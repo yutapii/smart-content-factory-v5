@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サムネイル生成 - 記事用サムネイル作成 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .priority-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.5em;
+            font-weight: normal;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .spec-banner {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .spec-banner h3 {
+            color: #e65100;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .spec-banner p {
+            color: #bf360c;
+            font-size: 0.9em;
+        }
+
+        .main-area {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .template-selector {
+            margin-bottom: 20px;
+        }
+
+        .template-selector h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .template-card {
+            aspect-ratio: 1200 / 628;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .template-card.active {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .template-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        .input-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea.input-field {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-input {
+            width: 60px;
+            height: 35px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .color-text {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .color-preset {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .color-preset:hover {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .image-upload {
+            margin-top: 15px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f7ff;
+        }
+
+        .upload-area.drag-over {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .upload-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #999;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .canvas-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .canvas-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .canvas-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        #thumbnailCanvas {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .control-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .control-label {
+            width: 100px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .control-input {
+            flex: 1;
+        }
+
+        .slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            width: 50px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .presets-section {
+            margin-top: 20px;
+        }
+
+        .presets-header {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .preset-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .preset-item {
+            padding: 8px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .preset-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 968px) {
+            .main-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .template-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>
+                🖼️ サムネイル生成 - 記事用サムネイル作成
+                <span class="priority-badge">本丸</span>
+            </h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="spec-banner">
+            <h3>📐 仕様: 1200×628px</h3>
+            <p>タイトル48pt、サブ24pt、メタ情報18pt | note.com / X(Twitter) / Facebook対応</p>
+        </div>
+
+        <div class="main-area">
+            <div class="sidebar">
+                <div class="template-selector">
+                    <h3>📋 テンプレート選択</h3>
+                    <div class="template-grid">
+                        <div class="template-card active" onclick="selectTemplate('gradient')" data-template="gradient">
+                            <canvas class="template-preview" id="preview-gradient"></canvas>
+                            <div class="template-name">グラデーション</div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('photo')" data-template="photo">
+                            <canvas class="template-preview" id="preview-photo"></canvas>
+                            <div class="template-name">写真背景</div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('minimal')" data-template="minimal">
+                            <canvas class="template-preview" id="preview-minimal"></canvas>
+                            <div class="template-name">ミニマル</div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('news')" data-template="news">
+                            <canvas class="template-preview" id="preview-news"></canvas>
+                            <div class="template-name">ニュース風</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <label class="input-label" for="titleInput">タイトル (48pt)</label>
+                        <textarea id="titleInput" class="input-field" placeholder="記事のタイトルを入力">AIが変える未来の働き方</textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="subtitleInput">サブタイトル (24pt)</label>
+                        <input type="text" id="subtitleInput" class="input-field" placeholder="サブタイトル（省略可）" value="2025年の展望と課題">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="metaInput">メタ情報 (18pt)</label>
+                        <input type="text" id="metaInput" class="input-field" placeholder="日付・著者名など" value="2025.01.10 | 日刊AIゆたさん新聞">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">背景色</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="bgColor1" class="color-input" value="#667eea">
+                            <input type="color" id="bgColor2" class="color-input" value="#764ba2">
+                            <input type="text" id="bgColorText" class="color-text" value="#667eea → #764ba2">
+                        </div>
+                        <div class="preset-colors">
+                            <div class="color-preset" style="background: linear-gradient(135deg, #667eea, #764ba2)" onclick="setColorPreset('#667eea', '#764ba2')"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #ff6b6b, #ffd93d)" onclick="setColorPreset('#ff6b6b', '#ffd93d')"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #4caf50, #8bc34a)" onclick="setColorPreset('#4caf50', '#8bc34a')"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #00d2ff, #3a47d5)" onclick="setColorPreset('#00d2ff', '#3a47d5')"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #333333, #666666)" onclick="setColorPreset('#333333', '#666666')"></div>
+                        </div>
+                    </div>
+
+                    <div class="image-upload">
+                        <label class="input-label">背景画像（オプション）</label>
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">クリックまたはドラッグ&ドロップ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section">
+                <div class="canvas-header">
+                    <h2 class="canvas-title">🎨 プレビュー</h2>
+                    <div style="font-size: 0.9em; color: #666;">1200 × 628 px</div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="thumbnailCanvas" width="1200" height="628"></canvas>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-row">
+                        <span class="control-label">透明度:</span>
+                        <div class="control-input" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="range" id="opacitySlider" class="slider" min="0" max="100" value="90">
+                            <span class="slider-value" id="opacityValue">90%</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-label">ぼかし:</span>
+                        <div class="control-input" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="range" id="blurSlider" class="slider" min="0" max="20" value="0">
+                            <span class="slider-value" id="blurValue">0px</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-label">文字色:</span>
+                        <div class="control-input">
+                            <select id="textColor" class="input-field">
+                                <option value="white">白</option>
+                                <option value="black">黒</option>
+                                <option value="#333333">ダークグレー</option>
+                                <option value="#667eea">ブランドカラー</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="resetCanvas()">リセット</button>
+                    <button class="btn btn-primary" onclick="generateThumbnail()">再生成</button>
+                    <button class="btn btn-success" onclick="downloadThumbnail()">ダウンロード</button>
+                </div>
+
+                <div class="presets-section">
+                    <div class="presets-header">💾 クイックプリセット</div>
+                    <div class="preset-list">
+                        <div class="preset-item" onclick="applyPreset('tech')">🔧 テック系</div>
+                        <div class="preset-item" onclick="applyPreset('business')">💼 ビジネス</div>
+                        <div class="preset-item" onclick="applyPreset('creative')">🎨 クリエイティブ</div>
+                        <div class="preset-item" onclick="applyPreset('news')">📰 ニュース</div>
+                        <div class="preset-item" onclick="applyPreset('blog')">✍️ ブログ</div>
+                        <div class="preset-item" onclick="applyPreset('event')">🎉 イベント</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 'gradient';
+        let uploadedImage = null;
+
+        // キャンバス初期化
+        function initCanvas() {
+            generateThumbnail();
+            drawTemplatePreviews();
+        }
+
+        // テンプレートプレビュー描画
+        function drawTemplatePreviews() {
+            const templates = ['gradient', 'photo', 'minimal', 'news'];
+            templates.forEach(template => {
+                const canvas = document.getElementById(`preview-${template}`);
+                if (canvas) {
+                    canvas.width = 240;
+                    canvas.height = 125;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 簡易プレビュー
+                    if (template === 'gradient') {
+                        const gradient = ctx.createLinearGradient(0, 0, 240, 125);
+                        gradient.addColorStop(0, '#667eea');
+                        gradient.addColorStop(1, '#764ba2');
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(0, 0, 240, 125);
+                    } else if (template === 'minimal') {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, 240, 125);
+                        ctx.fillStyle = '#667eea';
+                        ctx.fillRect(0, 100, 240, 25);
+                    } else if (template === 'news') {
+                        ctx.fillStyle = '#f44336';
+                        ctx.fillRect(0, 0, 240, 30);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 30, 240, 95);
+                    } else {
+                        ctx.fillStyle = '#e0e0e0';
+                        ctx.fillRect(0, 0, 240, 125);
+                    }
+                    
+                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('サンプル', 120, 65);
+                }
+            });
+        }
+
+        // テンプレート選択
+        function selectTemplate(template) {
+            currentTemplate = template;
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelector(`[data-template="${template}"]`).classList.add('active');
+            generateThumbnail();
+        }
+
+        // サムネイル生成
+        function generateThumbnail() {
+            const canvas = document.getElementById('thumbnailCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // クリア
+            ctx.clearRect(0, 0, 1200, 628);
+            
+            // 背景描画
+            if (uploadedImage) {
+                // 画像背景
+                ctx.drawImage(uploadedImage, 0, 0, 1200, 628);
+                
+                // オーバーレイ
+                const opacity = document.getElementById('opacitySlider').value / 100;
+                ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+                ctx.fillRect(0, 0, 1200, 628);
+            } else {
+                // グラデーション背景
+                drawBackground(ctx, currentTemplate);
+            }
+            
+            // テキスト描画
+            drawText(ctx);
+            
+            // 装飾要素
+            if (currentTemplate === 'news') {
+                drawNewsDecoration(ctx);
+            } else if (currentTemplate === 'minimal') {
+                drawMinimalDecoration(ctx);
+            }
+        }
+
+        // 背景描画
+        function drawBackground(ctx, template) {
+            const color1 = document.getElementById('bgColor1').value;
+            const color2 = document.getElementById('bgColor2').value;
+            
+            if (template === 'gradient') {
+                const gradient = ctx.createLinearGradient(0, 0, 1200, 628);
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(1, color2);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1200, 628);
+            } else if (template === 'minimal') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 1200, 628);
+                ctx.fillStyle = color1;
+                ctx.fillRect(0, 500, 1200, 128);
+            } else if (template === 'news') {
+                ctx.fillStyle = '#f44336';
+                ctx.fillRect(0, 0, 1200, 100);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 100, 1200, 528);
+            } else {
+                // デフォルト
+                ctx.fillStyle = '#f5f5f5';
+                ctx.fillRect(0, 0, 1200, 628);
+            }
+        }
+
+        // テキスト描画
+        function drawText(ctx) {
+            const title = document.getElementById('titleInput').value;
+            const subtitle = document.getElementById('subtitleInput').value;
+            const meta = document.getElementById('metaInput').value;
+            const textColor = document.getElementById('textColor').value;
+            
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            
+            // 影の設定
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            // タイトル (48pt = 64px)
+            ctx.font = 'bold 64px "Noto Sans JP", sans-serif';
+            const titleLines = wrapText(ctx, title, 1000);
+            const titleY = subtitle ? 250 : 300;
+            titleLines.forEach((line, index) => {
+                ctx.fillText(line, 600, titleY + (index * 75));
+            });
+            
+            // サブタイトル (24pt = 32px)
+            if (subtitle) {
+                ctx.font = '32px "Noto Sans JP", sans-serif';
+                ctx.fillText(subtitle, 600, titleY + (titleLines.length * 75) + 50);
+            }
+            
+            // メタ情報 (18pt = 24px)
+            ctx.shadowBlur = 5;
+            ctx.font = '24px "Noto Sans JP", sans-serif';
+            ctx.fillText(meta, 600, 550);
+            
+            // 影をリセット
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        // テキスト折り返し
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split('');
+            const lines = [];
+            let currentLine = '';
+            
+            for (let i = 0; i < words.length; i++) {
+                const testLine = currentLine + words[i];
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine !== '') {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            
+            if (currentLine !== '') {
+                lines.push(currentLine);
+            }
+            
+            return lines;
+        }
+
+        // ニュース装飾
+        function drawNewsDecoration(ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('BREAKING', 50, 65);
+            
+            ctx.fillStyle = '#f44336';
+            ctx.fillRect(50, 85, 200, 5);
+        }
+
+        // ミニマル装飾
+        function drawMinimalDecoration(ctx) {
+            ctx.strokeStyle = document.getElementById('bgColor1').value;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(100, 100);
+            ctx.lineTo(300, 100);
+            ctx.stroke();
+        }
+
+        // カラープリセット設定
+        function setColorPreset(color1, color2) {
+            document.getElementById('bgColor1').value = color1;
+            document.getElementById('bgColor2').value = color2;
+            document.getElementById('bgColorText').value = `${color1} → ${color2}`;
+            generateThumbnail();
+        }
+
+        // プリセット適用
+        function applyPreset(preset) {
+            const presets = {
+                tech: {
+                    template: 'gradient',
+                    color1: '#667eea',
+                    color2: '#764ba2',
+                    title: 'テクノロジーの最前線',
+                    subtitle: 'Innovation & Future',
+                    meta: '2025.01.10 | Tech News'
+                },
+                business: {
+                    template: 'minimal',
+                    color1: '#1976d2',
+                    color2: '#1565c0',
+                    title: 'ビジネス戦略レポート',
+                    subtitle: '成功への道筋',
+                    meta: '2025 Q1 Report'
+                },
+                creative: {
+                    template: 'gradient',
+                    color1: '#ff6b6b',
+                    color2: '#ffd93d',
+                    title: 'クリエイティブな発想',
+                    subtitle: 'Design & Art',
+                    meta: 'Creative Studio'
+                },
+                news: {
+                    template: 'news',
+                    color1: '#f44336',
+                    color2: '#d32f2f',
+                    title: '速報ニュース',
+                    subtitle: '',
+                    meta: new Date().toLocaleString('ja-JP')
+                },
+                blog: {
+                    template: 'photo',
+                    color1: '#4caf50',
+                    color2: '#45a049',
+                    title: 'ブログ記事タイトル',
+                    subtitle: 'Personal Blog',
+                    meta: 'Author Name'
+                },
+                event: {
+                    template: 'gradient',
+                    color1: '#9c27b0',
+                    color2: '#673ab7',
+                    title: 'イベント開催',
+                    subtitle: '2025.03.15 - 03.17',
+                    meta: 'Tokyo Convention Center'
+                }
+            };
+            
+            const p = presets[preset];
+            if (p) {
+                selectTemplate(p.template);
+                setColorPreset(p.color1, p.color2);
+                document.getElementById('titleInput').value = p.title;
+                document.getElementById('subtitleInput').value = p.subtitle;
+                document.getElementById('metaInput').value = p.meta;
+                generateThumbnail();
+            }
+        }
+
+        // ダウンロード
+        function downloadThumbnail() {
+            const canvas = document.getElementById('thumbnailCanvas');
+            const link = document.createElement('a');
+            link.download = `thumbnail-${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // リセット
+        function resetCanvas() {
+            document.getElementById('titleInput').value = 'AIが変える未来の働き方';
+            document.getElementById('subtitleInput').value = '2025年の展望と課題';
+            document.getElementById('metaInput').value = '2025.01.10 | 日刊AIゆたさん新聞';
+            document.getElementById('opacitySlider').value = 90;
+            document.getElementById('blurSlider').value = 0;
+            document.getElementById('textColor').value = 'white';
+            uploadedImage = null;
+            updateSliderValues();
+            generateThumbnail();
+        }
+
+        // スライダー値更新
+        function updateSliderValues() {
+            document.getElementById('opacityValue').textContent = document.getElementById('opacitySlider').value + '%';
+            document.getElementById('blurValue').textContent = document.getElementById('blurSlider').value + 'px';
+        }
+
+        // ファイルアップロード
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        });
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    uploadedImage = img;
+                    generateThumbnail();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // イベントリスナー
+        document.getElementById('titleInput').addEventListener('input', generateThumbnail);
+        document.getElementById('subtitleInput').addEventListener('input', generateThumbnail);
+        document.getElementById('metaInput').addEventListener('input', generateThumbnail);
+        document.getElementById('bgColor1').addEventListener('change', generateThumbnail);
+        document.getElementById('bgColor2').addEventListener('change', generateThumbnail);
+        document.getElementById('textColor').addEventListener('change', generateThumbnail);
+
+        document.getElementById('opacitySlider').addEventListener('input', () => {
+            updateSliderValues();
+            generateThumbnail();
+        });
+
+        document.getElementById('blurSlider').addEventListener('input', () => {
+            updateSliderValues();
+            const blur = document.getElementById('blurSlider').value;
+            document.getElementById('thumbnailCanvas').style.filter = `blur(${blur}px)`;
+        });
+
+        // 初期化
+        window.addEventListener('load', () => {
+            initCanvas();
+            updateSliderValues();
+        });
+    </script>
+</body>
+</html>

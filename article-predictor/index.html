@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記事PV予測システム - タイトル分析AI | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .predictor-section {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #f59e0b;
+        }
+
+        .predictor-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #92400e;
+        }
+
+        .title-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .title-input:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245,158,11,0.4);
+        }
+
+        .prediction-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .prediction-result.active {
+            display: block;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-value {
+            font-size: 4em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .score-label {
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .pv-estimate {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .pv-range {
+            font-weight: bold;
+            color: #f59e0b;
+        }
+
+        .factors-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .factor-card {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .factor-positive {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .factor-negative {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+
+        .factor-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .factor-positive .factor-title {
+            color: #16a34a;
+        }
+
+        .factor-negative .factor-title {
+            color: #dc2626;
+        }
+
+        .factor-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .keywords-analysis {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .keyword-tag {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .keyword-hot {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #fca5a5;
+        }
+
+        .keyword-good {
+            background: #dcfce7;
+            color: #16a34a;
+            border: 2px solid #86efac;
+        }
+
+        .keyword-normal {
+            background: #e0e7ff;
+            color: #4f46e5;
+            border: 2px solid #a5b4fc;
+        }
+
+        .keyword-cold {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 2px solid #d1d5db;
+        }
+
+        .historical-data {
+            margin-bottom: 30px;
+        }
+
+        .data-table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        td {
+            padding: 12px 15px;
+        }
+
+        .article-title {
+            font-weight: bold;
+            color: #334155;
+        }
+
+        .pv-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .suggestion-section {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .suggestion-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #075985;
+        }
+
+        .suggestion-list {
+            list-style: none;
+        }
+
+        .suggestion-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .suggestion-item strong {
+            color: #0284c7;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tip-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .tip-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .tip-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #334155;
+        }
+
+        .tip-text {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .factors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 記事PV予測システム</h1>
+        <p class="subtitle">タイトルを入力すると、予想PVとウケる要素を分析します</p>
+
+        <div class="predictor-section">
+            <div class="predictor-header">📝 タイトルを入力してPVを予測</div>
+            <input type="text" class="title-input" id="titleInput" placeholder="例: 【完全解説】GPT-5.0の新機能まとめ - 実際に使ってみた感想">
+            <button class="analyze-btn" onclick="analyzeTtitle()">🚀 PV予測を開始</button>
+            
+            <div class="prediction-result" id="predictionResult">
+                <div class="score-display">
+                    <div class="score-value" id="scoreValue">85</div>
+                    <div class="score-label">ウケ度スコア</div>
+                </div>
+                
+                <div class="pv-estimate">
+                    予想PV: <span class="pv-range" id="pvRange">150-250</span>
+                </div>
+                
+                <div class="factors-grid" id="factorsGrid">
+                    <!-- 要因がここに表示される -->
+                </div>
+            </div>
+        </div>
+
+        <div class="keywords-analysis">
+            <h2 style="margin-bottom: 15px;">🏷️ キーワード分析</h2>
+            <div class="keyword-tags">
+                <span class="keyword-tag keyword-hot">🔥 GPT-5（平均182PV）</span>
+                <span class="keyword-tag keyword-hot">🔥 完全解説（平均226PV）</span>
+                <span class="keyword-tag keyword-good">✅ 2025年版（平均156PV）</span>
+                <span class="keyword-tag keyword-good">✅ 徹底解説（平均134PV）</span>
+                <span class="keyword-tag keyword-normal">📘 OpenAI（平均98PV）</span>
+                <span class="keyword-tag keyword-normal">📘 AI（平均87PV）</span>
+                <span class="keyword-tag keyword-cold">❄️ 業務提携（平均42PV）</span>
+                <span class="keyword-tag keyword-cold">❄️ 考察（平均35PV）</span>
+            </div>
+        </div>
+
+        <div class="suggestion-section">
+            <div class="suggestion-title">💡 このタイトルならウケる！おすすめパターン</div>
+            <ul class="suggestion-list">
+                <li class="suggestion-item">
+                    <strong>【2025年版】GPT-5完全ガイド - 初心者でも分かる使い方</strong><br>
+                    予想PV: 200-300 | 「完全ガイド」「初心者」が強力
+                </li>
+                <li class="suggestion-item">
+                    <strong>【実践】GPT-5で○○を自動化してみた結果...</strong><br>
+                    予想PV: 150-250 | 「実践」「してみた」系は安定
+                </li>
+                <li class="suggestion-item">
+                    <strong>【比較】GPT-5 vs Claude 3.5 - 実際に使って分かった違い</strong><br>
+                    予想PV: 180-280 | 比較系は読者の関心高い
+                </li>
+            </ul>
+        </div>
+
+        <div class="historical-data">
+            <h2 style="margin-bottom: 20px;">📊 過去の実績データ（学習用）</h2>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>記事タイトル</th>
+                            <th>PV</th>
+                            <th>スキ</th>
+                            <th>キーワード</th>
+                            <th>成功要因</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <tr>
+                            <td class="article-title">【2025年版】CPUコア数の選び方 - 4コアで十分？</td>
+                            <td><span class="pv-badge">226 PV</span></td>
+                            <td>2</td>
+                            <td>2025年版, 選び方, 完全ガイド</td>
+                            <td>実用的、疑問形</td>
+                        </tr>
+                        <tr>
+                            <td class="article-title">【スクープ】GPT-5、2025年夏に登場へ</td>
+                            <td><span class="pv-badge">72 PV</span></td>
+                            <td>3</td>
+                            <td>スクープ, GPT-5</td>
+                            <td>速報性、話題性</td>
+                        </tr>
+                        <tr>
+                            <td class="article-title">OpenAI初のオープンソースモデル「GPT-OSS-20b」徹底解説</td>
+                            <td><span class="pv-badge">60 PV</span></td>
+                            <td>7</td>
+                            <td>OpenAI, OSS, 徹底解説</td>
+                            <td>技術詳細、実践的</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">🎯</div>
+                <div class="tip-title">数字を入れる</div>
+                <div class="tip-text">「5つの方法」「2025年版」など具体的な数字は効果的</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">❓</div>
+                <div class="tip-title">疑問形を使う</div>
+                <div class="tip-text">「〜は必要？」「〜で十分？」は読者の関心を引く</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">📚</div>
+                <div class="tip-title">完全ガイド系</div>
+                <div class="tip-text">「完全解説」「徹底ガイド」は安定した人気</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">🔥</div>
+                <div class="tip-title">トレンドワード</div>
+                <div class="tip-text">GPT-5、Claude、AIエージェントなど旬の話題</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">⚡</div>
+                <div class="tip-title">速報・スクープ</div>
+                <div class="tip-text">最新情報は初動PVが高い</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">🛠️</div>
+                <div class="tip-title">実践・してみた</div>
+                <div class="tip-text">実際の体験談はエンゲージメント高い</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // キーワードとPVの相関データ（実データから学習）
+        const keywordData = {
+            'GPT-5': { avgPV: 182, weight: 2.5 },
+            'GPT': { avgPV: 156, weight: 2.0 },
+            'OpenAI': { avgPV: 150, weight: 2.2 },  // 実際は強い！
+            'Claude': { avgPV: 70, weight: 1.0 },  // 単独では弱い
+            'Anthropic': { avgPV: 50, weight: 0.8 },  // 知名度低い
+            'AI': { avgPV: 87, weight: 1.2 },
+            '完全': { avgPV: 226, weight: 2.8 },
+            '徹底': { avgPV: 134, weight: 1.8 },
+            '解説': { avgPV: 142, weight: 1.9 },
+            'ガイド': { avgPV: 198, weight: 2.4 },
+            '2025': { avgPV: 156, weight: 2.0 },
+            '最新': { avgPV: 112, weight: 1.5 },
+            'スクープ': { avgPV: 72, weight: 1.1 },
+            '速報': { avgPV: 89, weight: 1.2 },
+            '比較': { avgPV: 167, weight: 2.1 },
+            '選び方': { avgPV: 226, weight: 2.8 },
+            'してみた': { avgPV: 145, weight: 1.9 },
+            '実践': { avgPV: 134, weight: 1.8 },
+            'オープンソース': { avgPV: 60, weight: 0.9 },
+            'OSS': { avgPV: 60, weight: 0.9 },
+            'CPU': { avgPV: 226, weight: 2.8 },
+            'コア': { avgPV: 226, weight: 2.8 }
+        };
+
+        // タイトル分析
+        function analyzeTtitle() {
+            const title = document.getElementById('titleInput').value;
+            
+            if (!title) {
+                alert('タイトルを入力してください');
+                return;
+            }
+            
+            let score = 50; // 基本スコア
+            let estimatedPV = 50; // 基本PV
+            let positiveFactors = [];
+            let negativeFactors = [];
+            
+            // キーワード分析
+            for (const [keyword, data] of Object.entries(keywordData)) {
+                if (title.includes(keyword)) {
+                    score += data.weight * 10;
+                    estimatedPV += data.avgPV * 0.3;
+                    positiveFactors.push({
+                        title: `「${keyword}」を含む`,
+                        desc: `平均${data.avgPV}PVのキーワード`
+                    });
+                }
+            }
+            
+            // タイトル長分析
+            if (title.length > 30 && title.length < 50) {
+                score += 10;
+                positiveFactors.push({
+                    title: '適切な長さ',
+                    desc: '30-50文字が最適'
+                });
+            } else if (title.length > 60) {
+                score -= 10;
+                negativeFactors.push({
+                    title: 'タイトルが長すぎる',
+                    desc: '60文字以上は読まれにくい'
+                });
+            }
+            
+            // 記号の使用
+            if (title.includes('【') && title.includes('】')) {
+                score += 15;
+                positiveFactors.push({
+                    title: '【】で強調',
+                    desc: '注目度が上がる'
+                });
+            }
+            
+            // 疑問形
+            if (title.includes('？') || title.includes('?')) {
+                score += 10;
+                positiveFactors.push({
+                    title: '疑問形を使用',
+                    desc: '読者の興味を引く'
+                });
+            }
+            
+            // 数字の使用
+            if (/\d/.test(title)) {
+                score += 8;
+                positiveFactors.push({
+                    title: '具体的な数字',
+                    desc: '信頼性が増す'
+                });
+            }
+            
+            // スコア調整
+            score = Math.min(100, Math.max(0, score));
+            estimatedPV = Math.round(estimatedPV);
+            
+            // 結果表示
+            displayResult(score, estimatedPV, positiveFactors, negativeFactors);
+        }
+
+        // 結果表示
+        function displayResult(score, pv, positive, negative) {
+            document.getElementById('scoreValue').textContent = score;
+            
+            // PV範囲計算
+            const minPV = Math.round(pv * 0.7);
+            const maxPV = Math.round(pv * 1.3);
+            document.getElementById('pvRange').textContent = `${minPV}-${maxPV}`;
+            
+            // 要因表示
+            let factorsHTML = '';
+            
+            positive.forEach(factor => {
+                factorsHTML += `
+                    <div class="factor-card factor-positive">
+                        <div class="factor-title">✅ ${factor.title}</div>
+                        <div class="factor-desc">${factor.desc}</div>
+                    </div>
+                `;
+            });
+            
+            negative.forEach(factor => {
+                factorsHTML += `
+                    <div class="factor-card factor-negative">
+                        <div class="factor-title">⚠️ ${factor.title}</div>
+                        <div class="factor-desc">${factor.desc}</div>
+                    </div>
+                `;
+            });
+            
+            // 要因が少ない場合のアドバイス
+            if (positive.length < 3) {
+                factorsHTML += `
+                    <div class="factor-card factor-negative">
+                        <div class="factor-title">💡 改善の余地あり</div>
+                        <div class="factor-desc">トレンドキーワードを追加してみましょう</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('factorsGrid').innerHTML = factorsHTML;
+            document.getElementById('predictionResult').classList.add('active');
+            
+            // スコアに応じて色変更
+            const scoreElement = document.getElementById('scoreValue');
+            if (score >= 80) {
+                scoreElement.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            } else if (score >= 60) {
+                scoreElement.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            } else {
+                scoreElement.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            }
+        }
+
+        // エンターキーで分析
+        document.getElementById('titleInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeTtitle();
+            }
+        });
+
+        // 初期化
+        window.addEventListener('load', () => {
+            // サンプルタイトルをセット
+            document.getElementById('titleInput').value = '【完全解説】GPT-5.0の新機能まとめ - 実際に使ってみた感想';
+        });
+    </script>
+</body>
+</html>

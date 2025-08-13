@@ -1,0 +1,118 @@
+{
+  "workingFeeds": [
+    {
+      "name": "TechCrunch",
+      "url": "https://techcrunch.com/feed/",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "The Verge",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "Wired",
+      "url": "https://www.wired.com/feed/rss",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "Ars Technica",
+      "url": "https://feeds.arstechnica.com/arstechnica/index",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "MIT Technology Review",
+      "url": "https://www.technologyreview.com/feed/",
+      "category": "AI・研究"
+    },
+    {
+      "name": "VentureBeat",
+      "url": "https://feeds.feedburner.com/venturebeat/SZYF",
+      "category": "AI・ビジネス"
+    },
+    {
+      "name": "The Information",
+      "url": "https://www.theinformation.com/feed",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "Hacker News",
+      "url": "https://news.ycombinator.com/rss",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "Reddit - Machine Learning",
+      "url": "https://www.reddit.com/r/MachineLearning.rss",
+      "category": "AI・機械学習"
+    },
+    {
+      "name": "Google AI Blog",
+      "url": "https://blog.google/technology/ai/rss/",
+      "category": "AI・研究"
+    },
+    {
+      "name": "OpenAI Blog",
+      "url": "https://openai.com/blog/rss/",
+      "category": "AI・研究"
+    },
+    {
+      "name": "DeepMind Blog",
+      "url": "https://deepmind.com/blog/feed/basic/",
+      "category": "AI・研究"
+    },
+    {
+      "name": "GIGAZINE",
+      "url": "https://gigazine.net/news/rss_2.0/",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "ITmedia AI+",
+      "url": "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
+      "category": "AI・機械学習"
+    },
+    {
+      "name": "ASCII.jp AI",
+      "url": "https://ascii.jp/cate/1064/rss.xml",
+      "category": "AI・機械学習"
+    },
+    {
+      "name": "日経xTECH",
+      "url": "https://xtech.nikkei.com/rss/index.rdf",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "BBC Technology",
+      "url": "https://feeds.bbci.co.uk/news/technology/rss.xml",
+      "category": "ニュース"
+    },
+    {
+      "name": "Reuters Technology",
+      "url": "https://www.reutersagency.com/feed/?best-topics=tech&post_type=best",
+      "category": "ニュース"
+    },
+    {
+      "name": "The Register",
+      "url": "https://www.theregister.com/headlines.atom",
+      "category": "テクノロジー"
+    },
+    {
+      "name": "Engadget",
+      "url": "https://www.engadget.com/rss.xml",
+      "category": "テクノロジー"
+    }
+  ],
+  "problematicFeeds": [
+    "economie.gouv.fr",
+    "ssi.gouv.fr",
+    "inria.fr",
+    "mise.gov.it",
+    "bmwk.de",
+    "bsi.bund.de",
+    "canada.ca",
+    "bmbf.de",
+    "enisa.europa.eu",
+    "digital.canada.ca",
+    "nrc.canada.ca",
+    "digital-strategy.ec.europa.eu"
+  ]
+}

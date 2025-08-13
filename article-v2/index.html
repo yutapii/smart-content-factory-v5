@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記事生成 V2 - 日刊AIゆたさん新聞 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .template-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .template-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #ff6b6b;
+        }
+
+        .template-card.active {
+            background: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,217,61,0.1));
+            border-color: #ff6b6b;
+        }
+
+        .template-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .template-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .template-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .source-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+        }
+
+        .source-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .source-item:hover {
+            background: #e9ecef;
+        }
+
+        .source-item.selected {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .source-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .field-group {
+            margin-bottom: 15px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .field-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .quick-insert {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .insert-chip {
+            background: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .insert-chip:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .preview-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .btn-preview {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-copy {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-export {
+            background: #ff9800;
+            color: white;
+        }
+
+        .preview-content {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 400px;
+            font-family: 'Noto Serif JP', serif;
+            line-height: 1.8;
+        }
+
+        .article-header {
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .article-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .article-body {
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .article-body h2 {
+            font-size: 1.5em;
+            margin: 30px 0 15px;
+            color: #ff6b6b;
+            border-left: 5px solid #ff6b6b;
+            padding-left: 10px;
+        }
+
+        .article-body h3 {
+            font-size: 1.3em;
+            margin: 20px 0 10px;
+            color: #333;
+        }
+
+        .article-body p {
+            margin-bottom: 15px;
+        }
+
+        .article-body ul, .article-body ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        .article-body li {
+            margin-bottom: 8px;
+        }
+
+        .article-body blockquote {
+            background: #f8f9fa;
+            border-left: 5px solid #ff6b6b;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+        }
+
+        .btn-save {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #fff3e0;
+            border-color: #ff6b6b;
+        }
+
+        .history-item-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-item-date {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        @media (max-width: 968px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .template-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📰 日刊AIゆたさん新聞 - 記事生成システム V2</h1>
+
+        <div class="template-selector">
+            <div class="template-card active" data-template="daily-news">
+                <div class="template-icon">📅</div>
+                <div class="template-name">日刊ニュース</div>
+                <div class="template-desc">今日のAI業界動向</div>
+            </div>
+            <div class="template-card" data-template="deep-dive">
+                <div class="template-icon">🔍</div>
+                <div class="template-name">深掘り解説</div>
+                <div class="template-desc">技術詳細分析</div>
+            </div>
+            <div class="template-card" data-template="tutorial">
+                <div class="template-icon">📚</div>
+                <div class="template-name">チュートリアル</div>
+                <div class="template-desc">実践ガイド</div>
+            </div>
+            <div class="template-card" data-template="opinion">
+                <div class="template-icon">💭</div>
+                <div class="template-name">オピニオン</div>
+                <div class="template-desc">考察・意見</div>
+            </div>
+            <div class="template-card" data-template="interview">
+                <div class="template-icon">🎤</div>
+                <div class="template-name">インタビュー</div>
+                <div class="template-desc">対談形式</div>
+            </div>
+            <div class="template-card" data-template="roundup">
+                <div class="template-icon">📊</div>
+                <div class="template-name">週間まとめ</div>
+                <div class="template-desc">今週の振り返り</div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-panel">
+                <div class="panel-title">📝 記事情報入力</div>
+                
+                <div class="field-group">
+                    <label class="field-label">記事タイトル</label>
+                    <input type="text" class="field-input" id="articleTitle" placeholder="例: GPT-5.0がついにリリース！その実力と課題を徹底解説">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">リード文（導入）</label>
+                    <textarea class="field-textarea" id="articleLead" placeholder="読者を引き込む導入文を入力..."></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">メインコンテンツ</label>
+                    <textarea class="field-textarea" id="articleMain" style="min-height: 200px;" placeholder="記事の本文を入力..."></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">結論・まとめ</label>
+                    <textarea class="field-textarea" id="articleConclusion" placeholder="記事の締めくくり..."></textarea>
+                </div>
+
+                <div class="quick-insert">
+                    <div class="insert-chip" onclick="insertText('## ')">見出し</div>
+                    <div class="insert-chip" onclick="insertText('**強調**')">強調</div>
+                    <div class="insert-chip" onclick="insertText('> 引用')">引用</div>
+                    <div class="insert-chip" onclick="insertText('- ')">箇条書き</div>
+                    <div class="insert-chip" onclick="insertText('[リンク](URL)')">リンク</div>
+                    <div class="insert-chip" onclick="insertText('```code```')">コード</div>
+                </div>
+            </div>
+
+            <div class="input-panel">
+                <div class="panel-title">📰 RSS記事ソース</div>
+                <div class="source-list" id="sourceList">
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>TechCrunch - GPT-5.0発表の衝撃</span>
+                    </div>
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>The Verge - AI規制法案の最新動向</span>
+                    </div>
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>Wired - 量子コンピュータとAIの融合</span>
+                    </div>
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>MIT Tech Review - 次世代AIチップ</span>
+                    </div>
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>VentureBeat - AI投資トレンド2025</span>
+                    </div>
+                    <div class="source-item">
+                        <input type="checkbox" class="source-checkbox">
+                        <span>GIGAZINE - 日本のAI開発最前線</span>
+                    </div>
+                </div>
+                
+                <div class="field-group" style="margin-top: 15px;">
+                    <label class="field-label">タグ・カテゴリー</label>
+                    <input type="text" class="field-input" id="articleTags" placeholder="AI, GPT-5, 機械学習, ニュース">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">著者名</label>
+                    <input type="text" class="field-input" id="articleAuthor" value="AIゆたさん">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">公開予定日時</label>
+                    <input type="datetime-local" class="field-input" id="publishDate">
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-header">
+                <span class="preview-title">📖 プレビュー</span>
+                <div class="preview-controls">
+                    <button class="preview-btn btn-preview" onclick="updatePreview()">🔄 更新</button>
+                    <button class="preview-btn btn-copy" onclick="copyArticle()">📋 コピー</button>
+                    <button class="preview-btn btn-export" onclick="exportArticle()">💾 エクスポート</button>
+                </div>
+            </div>
+            <div class="preview-content" id="previewContent">
+                <div class="article-header">
+                    <h1 class="article-title">記事タイトルがここに表示されます</h1>
+                    <div class="article-meta">
+                        <span>📅 2025年8月11日</span>
+                        <span>✍️ AIゆたさん</span>
+                        <span>🏷️ AI, テクノロジー</span>
+                    </div>
+                </div>
+                <div class="article-body">
+                    <p>記事のプレビューがここに表示されます。左側のフォームに入力すると、リアルタイムでプレビューが更新されます。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn btn-generate" onclick="generateArticle()">
+                🚀 AI支援で記事生成
+            </button>
+            <button class="action-btn btn-save" onclick="saveArticle()">
+                💾 下書き保存
+            </button>
+            <button class="action-btn btn-clear" onclick="clearAll()">
+                🗑️ クリア
+            </button>
+        </div>
+
+        <div class="history-section">
+            <div class="history-header">
+                <span class="history-title">📚 記事履歴</span>
+                <button class="preview-btn" onclick="clearHistory()">履歴クリア</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- 履歴アイテムがここに表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 'daily-news';
+        let articleHistory = [];
+
+        // テンプレート選択
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                currentTemplate = this.dataset.template;
+                loadTemplate(currentTemplate);
+            });
+        });
+
+        // テンプレート読み込み
+        function loadTemplate(template) {
+            const templates = {
+                'daily-news': {
+                    title: '【速報】今日のAI業界ニュース - ',
+                    lead: '本日のAI業界では、以下の重要な動きがありました。',
+                    main: '## 主要ニュース\n\n### 1. \n\n### 2. \n\n### 3. \n\n## 詳細解説\n\n## 業界への影響\n\n## 今後の展望',
+                    conclusion: '本日お伝えしたニュースは、AI業界の発展において重要な転換点となる可能性があります。明日も最新情報をお届けします。'
+                },
+                'deep-dive': {
+                    title: '【徹底解説】',
+                    lead: '今回は、話題の技術について詳しく解説します。',
+                    main: '## 背景\n\n## 技術的詳細\n\n### アーキテクチャ\n\n### 実装方法\n\n## 実用例\n\n## メリット・デメリット\n\n### メリット\n- \n\n### デメリット\n- ',
+                    conclusion: 'この技術は今後のAI開発において重要な役割を果たすことが期待されます。'
+                },
+                'tutorial': {
+                    title: '【実践ガイド】ステップバイステップで学ぶ',
+                    lead: '初心者でも簡単に始められるよう、順を追って解説します。',
+                    main: '## 準備するもの\n- \n\n## ステップ1: 環境構築\n\n## ステップ2: 基本設定\n\n## ステップ3: 実装\n\n```python\n# サンプルコード\n```\n\n## ステップ4: テスト\n\n## トラブルシューティング',
+                    conclusion: 'これで基本的な実装は完了です。さらに詳しく学びたい方は、公式ドキュメントも参照してください。'
+                },
+                'opinion': {
+                    title: '【考察】',
+                    lead: '最近の動向を踏まえて、個人的な見解を述べさせていただきます。',
+                    main: '## 現状分析\n\n## 問題提起\n\n## 私の考え\n\n### 賛成の立場から\n\n### 反対の立場から\n\n## 代替案の提示\n\n## 将来予測',
+                    conclusion: 'これはあくまで一つの見方です。皆様のご意見もぜひお聞かせください。'
+                },
+                'interview': {
+                    title: '【独占インタビュー】',
+                    lead: '今回は特別に、業界のキーパーソンにお話を伺いました。',
+                    main: '## プロフィール\n\n## インタビュー\n\n**Q: 最初の質問**\nA: \n\n**Q: 次の質問**\nA: \n\n**Q: 今後の展望について**\nA: \n\n## 編集後記',
+                    conclusion: '貴重なお話をありがとうございました。'
+                },
+                'roundup': {
+                    title: '【週間まとめ】今週のAI業界トップニュース',
+                    lead: '今週も様々な動きがありました。重要なニュースを振り返ります。',
+                    main: '## 月曜日\n\n## 火曜日\n\n## 水曜日\n\n## 木曜日\n\n## 金曜日\n\n## 今週のトレンド分析\n\n## 来週の注目ポイント',
+                    conclusion: '来週も引き続き、最新情報をお届けします。'
+                }
+            };
+
+            const t = templates[template];
+            document.getElementById('articleTitle').value = t.title;
+            document.getElementById('articleLead').value = t.lead;
+            document.getElementById('articleMain').value = t.main;
+            document.getElementById('articleConclusion').value = t.conclusion;
+            updatePreview();
+        }
+
+        // テキスト挿入
+        function insertText(text) {
+            const textarea = document.getElementById('articleMain');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const value = textarea.value;
+            
+            textarea.value = value.substring(0, start) + text + value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + text.length;
+        }
+
+        // プレビュー更新
+        function updatePreview() {
+            const title = document.getElementById('articleTitle').value || '記事タイトル';
+            const lead = document.getElementById('articleLead').value;
+            const main = document.getElementById('articleMain').value;
+            const conclusion = document.getElementById('articleConclusion').value;
+            const author = document.getElementById('articleAuthor').value || 'AIゆたさん';
+            const tags = document.getElementById('articleTags').value || 'AI, テクノロジー';
+            const date = document.getElementById('publishDate').value 
+                ? new Date(document.getElementById('publishDate').value).toLocaleDateString('ja-JP')
+                : new Date().toLocaleDateString('ja-JP');
+
+            let content = `
+                <div class="article-header">
+                    <h1 class="article-title">${title}</h1>
+                    <div class="article-meta">
+                        <span>📅 ${date}</span>
+                        <span>✍️ ${author}</span>
+                        <span>🏷️ ${tags}</span>
+                    </div>
+                </div>
+                <div class="article-body">
+            `;
+
+            if (lead) {
+                content += `<p><strong>${lead}</strong></p>`;
+            }
+
+            if (main) {
+                // Markdown風の変換
+                let processedMain = main
+                    .replace(/## (.*)/g, '<h2>$1</h2>')
+                    .replace(/### (.*)/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/> (.*)/g, '<blockquote>$1</blockquote>')
+                    .replace(/- (.*)/g, '<li>$1</li>')
+                    .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>');
+                
+                content += `<p>${processedMain}</p>`;
+            }
+
+            if (conclusion) {
+                content += `<hr style="margin: 30px 0;"><p><em>${conclusion}</em></p>`;
+            }
+
+            content += '</div>';
+
+            document.getElementById('previewContent').innerHTML = content;
+        }
+
+        // AI支援で記事生成
+        async function generateArticle() {
+            const apiKey = localStorage.getItem('openai-api-key');
+            if (!apiKey) {
+                alert('OpenAI APIキーが設定されていません。設定画面でAPIキーを登録してください。');
+                return;
+            }
+
+            // 選択されたRSSソースを取得
+            const selectedSources = [];
+            document.querySelectorAll('.source-item input:checked').forEach(checkbox => {
+                selectedSources.push(checkbox.nextElementSibling.textContent);
+            });
+
+            if (selectedSources.length === 0) {
+                alert('記事ソースを選択してください');
+                return;
+            }
+
+            alert(`選択されたソース:\n${selectedSources.join('\n')}\n\nこれらの情報を基に記事を生成します。`);
+            
+            // デモ用の自動入力
+            const title = document.getElementById('articleTitle').value;
+            if (!title || title.includes('【')) {
+                document.getElementById('articleTitle').value = 'GPT-5.0リリース！コード生成は優秀だが対話は冷たいと話題に';
+            }
+            
+            document.getElementById('articleLead').value = '待望のGPT-5.0がついにリリースされました。コード生成能力は飛躍的に向上した一方で、「お友達AI」としての温かみが失われたという声も上がっています。';
+            
+            document.getElementById('articleMain').value = `## GPT-5.0の主な特徴
+
+### 強化された能力
+- **コード生成**: 複雑なアルゴリズムも一発で実装
+- **数学的推論**: 大学院レベルの問題も解答可能
+- **マルチモーダル**: 画像・音声・動画の理解が向上
+
+### ユーザーの反応
+
+Twitterでは様々な反応が見られます：
+
+> 「コード書かせたら神レベル。でも雑談は味気ない」
+> 「仕事には最高だけど、友達にはなれない感じ」
+
+### 技術的な変更点
+
+アーキテクチャの大幅な見直しにより、タスク特化型の性能が向上しました。
+
+## 今後の展望
+
+OpenAIは今後、用途別に最適化されたモデルを提供していく方針とのことです。`;
+            
+            document.getElementById('articleConclusion').value = 'GPT-5.0は確実に進化していますが、万能ではありません。用途に応じて適切なAIを選択することが重要になってきています。';
+            
+            updatePreview();
+        }
+
+        // 記事コピー
+        function copyArticle() {
+            const content = document.getElementById('previewContent').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('記事をクリップボードにコピーしました！');
+            });
+        }
+
+        // 記事エクスポート
+        function exportArticle() {
+            const title = document.getElementById('articleTitle').value || '無題';
+            const content = document.getElementById('previewContent').innerHTML;
+            
+            const html = `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .article-header { border-bottom: 3px solid #ff6b6b; padding-bottom: 20px; margin-bottom: 20px; }
+        .article-title { font-size: 2em; font-weight: bold; }
+        .article-meta { color: #666; font-size: 0.9em; }
+        .article-body { line-height: 1.8; }
+        h2 { color: #ff6b6b; border-left: 5px solid #ff6b6b; padding-left: 10px; }
+        blockquote { background: #f8f9fa; border-left: 5px solid #ff6b6b; padding: 15px; }
+    </style>
+</head>
+<body>
+    ${content}
+</body>
+</html>`;
+            
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 記事保存
+        function saveArticle() {
+            const article = {
+                title: document.getElementById('articleTitle').value,
+                lead: document.getElementById('articleLead').value,
+                main: document.getElementById('articleMain').value,
+                conclusion: document.getElementById('articleConclusion').value,
+                author: document.getElementById('articleAuthor').value,
+                tags: document.getElementById('articleTags').value,
+                template: currentTemplate,
+                timestamp: new Date().toISOString()
+            };
+            
+            articleHistory.unshift(article);
+            articleHistory = articleHistory.slice(0, 20); // 最新20件のみ
+            
+            localStorage.setItem('article-history', JSON.stringify(articleHistory));
+            updateHistoryDisplay();
+            
+            alert('記事を下書き保存しました！');
+        }
+
+        // 履歴表示更新
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (articleHistory.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #999;">履歴がありません</div>';
+                return;
+            }
+            
+            historyList.innerHTML = articleHistory.map((article, index) => `
+                <div class="history-item" onclick="loadFromHistory(${index})">
+                    <div class="history-item-title">${article.title || '無題'}</div>
+                    <div class="history-item-date">${new Date(article.timestamp).toLocaleString('ja-JP')}</div>
+                </div>
+            `).join('');
+        }
+
+        // 履歴から読み込み
+        function loadFromHistory(index) {
+            const article = articleHistory[index];
+            document.getElementById('articleTitle').value = article.title || '';
+            document.getElementById('articleLead').value = article.lead || '';
+            document.getElementById('articleMain').value = article.main || '';
+            document.getElementById('articleConclusion').value = article.conclusion || '';
+            document.getElementById('articleAuthor').value = article.author || '';
+            document.getElementById('articleTags').value = article.tags || '';
+            
+            // テンプレート切り替え
+            if (article.template) {
+                document.querySelectorAll('.template-card').forEach(card => {
+                    card.classList.remove('active');
+                    if (card.dataset.template === article.template) {
+                        card.classList.add('active');
+                    }
+                });
+                currentTemplate = article.template;
+            }
+            
+            updatePreview();
+        }
+
+        // クリア
+        function clearAll() {
+            if (confirm('すべての入力内容をクリアしますか？')) {
+                document.getElementById('articleTitle').value = '';
+                document.getElementById('articleLead').value = '';
+                document.getElementById('articleMain').value = '';
+                document.getElementById('articleConclusion').value = '';
+                document.getElementById('articleTags').value = '';
+                updatePreview();
+            }
+        }
+
+        // 履歴クリア
+        function clearHistory() {
+            if (confirm('履歴をすべて削除しますか？')) {
+                articleHistory = [];
+                localStorage.removeItem('article-history');
+                updateHistoryDisplay();
+            }
+        }
+
+        // 初期化
+        window.addEventListener('load', () => {
+            // 履歴読み込み
+            const saved = localStorage.getItem('article-history');
+            if (saved) {
+                articleHistory = JSON.parse(saved);
+                updateHistoryDisplay();
+            }
+            
+            // 日付初期値
+            const now = new Date();
+            document.getElementById('publishDate').value = now.toISOString().slice(0, 16);
+            
+            // 初期テンプレート読み込み
+            loadTemplate('daily-news');
+            
+            // リアルタイムプレビュー
+            ['articleTitle', 'articleLead', 'articleMain', 'articleConclusion', 'articleAuthor', 'articleTags'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+        });
+
+        // RSSソース選択イベント
+        document.querySelectorAll('.source-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.closest('.source-item').classList.toggle('selected', this.checked);
+            });
+        });
+    </script>
+</body>
+</html>

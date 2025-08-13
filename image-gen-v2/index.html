@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像生成 V2 - 実用版 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2em;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .service-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: white;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .service-card.active {
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+            border-color: #667eea;
+        }
+
+        .service-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .service-desc {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .service-features {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: #555;
+        }
+
+        .prompt-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .prompt-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .template-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .template-btn:hover {
+            background: #5a6fc8;
+        }
+
+        .prompt-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .enhancement-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .enhancement-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .enhancement-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .enhancement-chip {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .enhancement-chip:hover {
+            background: #f0f0f0;
+        }
+
+        .enhancement-chip.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .action-section {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-copy {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #218838;
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .history-prompt {
+            font-size: 0.9em;
+            color: #333;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .templates-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .templates-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .template-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .template-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-item:hover {
+            background: #e9ecef;
+        }
+
+        .template-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .template-text {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .service-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 AI画像生成プロンプトジェネレーター V2</h1>
+        
+        <div class="info-box">
+            <h3>💡 使い方</h3>
+            <p>1. 使用するAIサービスを選択<br>
+               2. プロンプトを入力または テンプレートから選択<br>
+               3. 必要に応じて拡張オプションを追加<br>
+               4. 「プロンプト生成」をクリックして最適化<br>
+               5. 各サービスのサイトで画像を生成</p>
+        </div>
+
+        <div class="service-grid">
+            <div class="service-card active" data-service="dalle3">
+                <div class="service-name">DALL-E 3</div>
+                <div class="service-desc">OpenAI / ChatGPT Plus</div>
+                <div class="service-features">
+                    <span class="feature-tag">高品質</span>
+                    <span class="feature-tag">日本語OK</span>
+                    <span class="feature-tag">無料枠あり</span>
+                </div>
+            </div>
+            
+            <div class="service-card" data-service="midjourney">
+                <div class="service-name">Midjourney</div>
+                <div class="service-desc">Discord経由</div>
+                <div class="service-features">
+                    <span class="feature-tag">アート特化</span>
+                    <span class="feature-tag">高解像度</span>
+                    <span class="feature-tag">有料</span>
+                </div>
+            </div>
+            
+            <div class="service-card" data-service="stable">
+                <div class="service-name">Stable Diffusion</div>
+                <div class="service-desc">DreamStudio / Civitai</div>
+                <div class="service-features">
+                    <span class="feature-tag">カスタマイズ</span>
+                    <span class="feature-tag">モデル豊富</span>
+                    <span class="feature-tag">無料可</span>
+                </div>
+            </div>
+            
+            <div class="service-card" data-service="bing">
+                <div class="service-name">Bing Image Creator</div>
+                <div class="service-desc">Microsoft / 無料</div>
+                <div class="service-features">
+                    <span class="feature-tag">完全無料</span>
+                    <span class="feature-tag">DALL-E 3</span>
+                    <span class="feature-tag">簡単</span>
+                </div>
+            </div>
+            
+            <div class="service-card" data-service="imagen">
+                <div class="service-name">Google Imagen 3</div>
+                <div class="service-desc">Google AI Test Kitchen</div>
+                <div class="service-features">
+                    <span class="feature-tag">最新AI</span>
+                    <span class="feature-tag">高品質</span>
+                    <span class="feature-tag">無料テスト</span>
+                </div>
+            </div>
+            
+            <div class="service-card" data-service="gemini">
+                <div class="service-name">Gemini (Bard)</div>
+                <div class="service-desc">Google / 画像生成対応</div>
+                <div class="service-features">
+                    <span class="feature-tag">無料</span>
+                    <span class="feature-tag">日本語OK</span>
+                    <span class="feature-tag">統合AI</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-section">
+            <div class="prompt-header">
+                <span class="prompt-title">📝 プロンプト入力</span>
+                <button class="template-btn" onclick="showTemplates()">テンプレート選択</button>
+            </div>
+            
+            <textarea id="promptInput" class="prompt-input" placeholder="生成したい画像の説明を入力してください...
+
+例: 桜が満開の日本庭園で、着物を着た女性が傘を持って立っている。背景には富士山が見え、夕焼けの光が全体を照らしている。写実的なスタイル、8K解像度"></textarea>
+            
+            <div class="enhancement-section">
+                <div class="enhancement-title">🎯 拡張オプション（クリックで追加）</div>
+                <div class="enhancement-options">
+                    <div class="enhancement-chip" data-text="masterpiece, best quality">最高品質</div>
+                    <div class="enhancement-chip" data-text="ultra detailed, 8k resolution">超高解像度</div>
+                    <div class="enhancement-chip" data-text="photorealistic, RAW photo">写実的</div>
+                    <div class="enhancement-chip" data-text="anime style, cel shading">アニメ風</div>
+                    <div class="enhancement-chip" data-text="oil painting style">油絵風</div>
+                    <div class="enhancement-chip" data-text="watercolor painting">水彩画風</div>
+                    <div class="enhancement-chip" data-text="cinematic lighting">映画的照明</div>
+                    <div class="enhancement-chip" data-text="golden hour lighting">ゴールデンアワー</div>
+                    <div class="enhancement-chip" data-text="depth of field, bokeh">被写界深度</div>
+                    <div class="enhancement-chip" data-text="wide angle lens">広角レンズ</div>
+                    <div class="enhancement-chip" data-text="macro photography">マクロ撮影</div>
+                    <div class="enhancement-chip" data-text="trending on artstation">トレンド</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-section">
+            <button class="action-btn btn-generate" onclick="generateOptimizedPrompt()">
+                🚀 プロンプト生成
+            </button>
+            <button class="action-btn btn-copy" onclick="copyPrompt()">
+                📋 コピー
+            </button>
+            <button class="action-btn btn-clear" onclick="clearPrompt()">
+                🗑️ クリア
+            </button>
+        </div>
+
+        <div class="info-box" style="margin-top: 20px;">
+            <h3>🔗 画像生成サービスへのリンク</h3>
+            <p id="serviceLinks">
+                <strong>DALL-E 3:</strong> <a href="https://chat.openai.com" target="_blank">ChatGPT</a> または <a href="https://www.bing.com/create" target="_blank">Bing Image Creator</a><br>
+                生成したプロンプトをコピーして、上記サービスで使用してください。
+            </p>
+        </div>
+
+        <div class="history-section">
+            <div class="history-header">
+                <span class="history-title">📚 プロンプト履歴</span>
+                <button class="template-btn" onclick="clearHistory()">履歴クリア</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- 履歴アイテムがここに表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <!-- テンプレートモーダル -->
+    <div class="templates-modal" id="templatesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">📚 プロンプトテンプレート</span>
+                <button class="modal-close" onclick="hideTemplates()">×</button>
+            </div>
+            <div class="template-list">
+                <div class="template-item" onclick="useTemplate('portrait')">
+                    <div class="template-name">人物ポートレート</div>
+                    <div class="template-text">プロフェッショナルなポートレート写真、スタジオライティング、背景ぼかし、高解像度、写実的</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('landscape')">
+                    <div class="template-name">風景写真</div>
+                    <div class="template-text">壮大な自然風景、ゴールデンアワーの光、広角レンズ、高ダイナミックレンジ、8K解像度</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('anime')">
+                    <div class="template-name">アニメイラスト</div>
+                    <div class="template-text">アニメスタイル、美少女キャラクター、カラフルな背景、デジタルアート、pixiv風</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('concept')">
+                    <div class="template-name">コンセプトアート</div>
+                    <div class="template-text">SF コンセプトアート、未来都市、ネオンライト、サイバーパンク、映画的構図</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('product')">
+                    <div class="template-name">商品写真</div>
+                    <div class="template-text">プロダクト写真、白背景、スタジオライティング、高品質、商業用、影付き</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('food')">
+                    <div class="template-name">料理写真</div>
+                    <div class="template-text">美味しそうな料理、自然光、木製テーブル、プロフェッショナルフードフォトグラフィー</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('architecture')">
+                    <div class="template-name">建築写真</div>
+                    <div class="template-text">モダン建築、幾何学的構図、青空、建築写真、広角レンズ、高コントラスト</div>
+                </div>
+                <div class="template-item" onclick="useTemplate('fantasy')">
+                    <div class="template-name">ファンタジーアート</div>
+                    <div class="template-text">ファンタジーアート、魔法の世界、ドラゴン、城、神秘的な雰囲気、デジタルペインティング</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentService = 'dalle3';
+        let promptHistory = [];
+
+        // サービス選択
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.service-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                currentService = this.dataset.service;
+                updateServiceLinks();
+            });
+        });
+
+        // 拡張オプション選択
+        document.querySelectorAll('.enhancement-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updatePromptWithEnhancements();
+            });
+        });
+
+        // プロンプトに拡張オプションを追加
+        function updatePromptWithEnhancements() {
+            const basePrompt = document.getElementById('promptInput').value.split(',')[0];
+            const selectedEnhancements = Array.from(document.querySelectorAll('.enhancement-chip.selected'))
+                .map(chip => chip.dataset.text);
+            
+            if (selectedEnhancements.length > 0) {
+                document.getElementById('promptInput').value = basePrompt + ', ' + selectedEnhancements.join(', ');
+            }
+        }
+
+        // サービスリンク更新
+        function updateServiceLinks() {
+            const linksElement = document.getElementById('serviceLinks');
+            const links = {
+                dalle3: '<strong>DALL-E 3:</strong> <a href="https://chat.openai.com" target="_blank">ChatGPT</a> または <a href="https://www.bing.com/create" target="_blank">Bing Image Creator</a>',
+                midjourney: '<strong>Midjourney:</strong> <a href="https://discord.com/channels/@me" target="_blank">Discord</a> で /imagine コマンドを使用',
+                stable: '<strong>Stable Diffusion:</strong> <a href="https://dreamstudio.ai" target="_blank">DreamStudio</a> または <a href="https://civitai.com" target="_blank">Civitai</a>',
+                bing: '<strong>Bing Image Creator:</strong> <a href="https://www.bing.com/create" target="_blank">無料で利用可能</a>',
+                imagen: '<strong>Google Imagen 3:</strong> <a href="https://aitestkitchen.withgoogle.com" target="_blank">AI Test Kitchen</a> で利用可能（招待制）',
+                gemini: '<strong>Gemini (旧Bard):</strong> <a href="https://gemini.google.com" target="_blank">Gemini</a> で画像生成機能を利用'
+            };
+            linksElement.innerHTML = links[currentService] + '<br>生成したプロンプトをコピーして、上記サービスで使用してください。';
+        }
+
+        // プロンプト最適化
+        function generateOptimizedPrompt() {
+            const input = document.getElementById('promptInput').value;
+            if (!input) {
+                alert('プロンプトを入力してください');
+                return;
+            }
+
+            let optimized = input;
+
+            // サービスごとの最適化
+            if (currentService === 'midjourney') {
+                // Midjourneyは短いプロンプトを好む
+                optimized = input.split(',').slice(0, 5).join(',') + ' --v 6 --ar 16:9';
+            } else if (currentService === 'stable') {
+                // Stable Diffusionはネガティブプロンプトも重要
+                optimized = input + '\nNegative prompt: low quality, blurry, distorted, ugly, bad anatomy';
+            } else if (currentService === 'dalle3') {
+                // DALL-E 3は自然言語を理解
+                optimized = '次の要素を含む高品質な画像を生成してください: ' + input;
+            } else if (currentService === 'imagen') {
+                // Google Imagen 3は詳細な説明を好む
+                optimized = 'A highly detailed image of: ' + input + ', photorealistic, professional photography';
+            } else if (currentService === 'gemini') {
+                // Geminiは会話形式で指示
+                optimized = '以下の特徴を持つ画像を生成してください:\n' + input + '\n高解像度で美しい仕上がりにしてください。';
+            }
+
+            document.getElementById('promptInput').value = optimized;
+            
+            // 履歴に保存
+            saveToHistory(optimized);
+            
+            // 自動コピー
+            copyPrompt();
+            
+            alert('プロンプトを最適化しました！クリップボードにコピー済みです。');
+        }
+
+        // コピー機能
+        function copyPrompt() {
+            const prompt = document.getElementById('promptInput').value;
+            if (!prompt) {
+                alert('コピーするプロンプトがありません');
+                return;
+            }
+            
+            navigator.clipboard.writeText(prompt).then(() => {
+                alert('プロンプトをクリップボードにコピーしました！');
+            }).catch(err => {
+                alert('コピーに失敗しました');
+            });
+        }
+
+        // クリア
+        function clearPrompt() {
+            if (confirm('プロンプトをクリアしますか？')) {
+                document.getElementById('promptInput').value = '';
+                document.querySelectorAll('.enhancement-chip').forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+            }
+        }
+
+        // テンプレート表示
+        function showTemplates() {
+            document.getElementById('templatesModal').classList.add('active');
+        }
+
+        // テンプレート非表示
+        function hideTemplates() {
+            document.getElementById('templatesModal').classList.remove('active');
+        }
+
+        // テンプレート使用
+        function useTemplate(type) {
+            const templates = {
+                portrait: 'プロフェッショナルなポートレート写真、若い日本人女性、自然な笑顔、スタジオライティング、背景ぼかし、高解像度、写実的、85mm レンズ',
+                landscape: '壮大な自然風景、富士山と桜、春の朝、ゴールデンアワーの光、広角レンズ、高ダイナミックレンジ、8K解像度、National Geographic スタイル',
+                anime: 'アニメスタイル、美少女キャラクター、学園制服、桜の花びらが舞う、カラフルな背景、デジタルアート、pixiv風、高品質イラスト',
+                concept: 'SF コンセプトアート、未来の東京、ネオンライト、空飛ぶ車、サイバーパンク、雨の夜、映画的構図、Blade Runner風',
+                product: 'プロダクト写真、最新スマートフォン、白背景、スタジオライティング、反射あり、高品質、商業用、Apple スタイル',
+                food: '美味しそうな寿司セット、高級レストラン、自然光、木製カウンター、プロフェッショナルフードフォトグラフィー、浅い被写界深度',
+                architecture: 'モダン日本建築、安藤忠雄スタイル、コンクリート、幾何学的構図、青空、建築写真、広角レンズ、高コントラスト',
+                fantasy: 'ファンタジーアート、日本の妖怪、神秘的な森、月光、霧、デジタルペインティング、Studio Ghibli風、幻想的な雰囲気'
+            };
+            
+            document.getElementById('promptInput').value = templates[type];
+            hideTemplates();
+        }
+
+        // 履歴保存
+        function saveToHistory(prompt) {
+            const historyItem = {
+                prompt: prompt,
+                service: currentService,
+                timestamp: new Date().toISOString()
+            };
+            
+            promptHistory.unshift(historyItem);
+            promptHistory = promptHistory.slice(0, 20); // 最新20件のみ保持
+            
+            localStorage.setItem('prompt-history', JSON.stringify(promptHistory));
+            updateHistoryDisplay();
+        }
+
+        // 履歴表示更新
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (promptHistory.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #999;">履歴がありません</div>';
+                return;
+            }
+            
+            historyList.innerHTML = promptHistory.map((item, index) => `
+                <div class="history-item" onclick="loadFromHistory(${index})">
+                    <div class="history-prompt">${item.prompt}</div>
+                    <div class="history-meta">
+                        <span>${item.service.toUpperCase()}</span>
+                        <span>${new Date(item.timestamp).toLocaleString('ja-JP')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 履歴から読み込み
+        function loadFromHistory(index) {
+            const item = promptHistory[index];
+            document.getElementById('promptInput').value = item.prompt;
+            
+            // サービスも切り替え
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.classList.remove('active');
+                if (card.dataset.service === item.service) {
+                    card.classList.add('active');
+                }
+            });
+            currentService = item.service;
+            updateServiceLinks();
+        }
+
+        // 履歴クリア
+        function clearHistory() {
+            if (confirm('履歴をすべて削除しますか？')) {
+                promptHistory = [];
+                localStorage.removeItem('prompt-history');
+                updateHistoryDisplay();
+            }
+        }
+
+        // 初期化
+        window.addEventListener('load', () => {
+            // 履歴読み込み
+            const saved = localStorage.getItem('prompt-history');
+            if (saved) {
+                promptHistory = JSON.parse(saved);
+                updateHistoryDisplay();
+            }
+            
+            // サービスリンク初期表示
+            updateServiceLinks();
+        });
+
+        // モーダル外クリックで閉じる
+        document.getElementById('templatesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideTemplates();
+            }
+        });
+    </script>
+</body>
+</html>

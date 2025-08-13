@@ -1,0 +1,20 @@
+TechCrunch Japan|https://jp.techcrunch.com/feed/|テクノロジー
+GIGAZINE|https://gigazine.net/news/rss_2.0/|テクノロジー
+ITmedia AI+|https://rss.itmedia.co.jp/rss/2.0/aiplus.xml|AI・機械学習
+OpenAI Blog|https://openai.com/blog/rss.xml|AI・機械学習
+Google AI Blog|http://googleaiblog.blogspot.com/atom.xml|AI・機械学習
+MIT News - AI|https://news.mit.edu/rss/topic/artificial-intelligence2|AI・機械学習
+DeepMind Blog|https://deepmind.com/blog/feed/basic/|AI・機械学習
+AI News|https://www.artificialintelligence-news.com/feed/|AI・機械学習
+AINOW|https://ainow.ai/feed/|テクノロジー
+Ledge.ai|https://ledge.ai/feed/|AI・機械学習
+AI-SCHOLAR|https://ai-scholar.tech/feed/|AI・機械学習
+ロボスタ|https://robotstart.info/feed|テクノロジー
+IEEE Spectrum - Robotics|https://spectrum.ieee.org/feeds/topic/robotics.rss|テクノロジー
+Wired AI|https://www.wired.com/feed/category/artificial-intelligence/latest/rss|AI・機械学習
+VentureBeat AI|https://feeds.feedburner.com/venturebeat/SZYF|ビジネス
+The Verge Tech|https://www.theverge.com/tech/rss/index.xml|テクノロジー
+Ars Technica|https://feeds.arstechnica.com/arstechnica/technology-lab|テクノロジー
+経済産業省|https://www.meti.go.jp/feedRSS/index.xml|官公庁
+総務省|https://www.soumu.go.jp/news.rdf|官公庁
+日経xTECH|https://xtech.nikkei.com/rss/index.rdf|ビジネス

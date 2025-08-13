@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WXR出力 - note.com用XML生成 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .priority-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.5em;
+            font-weight: normal;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .info-banner h3 {
+            color: #e65100;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .info-banner p {
+            color: #bf360c;
+            font-size: 0.9em;
+        }
+
+        .main-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-section, .output-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .char-counter {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85em;
+        }
+
+        .counter-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .counter-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .counter-limit {
+            color: #999;
+        }
+
+        .counter-warn {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .counter-error {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea.input-field {
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        #titleInput {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #bodyInput {
+            min-height: 300px;
+        }
+
+        .format-hint {
+            margin-top: 5px;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .batch-mode {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .batch-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        .batch-info {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .output-area {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            background: #f8f9fa;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .validation-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .validation-error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .validation-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .validation-error .validation-title {
+            color: #c62828;
+        }
+
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .validation-icon {
+            font-size: 1.2em;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .download-info {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        @media (max-width: 968px) {
+            .main-area {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>
+                📦 WXR出力 - note.com用XML生成
+                <span class="priority-badge">最重要</span>
+            </h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="info-banner">
+            <h3>📌 note.com標準フォーマット</h3>
+            <p>タイトル（100文字）→ 本文（50000文字）→ タグ（最大5個、各30文字）の形式で入力してください</p>
+        </div>
+
+        <div class="main-area">
+            <div class="input-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        ✏️ 入力
+                    </h2>
+                    <div class="char-counter">
+                        <div class="counter-item" id="titleCounter">
+                            <span>タイトル:</span>
+                            <span class="counter-value">0</span>
+                            <span class="counter-limit">/ 100</span>
+                        </div>
+                        <div class="counter-item" id="bodyCounter">
+                            <span>本文:</span>
+                            <span class="counter-value">0</span>
+                            <span class="counter-limit">/ 50000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="batch-mode">
+                    <div class="batch-toggle">
+                        <label>バッチモード（複数記事）:</label>
+                        <div class="toggle-switch" id="batchToggle" onclick="toggleBatchMode()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <div class="batch-info">
+                        オンにすると「---」区切りで複数記事を一括処理できます
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="articleInput">記事入力（統合フォーマット）</label>
+                    <textarea id="articleInput" class="input-field" style="min-height: 400px;" placeholder="【タイトル】
+AIが変える未来の働き方 - 2025年の展望
+
+【本文】
+## はじめに
+AI技術の急速な発展により、私たちの働き方は大きく変化しています。
+
+### 1. リモートワークの進化
+- AIアシスタントによる業務支援
+- バーチャルオフィスの実現
+
+### 2. 新しい職業の誕生
+AIプロンプトエンジニアなど、新たな専門職が生まれています。
+
+**重要なポイント**：人間とAIの協働が鍵となります。
+
+【タグ】
+#AI #働き方改革 #未来予測 #テクノロジー #DX"></textarea>
+                    <div class="format-hint">【タイトル】【本文】【タグ】の順に記入してください。複数記事の場合は「---」で区切ります</div>
+                </div>
+
+                <!-- 旧入力欄（非表示） -->
+                <input type="hidden" id="titleInput">
+                <textarea style="display:none;" id="bodyInput"></textarea>
+                <input type="hidden" id="tagsInput">
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="loadSample()">サンプル読込</button>
+                    <button class="btn btn-primary" onclick="generateWXR()">WXR生成</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        📄 出力（WXR形式）
+                    </h2>
+                </div>
+
+                <textarea id="outputArea" class="output-area" readonly placeholder="生成されたWXR XMLがここに表示されます"></textarea>
+
+                <div id="validationResults"></div>
+
+                <div id="downloadSection" style="display: none;">
+                    <div class="download-section">
+                        <button class="download-btn" onclick="downloadWXR()">
+                            📥 WXRファイルをダウンロード
+                        </button>
+                        <div class="download-info">
+                            note.comの管理画面からインポートできます
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let batchMode = false;
+        let generatedWXR = '';
+
+        // バッチモード切り替え
+        function toggleBatchMode() {
+            batchMode = !batchMode;
+            const toggle = document.getElementById('batchToggle');
+            toggle.classList.toggle('active');
+            
+            if (batchMode) {
+                document.getElementById('articleInput').placeholder = `複数記事を「---」で区切って入力:
+
+【タイトル】
+記事1のタイトル
+
+【本文】
+記事1の本文
+
+【タグ】
+#タグ1 #タグ2
+
+---
+
+【タイトル】
+記事2のタイトル
+
+【本文】
+記事2の本文
+
+【タグ】
+#タグ3 #タグ4`;
+            } else {
+                document.getElementById('articleInput').placeholder = `【タイトル】
+AIが変える未来の働き方 - 2025年の展望
+
+【本文】
+## はじめに
+AI技術の急速な発展により、私たちの働き方は大きく変化しています。
+
+### 1. リモートワークの進化
+- AIアシスタントによる業務支援
+- バーチャルオフィスの実現
+
+### 2. 新しい職業の誕生
+AIプロンプトエンジニアなど、新たな専門職が生まれています。
+
+**重要なポイント**：人間とAIの協働が鍵となります。
+
+【タグ】
+#AI #働き方改革 #未来予測 #テクノロジー #DX`;
+            }
+        }
+
+        // 統合入力からの解析
+        function parseArticleInput() {
+            const input = document.getElementById('articleInput').value;
+            let title = '';
+            let body = '';
+            let tags = '';
+            
+            // 【タイトル】セクションを抽出
+            const titleMatch = input.match(/【タイトル】([\s\S]*?)(?=【本文】|$)/);
+            if (titleMatch) {
+                title = titleMatch[1].trim();
+            }
+            
+            // 【本文】セクションを抽出
+            const bodyMatch = input.match(/【本文】([\s\S]*?)(?=【タグ】|$)/);
+            if (bodyMatch) {
+                body = bodyMatch[1].trim();
+            }
+            
+            // 【タグ】セクションを抽出
+            const tagsMatch = input.match(/【タグ】([\s\S]*?)(?=---|$)/);
+            if (tagsMatch) {
+                tags = tagsMatch[1].trim();
+            }
+            
+            // 旧形式互換性のため、隠しフィールドに値を設定
+            document.getElementById('titleInput').value = title;
+            document.getElementById('bodyInput').value = body;
+            document.getElementById('tagsInput').value = tags;
+            
+            return { title, body, tags };
+        }
+        
+        // 文字数カウント
+        function updateCounters() {
+            const { title, body } = parseArticleInput();
+            
+            // タイトルカウンター
+            const titleCounter = document.getElementById('titleCounter');
+            const titleCount = title.length;
+            titleCounter.querySelector('.counter-value').textContent = titleCount;
+            
+            if (titleCount > 100) {
+                titleCounter.classList.add('counter-error');
+            } else if (titleCount > 80) {
+                titleCounter.classList.add('counter-warn');
+            } else {
+                titleCounter.classList.remove('counter-error', 'counter-warn');
+            }
+            
+            // 本文カウンター
+            const bodyCounter = document.getElementById('bodyCounter');
+            const bodyCount = body.length;
+            bodyCounter.querySelector('.counter-value').textContent = bodyCount;
+            
+            if (bodyCount > 50000) {
+                bodyCounter.classList.add('counter-error');
+            } else if (bodyCount > 40000) {
+                bodyCounter.classList.add('counter-warn');
+            } else {
+                bodyCounter.classList.remove('counter-error', 'counter-warn');
+            }
+        }
+
+        // XMLエスケープ
+        function escapeXml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
+        // WXR生成
+        function generateWXR() {
+            const title = document.getElementById('titleInput').value.trim();
+            const body = document.getElementById('bodyInput').value.trim();
+            const tags = document.getElementById('tagsInput').value.trim();
+            
+            if (!batchMode) {
+                // シングルモード
+                if (!title.trim() || !body.trim()) {
+                    alert('タイトルと本文を入力してください\n\n【タイトル】\nタイトル\n\n【本文】\n本文\n\n【タグ】\n#タグ');
+                    return;
+                }
+                
+                const articles = [{
+                    title: title.substring(0, 100),
+                    body: body.substring(0, 50000),
+                    tags: parseTags(tags)
+                }];
+                
+                generatedWXR = createWXR(articles);
+            } else {
+                // バッチモード
+                const articles = parseBatchInput(body);
+                if (articles.length === 0) {
+                    alert('記事を入力してください');
+                    return;
+                }
+                
+                generatedWXR = createWXR(articles);
+            }
+            
+            document.getElementById('outputArea').value = generatedWXR;
+            validateWXR(generatedWXR);
+            document.getElementById('downloadSection').style.display = 'block';
+        }
+
+        // タグパース
+        function parseTags(tagsStr) {
+            if (!tagsStr) return [];
+            
+            return tagsStr
+                .split(/[\s,、]+/)
+                .map(tag => tag.replace('#', '').trim())
+                .filter(tag => tag)
+                .slice(0, 5)
+                .map(tag => tag.substring(0, 30));
+        }
+
+        // バッチ入力パース
+        function parseBatchInput(input) {
+            const articles = [];
+            const blocks = input.split('---');
+            
+            for (const block of blocks) {
+                const lines = block.trim().split('\n');
+                if (lines.length >= 2) {
+                    const title = lines[0].trim().substring(0, 100);
+                    const lastLine = lines[lines.length - 1];
+                    const hasTag = lastLine.startsWith('#');
+                    
+                    const body = hasTag ? 
+                        lines.slice(1, -1).join('\n').substring(0, 50000) :
+                        lines.slice(1).join('\n').substring(0, 50000);
+                    
+                    const tags = hasTag ? parseTags(lastLine) : [];
+                    
+                    if (title && body) {
+                        articles.push({ title, body, tags });
+                    }
+                }
+            }
+            
+            return articles;
+        }
+
+        // WXR XML作成
+        function createWXR(articles) {
+            const now = new Date();
+            const pubDate = now.toUTCString();
+            const wxrDate = now.toISOString();
+            
+            let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <title>日刊AIゆたさん新聞</title>
+    <link>https://note.com/yutapii</link>
+    <description>Smart Content Factory V5 Export</description>
+    <pubDate>${pubDate}</pubDate>
+    <language>ja</language>
+    <wp:wxr_version>1.2</wp:wxr_version>
+    <wp:base_site_url>https://note.com/</wp:base_site_url>
+    <wp:base_blog_url>https://note.com/yutapii</wp:base_blog_url>
+    
+    <wp:author>
+        <wp:author_login><![CDATA[yutapii]]></wp:author_login>
+        <wp:author_email><![CDATA[]]></wp:author_email>
+        <wp:author_display_name><![CDATA[日刊AIゆたさん新聞]]></wp:author_display_name>
+    </wp:author>`;
+
+            articles.forEach((article, index) => {
+                const postDate = new Date(now.getTime() + index * 1000);
+                const postId = Date.now() + index;
+                
+                xml += `
+    
+    <item>
+        <title>${escapeXml(article.title)}</title>
+        <link>https://note.com/yutapii/n/n${postId}</link>
+        <pubDate>${postDate.toUTCString()}</pubDate>
+        <dc:creator><![CDATA[yutapii]]></dc:creator>
+        <guid isPermaLink="false">https://note.com/yutapii/n/n${postId}</guid>
+        <description></description>
+        <content:encoded><![CDATA[${article.body}]]></content:encoded>
+        <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+        <wp:post_id>${postId}</wp:post_id>
+        <wp:post_date>${postDate.toISOString()}</wp:post_date>
+        <wp:post_date_gmt>${postDate.toISOString()}</wp:post_date_gmt>
+        <wp:comment_status>open</wp:comment_status>
+        <wp:ping_status>open</wp:ping_status>
+        <wp:post_name>post-${postId}</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_parent>0</wp:post_parent>
+        <wp:menu_order>0</wp:menu_order>
+        <wp:post_type>post</wp:post_type>
+        <wp:post_password></wp:post_password>
+        <wp:is_sticky>0</wp:is_sticky>`;
+                
+                // タグ追加
+                article.tags.forEach(tag => {
+                    xml += `
+        <category domain="post_tag" nicename="${escapeXml(tag.toLowerCase())}"><![CDATA[${escapeXml(tag)}]]></category>`;
+                });
+                
+                xml += `
+    </item>`;
+            });
+            
+            xml += `
+</channel>
+</rss>`;
+            
+            return xml;
+        }
+
+        // バリデーション
+        function validateWXR(xml) {
+            const results = [];
+            let hasError = false;
+            
+            // XML形式チェック
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xml, 'text/xml');
+                const parserError = doc.querySelector('parsererror');
+                
+                if (parserError) {
+                    results.push({ icon: '❌', text: 'XML形式エラー', error: true });
+                    hasError = true;
+                } else {
+                    results.push({ icon: '✅', text: 'XML形式: 正常' });
+                }
+            } catch (e) {
+                results.push({ icon: '❌', text: 'XML解析エラー', error: true });
+                hasError = true;
+            }
+            
+            // 記事数チェック
+            const itemCount = (xml.match(/<item>/g) || []).length;
+            results.push({ icon: '📄', text: `記事数: ${itemCount}件` });
+            
+            // 文字数チェック
+            const titles = xml.match(/<title>(.*?)<\/title>/g) || [];
+            let longTitle = false;
+            titles.forEach(title => {
+                const text = title.replace(/<\/?title>/g, '');
+                if (text.length > 100) longTitle = true;
+            });
+            
+            if (longTitle) {
+                results.push({ icon: '⚠️', text: 'タイトルが100文字を超えています', error: true });
+                hasError = true;
+            } else {
+                results.push({ icon: '✅', text: 'タイトル文字数: OK' });
+            }
+            
+            // 結果表示
+            const validationDiv = document.getElementById('validationResults');
+            validationDiv.className = hasError ? 'validation-results validation-error' : 'validation-results';
+            validationDiv.innerHTML = `
+                <div class="validation-title">${hasError ? '⚠️ 検証結果: 注意が必要です' : '✅ 検証結果: 正常'}</div>
+                ${results.map(r => `
+                    <div class="validation-item">
+                        <span class="validation-icon">${r.icon}</span>
+                        <span>${r.text}</span>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // ダウンロード
+        function downloadWXR() {
+            if (!generatedWXR) {
+                alert('先にWXRを生成してください');
+                return;
+            }
+            
+            const blob = new Blob([generatedWXR], { type: 'text/xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `note-wxr-${new Date().toISOString().split('T')[0]}.xml`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // サンプル読込
+        function loadSample() {
+            document.getElementById('titleInput').value = 'AIが変える未来の働き方 - 2025年の展望';
+            document.getElementById('bodyInput').value = `## はじめに
+
+2025年、AI技術の急速な発展により、私たちの働き方は大きく変わろうとしています。
+
+### 1. 自動化の進展
+
+多くの定型業務がAIによって自動化され、人間はより創造的な仕事に集中できるようになりました。
+
+### 2. 新しい職種の誕生
+
+- AIプロンプトエンジニア
+- AI倫理コンサルタント
+- 人間-AI協働コーディネーター
+
+### 3. 必要なスキルの変化
+
+これからの時代に求められるのは、AIを使いこなす力と、AIにはできない人間らしい創造性です。
+
+## まとめ
+
+AIと共生する新しい働き方を、私たち一人ひとりが模索していく必要があります。`;
+            
+            updateCounters();
+        }
+
+        // イベントリスナー
+        document.getElementById('articleInput').addEventListener('input', updateCounters);
+
+        // 初期化
+        updateCounters();
+    </script>
+</body>
+</html>

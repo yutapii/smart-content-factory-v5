@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロンプト生成 - AI用プロンプト作成 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .ai-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .ai-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .ai-tab {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .ai-tab:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .ai-tab.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+        }
+
+        .ai-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .ai-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .ai-model {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .main-area {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .prompt-type {
+            margin-bottom: 20px;
+        }
+
+        .prompt-type h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .type-card {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .type-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .type-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.05), rgba(118,75,162,0.05));
+        }
+
+        .type-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .type-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .context-inputs {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .tone-selector {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tone-btn {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .tone-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .tone-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .main-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .char-counter {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85em;
+        }
+
+        .counter-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .counter-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .prompt-editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .prompt-editor:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .variable-hint {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .variable-hint-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .variable-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .variable-tag {
+            background: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1976d2;
+            cursor: pointer;
+        }
+
+        .variable-tag:hover {
+            background: #e3f2fd;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .test-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .test-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .test-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .response-area {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 150px;
+            white-space: pre-wrap;
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .response-loading {
+            text-align: center;
+            color: #999;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .templates-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .template-item:hover {
+            background: #e9ecef;
+        }
+
+        .template-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .template-preview {
+            font-size: 0.85em;
+            color: #666;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 968px) {
+            .main-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .ai-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🤖 プロンプト生成 - AI用プロンプト作成</h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="ai-selector">
+            <div class="ai-tabs">
+                <div class="ai-tab active" onclick="selectAI('openai')" data-ai="openai">
+                    <div class="ai-icon">🧠</div>
+                    <div class="ai-name">OpenAI</div>
+                    <div class="ai-model">GPT-4 / GPT-3.5</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('anthropic')" data-ai="anthropic">
+                    <div class="ai-icon">🤖</div>
+                    <div class="ai-name">Anthropic</div>
+                    <div class="ai-model">Claude 3</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('google')" data-ai="google">
+                    <div class="ai-icon">🌟</div>
+                    <div class="ai-name">Google</div>
+                    <div class="ai-model">Gemini Pro</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('template')" data-ai="template">
+                    <div class="ai-icon">📝</div>
+                    <div class="ai-name">テンプレート</div>
+                    <div class="ai-model">APIキー不要</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="sidebar">
+                <div class="prompt-type">
+                    <h3>📋 プロンプトタイプ</h3>
+                    <div class="type-card active" onclick="selectType('article')" data-type="article">
+                        <div class="type-title">記事生成</div>
+                        <div class="type-desc">ニュース記事作成用</div>
+                    </div>
+                    <div class="type-card" onclick="selectType('summary')" data-type="summary">
+                        <div class="type-title">要約生成</div>
+                        <div class="type-desc">長文を簡潔にまとめる</div>
+                    </div>
+                    <div class="type-card" onclick="selectType('rewrite')" data-type="rewrite">
+                        <div class="type-title">リライト</div>
+                        <div class="type-desc">文章を別の表現に</div>
+                    </div>
+                    <div class="type-card" onclick="selectType('translation')" data-type="translation">
+                        <div class="type-title">翻訳</div>
+                        <div class="type-desc">多言語対応</div>
+                    </div>
+                    <div class="type-card" onclick="selectType('qa')" data-type="qa">
+                        <div class="type-title">Q&A生成</div>
+                        <div class="type-desc">質問と回答を作成</div>
+                    </div>
+                    <div class="type-card" onclick="selectType('custom')" data-type="custom">
+                        <div class="type-title">カスタム</div>
+                        <div class="type-desc">自由にプロンプト作成</div>
+                    </div>
+                </div>
+
+                <div class="context-inputs">
+                    <div class="input-group">
+                        <label class="input-label">トーン</label>
+                        <div class="tone-selector">
+                            <button class="tone-btn active" onclick="selectTone('professional')" data-tone="professional">プロ</button>
+                            <button class="tone-btn" onclick="selectTone('casual')" data-tone="casual">カジュアル</button>
+                            <button class="tone-btn" onclick="selectTone('friendly')" data-tone="friendly">親しみ</button>
+                            <button class="tone-btn" onclick="selectTone('formal')" data-tone="formal">フォーマル</button>
+                            <button class="tone-btn" onclick="selectTone('creative')" data-tone="creative">創造的</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="targetAudience">ターゲット</label>
+                        <input type="text" id="targetAudience" class="input-field" placeholder="例: ビジネスパーソン">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="keywords">キーワード</label>
+                        <input type="text" id="keywords" class="input-field" placeholder="例: AI, 自動化, DX">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="maxLength">最大文字数</label>
+                        <input type="number" id="maxLength" class="input-field" value="1000">
+                    </div>
+                </div>
+
+                <div class="templates-list" id="templatesList">
+                    <!-- テンプレート一覧 -->
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="section-header">
+                    <h2 class="section-title">✏️ プロンプトエディタ</h2>
+                    <div class="char-counter">
+                        <div class="counter-item">
+                            <span>文字数:</span>
+                            <span class="counter-value" id="charCount">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span>トークン数(推定):</span>
+                            <span class="counter-value" id="tokenCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <textarea id="promptEditor" class="prompt-editor" placeholder="プロンプトを入力してください...
+
+例:
+以下の情報を基に、日本語でニュース記事を作成してください。
+
+タイトル: {{title}}
+要約: {{summary}}
+キーワード: {{keywords}}
+
+要件:
+- 文字数: {{maxLength}}文字以内
+- トーン: {{tone}}
+- ターゲット: {{targetAudience}}
+"></textarea>
+
+                <div class="variable-hint">
+                    <div class="variable-hint-title">📌 使用可能な変数</div>
+                    <div class="variable-list">
+                        <span class="variable-tag" onclick="insertVariable('{{title}}')">{{title}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{summary}}')">{{summary}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{keywords}}')">{{keywords}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{maxLength}}')">{{maxLength}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{tone}}')">{{tone}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{targetAudience}}')">{{targetAudience}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{date}}')">{{date}}</span>
+                        <span class="variable-tag" onclick="insertVariable('{{source}}')">{{source}}</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="clearPrompt()">クリア</button>
+                    <button class="btn btn-success" onclick="savePrompt()">テンプレート保存</button>
+                    <button class="btn btn-primary" onclick="generatePrompt()">プロンプト生成</button>
+                </div>
+
+                <div class="test-section">
+                    <div class="test-header">
+                        <span class="test-title">🧪 テスト実行</span>
+                        <button class="btn btn-primary" onclick="testPrompt()">実行</button>
+                    </div>
+                    <textarea id="testInput" class="test-input" placeholder="テストデータを入力（変数に対応する値を入力）"></textarea>
+                    <div id="responseArea" class="response-area">
+                        レスポンスがここに表示されます
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAI = 'openai';
+        let currentType = 'article';
+        let currentTone = 'professional';
+
+        // プロンプトテンプレート
+        const promptTemplates = {
+            article: {
+                openai: `あなたは経験豊富なジャーナリストです。以下の情報を基に、魅力的な記事を作成してください。
+
+タイトル: {{title}}
+要約: {{summary}}
+キーワード: {{keywords}}
+
+要件:
+- 文字数: {{maxLength}}文字以内
+- トーン: {{tone}}
+- ターゲット: {{targetAudience}}
+- 構成: 導入、本文（3-5段落）、結論
+- SEOを意識した内容
+- 事実に基づいた正確な情報`,
+                anthropic: `以下の指示に従って、高品質な記事を作成してください。
+
+<context>
+タイトル: {{title}}
+要約: {{summary}}
+キーワード: {{keywords}}
+</context>
+
+<requirements>
+- 最大文字数: {{maxLength}}
+- 文体: {{tone}}
+- 読者層: {{targetAudience}}
+</requirements>
+
+<instructions>
+1. 読者の興味を引く導入を書く
+2. 論理的な構成で本文を展開
+3. 実用的な結論で締めくくる
+</instructions>`,
+                google: `タスク: ニュース記事の作成
+
+入力情報:
+• タイトル: {{title}}
+• 概要: {{summary}}
+• キーワード: {{keywords}}
+
+制約条件:
+• 文字数上限: {{maxLength}}
+• 文体: {{tone}}
+• 対象読者: {{targetAudience}}
+
+出力形式:
+記事全文を日本語で出力`,
+                template: `【記事作成テンプレート】
+
+■基本情報
+タイトル: {{title}}
+概要: {{summary}}
+キーワード: {{keywords}}
+
+■執筆要件
+・文字数: {{maxLength}}文字以内
+・トーン: {{tone}}
+・ターゲット: {{targetAudience}}
+
+■記事構成
+1. リード文（問題提起）
+2. 現状説明
+3. 詳細解説
+4. 今後の展望
+5. まとめ`
+            },
+            summary: {
+                openai: `以下の文章を{{maxLength}}文字以内で要約してください。
+
+原文:
+{{content}}
+
+要件:
+- 重要なポイントを漏らさない
+- {{tone}}な文体
+- {{targetAudience}}向けの表現`,
+                anthropic: `<task>文章要約</task>
+
+<original_text>
+{{content}}
+</original_text>
+
+<requirements>
+- 最大{{maxLength}}文字
+- トーン: {{tone}}
+- 対象: {{targetAudience}}
+- 箇条書きで主要ポイントを抽出
+</requirements>`,
+                google: `要約タスク:
+
+入力テキスト:
+{{content}}
+
+制約:
+• {{maxLength}}文字以内
+• {{tone}}スタイル
+• {{targetAudience}}向け
+
+出力: 簡潔な要約`,
+                template: `【要約テンプレート】
+
+原文:
+{{content}}
+
+要約条件:
+・{{maxLength}}文字以内
+・{{tone}}な表現
+・{{targetAudience}}が理解しやすい内容`
+            },
+            rewrite: {
+                openai: `以下の文章を{{tone}}なトーンで書き直してください。
+
+原文:
+{{content}}
+
+ターゲット: {{targetAudience}}
+キーワード: {{keywords}}`,
+                anthropic: `<task>文章のリライト</task>
+
+<original>
+{{content}}
+</original>
+
+<style>{{tone}}</style>
+<audience>{{targetAudience}}</audience>
+<keywords>{{keywords}}</keywords>`,
+                google: `リライトタスク:
+
+元の文章:
+{{content}}
+
+新しいスタイル: {{tone}}
+読者: {{targetAudience}}
+含めるキーワード: {{keywords}}`,
+                template: `【リライトテンプレート】
+
+元の文章:
+{{content}}
+
+リライト方針:
+・トーン: {{tone}}
+・読者: {{targetAudience}}
+・キーワード: {{keywords}}`
+            },
+            translation: {
+                openai: `以下の文章を{{targetLanguage}}に翻訳してください。
+
+原文:
+{{content}}
+
+注意点:
+- {{tone}}な表現を使用
+- 文化的な文脈を考慮
+- 専門用語は適切に翻訳`,
+                anthropic: `<translation_task>
+<source_text>
+{{content}}
+</source_text>
+
+<target_language>{{targetLanguage}}</target_language>
+<tone>{{tone}}</tone>
+<notes>文化的な適応を含む</notes>
+</translation_task>`,
+                google: `翻訳:
+
+原文:
+{{content}}
+
+翻訳先: {{targetLanguage}}
+スタイル: {{tone}}`,
+                template: `【翻訳テンプレート】
+
+原文:
+{{content}}
+
+翻訳先言語: {{targetLanguage}}
+文体: {{tone}}`
+            },
+            qa: {
+                openai: `以下のトピックについて、Q&A形式のコンテンツを作成してください。
+
+トピック: {{title}}
+詳細: {{summary}}
+キーワード: {{keywords}}
+
+要件:
+- 質問数: 5-10個
+- {{tone}}な回答
+- {{targetAudience}}向け`,
+                anthropic: `<task>Q&A生成</task>
+
+<topic>
+タイトル: {{title}}
+説明: {{summary}}
+キーワード: {{keywords}}
+</topic>
+
+<requirements>
+- 5-10個の質問と回答
+- トーン: {{tone}}
+- 対象: {{targetAudience}}
+</requirements>`,
+                google: `Q&A作成:
+
+トピック: {{title}}
+概要: {{summary}}
+キーワード: {{keywords}}
+
+生成: 5-10個のQ&A
+スタイル: {{tone}}
+対象: {{targetAudience}}`,
+                template: `【Q&Aテンプレート】
+
+トピック: {{title}}
+概要: {{summary}}
+キーワード: {{keywords}}
+
+Q&A形式:
+Q1: [質問]
+A1: [回答]
+
+トーン: {{tone}}
+対象: {{targetAudience}}`
+            },
+            custom: {
+                openai: '',
+                anthropic: '',
+                google: '',
+                template: ''
+            }
+        };
+
+        // AI選択
+        function selectAI(ai) {
+            currentAI = ai;
+            document.querySelectorAll('.ai-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-ai="${ai}"]`).classList.add('active');
+            loadTemplate();
+        }
+
+        // タイプ選択
+        function selectType(type) {
+            currentType = type;
+            document.querySelectorAll('.type-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+            loadTemplate();
+        }
+
+        // トーン選択
+        function selectTone(tone) {
+            currentTone = tone;
+            document.querySelectorAll('.tone-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tone="${tone}"]`).classList.add('active');
+        }
+
+        // テンプレート読み込み
+        function loadTemplate() {
+            const template = promptTemplates[currentType][currentAI];
+            document.getElementById('promptEditor').value = template;
+            updateCounters();
+        }
+
+        // 文字数カウント
+        function updateCounters() {
+            const text = document.getElementById('promptEditor').value;
+            document.getElementById('charCount').textContent = text.length;
+            // トークン数の推定（日本語: 1文字≒2トークン、英語: 1単語≒1トークン）
+            const japaneseChars = text.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g) || [];
+            const englishWords = text.match(/[a-zA-Z]+/g) || [];
+            const estimatedTokens = japaneseChars.length * 2 + englishWords.length;
+            document.getElementById('tokenCount').textContent = Math.round(estimatedTokens);
+        }
+
+        // 変数挿入
+        function insertVariable(variable) {
+            const editor = document.getElementById('promptEditor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            editor.value = text.substring(0, start) + variable + text.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + variable.length;
+            editor.focus();
+            updateCounters();
+        }
+
+        // プロンプト生成
+        function generatePrompt() {
+            const editor = document.getElementById('promptEditor');
+            let prompt = editor.value;
+            
+            // 変数置換
+            const variables = {
+                '{{title}}': document.getElementById('testInput').value.split('\n')[0] || 'タイトル',
+                '{{summary}}': document.getElementById('testInput').value.split('\n')[1] || '要約',
+                '{{keywords}}': document.getElementById('keywords').value || 'キーワード',
+                '{{maxLength}}': document.getElementById('maxLength').value || '1000',
+                '{{tone}}': currentTone,
+                '{{targetAudience}}': document.getElementById('targetAudience').value || '一般',
+                '{{date}}': new Date().toLocaleDateString('ja-JP'),
+                '{{source}}': '日刊AIゆたさん新聞'
+            };
+            
+            for (const [key, value] of Object.entries(variables)) {
+                prompt = prompt.replace(new RegExp(key, 'g'), value);
+            }
+            
+            editor.value = prompt;
+            updateCounters();
+            alert('プロンプトを生成しました');
+        }
+
+        // プロンプトテスト
+        async function testPrompt() {
+            const apiKey = localStorage.getItem(`${currentAI}-api-key`);
+            
+            if (currentAI === 'template') {
+                document.getElementById('responseArea').innerHTML = 
+                    '<div style="color: #666;">テンプレートモードではAPIを使用しません。<br>生成されたプロンプトを手動でAIサービスに入力してください。</div>';
+                return;
+            }
+            
+            if (!apiKey) {
+                alert(`${currentAI.toUpperCase()}のAPIキーが設定されていません。設定画面で登録してください。`);
+                return;
+            }
+            
+            const responseArea = document.getElementById('responseArea');
+            responseArea.innerHTML = `
+                <div class="response-loading">
+                    <div class="loading-spinner"></div>
+                    <div>AIからの応答を待っています...</div>
+                </div>
+            `;
+            
+            // 実際のAPI呼び出しはここに実装
+            setTimeout(() => {
+                responseArea.innerHTML = 
+                    `[デモ] APIキーが設定されています。実際のAPI呼び出しは実装されていません。\n\n` +
+                    `使用AI: ${currentAI}\n` +
+                    `プロンプトタイプ: ${currentType}\n` +
+                    `トーン: ${currentTone}`;
+            }, 2000);
+        }
+
+        // プロンプト保存
+        function savePrompt() {
+            const prompt = document.getElementById('promptEditor').value;
+            const name = prompt('テンプレート名を入力してください:');
+            
+            if (name) {
+                const templates = JSON.parse(localStorage.getItem('prompt-templates') || '[]');
+                templates.push({
+                    name: name,
+                    prompt: prompt,
+                    type: currentType,
+                    ai: currentAI,
+                    savedAt: new Date().toISOString()
+                });
+                localStorage.setItem('prompt-templates', JSON.stringify(templates));
+                loadSavedTemplates();
+                alert('テンプレートを保存しました');
+            }
+        }
+
+        // 保存済みテンプレート読み込み
+        function loadSavedTemplates() {
+            const templates = JSON.parse(localStorage.getItem('prompt-templates') || '[]');
+            const list = document.getElementById('templatesList');
+            
+            if (templates.length === 0) {
+                list.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">保存されたテンプレートはありません</div>';
+                return;
+            }
+            
+            list.innerHTML = '<h3 style="margin-bottom: 10px;">💾 保存済みテンプレート</h3>' +
+                templates.map((template, index) => `
+                    <div class="template-item" onclick="loadSavedTemplate(${index})">
+                        <div class="template-name">${template.name}</div>
+                        <div class="template-preview">${template.prompt.substring(0, 100)}...</div>
+                    </div>
+                `).join('');
+        }
+
+        // 保存済みテンプレート適用
+        function loadSavedTemplate(index) {
+            const templates = JSON.parse(localStorage.getItem('prompt-templates') || '[]');
+            const template = templates[index];
+            
+            if (template) {
+                document.getElementById('promptEditor').value = template.prompt;
+                selectAI(template.ai);
+                selectType(template.type);
+                updateCounters();
+            }
+        }
+
+        // クリア
+        function clearPrompt() {
+            if (confirm('プロンプトをクリアしますか？')) {
+                document.getElementById('promptEditor').value = '';
+                updateCounters();
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('promptEditor').addEventListener('input', updateCounters);
+
+        // 初期化
+        loadTemplate();
+        loadSavedTemplates();
+        updateCounters();
+    </script>
+</body>
+</html>

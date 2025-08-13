@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>図表生成 - データ可視化 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .chart-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chart-type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .chart-type-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .chart-type-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+        }
+
+        .chart-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .chart-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .main-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-section, .output-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-format-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .format-tab {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+
+        .format-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .format-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .data-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .data-input:focus {
+            outline: none;
+            border-color: #667eea;
+            border-style: solid;
+        }
+
+        .data-input.drag-over {
+            background: #f0f7ff;
+            border-color: #667eea;
+        }
+
+        .format-hint {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .format-example {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .chart-options {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .option-group {
+            margin-bottom: 15px;
+        }
+
+        .option-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .option-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .resolution-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .resolution-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .resolution-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .resolution-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #chartCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .empty-chart {
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-chart-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .export-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .export-btn.primary {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+        }
+
+        .export-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        @media (max-width: 968px) {
+            .main-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-type-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📊 図表生成 - データ可視化</h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="controls-section">
+            <div class="chart-type-selector">
+                <div class="chart-type-btn active" onclick="selectChartType('bar')" data-type="bar">
+                    <div class="chart-icon">📊</div>
+                    <div class="chart-label">棒グラフ</div>
+                </div>
+                <div class="chart-type-btn" onclick="selectChartType('line')" data-type="line">
+                    <div class="chart-icon">📈</div>
+                    <div class="chart-label">折れ線グラフ</div>
+                </div>
+                <div class="chart-type-btn" onclick="selectChartType('pie')" data-type="pie">
+                    <div class="chart-icon">🥧</div>
+                    <div class="chart-label">円グラフ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="input-section">
+                <div class="section-header">
+                    <h2 class="section-title">📝 データ入力</h2>
+                </div>
+
+                <div class="input-format-tabs">
+                    <div class="format-tab active" onclick="selectFormat('csv')" data-format="csv">CSV</div>
+                    <div class="format-tab" onclick="selectFormat('tsv')" data-format="tsv">TSV</div>
+                    <div class="format-tab" onclick="selectFormat('markdown')" data-format="markdown">Markdown</div>
+                </div>
+
+                <textarea id="dataInput" class="data-input" placeholder="データを貼り付けるか、ファイルをドラッグ&ドロップしてください"></textarea>
+
+                <div class="format-hint" id="formatHint">
+                    <strong>CSV形式の例:</strong>
+                    <code class="format-example">カテゴリ,値
+製品A,100
+製品B,150
+製品C,80</code>
+                </div>
+
+                <div class="chart-options">
+                    <div class="option-group">
+                        <label class="option-label" for="chartTitle">グラフタイトル</label>
+                        <input type="text" id="chartTitle" class="option-input" placeholder="例: 2025年度売上高">
+                    </div>
+                    
+                    <div class="option-group">
+                        <label class="option-label">解像度</label>
+                        <div class="resolution-selector">
+                            <div class="resolution-btn active" onclick="selectResolution(0)" data-res="0">
+                                800×600
+                            </div>
+                            <div class="resolution-btn" onclick="selectResolution(1)" data-res="1">
+                                1280×960
+                            </div>
+                            <div class="resolution-btn" onclick="selectResolution(2)" data-res="2">
+                                1920×1080
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="loadSample()">サンプル読込</button>
+                    <button class="btn btn-primary" onclick="generateChart()">グラフ生成</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="section-header">
+                    <h2 class="section-title">📈 出力</h2>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="chartCanvas" style="display: none;"></canvas>
+                    <div class="empty-chart" id="emptyChart">
+                        <div class="empty-chart-icon">📊</div>
+                        <div>グラフがここに表示されます</div>
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <button class="export-btn primary" onclick="exportChart('png')">
+                        🖼️ PNG出力
+                    </button>
+                    <button class="export-btn" onclick="exportChart('svg')">
+                        📐 SVG出力
+                    </button>
+                    <button class="export-btn" onclick="copyToClipboard()">
+                        📋 クリップボード
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChartType = 'bar';
+        let currentFormat = 'csv';
+        let currentResolution = 0;
+        let chartData = null;
+
+        const resolutions = [
+            [800, 600],
+            [1280, 960],
+            [1920, 1080]
+        ];
+
+        const colors = [
+            '#667eea', '#764ba2', '#f093fb', '#fda085', '#84fab0',
+            '#8fd3f4', '#a8e6cf', '#ffd3b6', '#ffaaa5', '#ff8b94'
+        ];
+
+        // グラフタイプ選択
+        function selectChartType(type) {
+            currentChartType = type;
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        }
+
+        // フォーマット選択
+        function selectFormat(format) {
+            currentFormat = format;
+            document.querySelectorAll('.format-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('active');
+            
+            updateFormatHint();
+        }
+
+        // 解像度選択
+        function selectResolution(index) {
+            currentResolution = index;
+            document.querySelectorAll('.resolution-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-res="${index}"]`).classList.add('active');
+        }
+
+        // フォーマットヒント更新
+        function updateFormatHint() {
+            const hints = {
+                csv: {
+                    title: 'CSV形式の例:',
+                    example: 'カテゴリ,値\n製品A,100\n製品B,150\n製品C,80'
+                },
+                tsv: {
+                    title: 'TSV形式の例:',
+                    example: 'カテゴリ\t値\n製品A\t100\n製品B\t150\n製品C\t80'
+                },
+                markdown: {
+                    title: 'Markdown表形式の例:',
+                    example: '| カテゴリ | 値 |\n|---------|----|\n| 製品A | 100 |\n| 製品B | 150 |\n| 製品C | 80 |'
+                }
+            };
+            
+            const hint = hints[currentFormat];
+            document.getElementById('formatHint').innerHTML = `
+                <strong>${hint.title}</strong>
+                <code class="format-example">${hint.example}</code>
+            `;
+        }
+
+        // データパース
+        function parseData(input) {
+            const lines = input.trim().split('\n');
+            if (lines.length < 2) return null;
+            
+            let delimiter = ',';
+            if (currentFormat === 'tsv') delimiter = '\t';
+            if (currentFormat === 'markdown') {
+                // Markdown表をパース
+                const cleanLines = lines
+                    .filter(line => !line.includes('---'))
+                    .map(line => line.replace(/^\||\|$/g, '').trim());
+                
+                const headers = cleanLines[0].split('|').map(h => h.trim());
+                const data = cleanLines.slice(1).map(line => 
+                    line.split('|').map(cell => cell.trim())
+                );
+                
+                return {
+                    labels: data.map(row => row[0]),
+                    values: data.map(row => parseFloat(row[1]) || 0),
+                    headers: headers
+                };
+            }
+            
+            const headers = lines[0].split(delimiter).map(h => h.trim());
+            const data = lines.slice(1).map(line => {
+                const values = line.split(delimiter).map(v => v.trim());
+                return values;
+            });
+            
+            return {
+                labels: data.map(row => row[0]),
+                values: data.map(row => parseFloat(row[1]) || 0),
+                headers: headers
+            };
+        }
+
+        // グラフ生成
+        function generateChart() {
+            const input = document.getElementById('dataInput').value;
+            if (!input) {
+                alert('データを入力してください');
+                return;
+            }
+            
+            chartData = parseData(input);
+            if (!chartData) {
+                alert('データの形式が正しくありません');
+                return;
+            }
+            
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            const [width, height] = resolutions[currentResolution];
+            
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.display = 'block';
+            document.getElementById('emptyChart').style.display = 'none';
+            
+            // 背景
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, width, height);
+            
+            // タイトル
+            const title = document.getElementById('chartTitle').value || 'グラフ';
+            ctx.font = `${Math.floor(height * 0.05)}px Arial`;
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, height * 0.1);
+            
+            // グラフ描画
+            if (currentChartType === 'bar') {
+                drawBarChart(ctx, chartData, width, height);
+            } else if (currentChartType === 'line') {
+                drawLineChart(ctx, chartData, width, height);
+            } else if (currentChartType === 'pie') {
+                drawPieChart(ctx, chartData, width, height);
+            }
+        }
+
+        // 棒グラフ描画
+        function drawBarChart(ctx, data, width, height) {
+            const padding = width * 0.1;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            const barWidth = chartWidth / data.labels.length * 0.8;
+            const maxValue = Math.max(...data.values);
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            data.values.forEach((value, i) => {
+                const x = padding + (chartWidth / data.labels.length) * i + barWidth * 0.1;
+                const barHeight = (value / maxValue) * chartHeight * 0.8;
+                const y = height - padding - barHeight;
+                
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                ctx.fillStyle = '#333';
+                ctx.font = `${Math.floor(height * 0.025)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(data.labels[i], x + barWidth / 2, height - padding + 20);
+                ctx.fillText(value.toString(), x + barWidth / 2, y - 5);
+            });
+        }
+
+        // 折れ線グラフ描画
+        function drawLineChart(ctx, data, width, height) {
+            const padding = width * 0.1;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            const maxValue = Math.max(...data.values);
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            data.values.forEach((value, i) => {
+                const x = padding + (chartWidth / (data.labels.length - 1)) * i;
+                const y = height - padding - (value / maxValue) * chartHeight * 0.8;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.fillStyle = '#667eea';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#333';
+                ctx.font = `${Math.floor(height * 0.025)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(data.labels[i], x, height - padding + 20);
+                ctx.fillText(value.toString(), x, y - 10);
+            });
+            
+            ctx.stroke();
+        }
+
+        // 円グラフ描画
+        function drawPieChart(ctx, data, width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.3;
+            const total = data.values.reduce((sum, val) => sum + val, 0);
+            let currentAngle = -Math.PI / 2;
+            
+            data.values.forEach((value, i) => {
+                const sliceAngle = (value / total) * Math.PI * 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                
+                // ラベル
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius * 1.3);
+                const labelY = centerY + Math.sin(labelAngle) * (radius * 1.3);
+                
+                ctx.fillStyle = '#333';
+                ctx.font = `${Math.floor(height * 0.025)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${data.labels[i]}`, labelX, labelY);
+                ctx.fillText(`${((value / total) * 100).toFixed(1)}%`, labelX, labelY + 20);
+                
+                currentAngle += sliceAngle;
+            });
+        }
+
+        // エクスポート
+        function exportChart(format) {
+            const canvas = document.getElementById('chartCanvas');
+            if (!chartData) {
+                alert('先にグラフを生成してください');
+                return;
+            }
+            
+            if (format === 'png') {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `chart-${new Date().toISOString().split('T')[0]}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            } else if (format === 'svg') {
+                // 簡易SVG変換
+                alert('SVG出力は開発中です。PNGをご利用ください。');
+            }
+        }
+
+        // クリップボードにコピー
+        function copyToClipboard() {
+            const canvas = document.getElementById('chartCanvas');
+            if (!chartData) {
+                alert('先にグラフを生成してください');
+                return;
+            }
+            
+            canvas.toBlob(blob => {
+                const item = new ClipboardItem({ 'image/png': blob });
+                navigator.clipboard.write([item]).then(() => {
+                    alert('クリップボードにコピーしました');
+                });
+            });
+        }
+
+        // サンプル読込
+        function loadSample() {
+            const samples = {
+                bar: 'カテゴリ,売上高\n製品A,1234\n製品B,5678\n製品C,9012\n製品D,3456\n製品E,7890',
+                line: '月,売上\n1月,100\n2月,150\n3月,130\n4月,180\n5月,220\n6月,260',
+                pie: 'カテゴリ,割合\n国内,60\nアジア,25\n欧米,10\nその他,5'
+            };
+            
+            document.getElementById('dataInput').value = samples[currentChartType];
+            document.getElementById('chartTitle').value = 'サンプルグラフ';
+        }
+
+        // ドラッグ&ドロップ
+        const dataInput = document.getElementById('dataInput');
+        
+        dataInput.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dataInput.classList.add('drag-over');
+        });
+        
+        dataInput.addEventListener('dragleave', () => {
+            dataInput.classList.remove('drag-over');
+        });
+        
+        dataInput.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dataInput.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.includes('text')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    dataInput.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>

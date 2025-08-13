@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像生成 - AI画像作成 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .ai-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .ai-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-tab {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .ai-tab:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .ai-tab.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+        }
+
+        .ai-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .ai-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .ai-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .main-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-section, .output-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .prompt-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .prompt-area:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .style-options {
+            margin-top: 20px;
+        }
+
+        .option-group {
+            margin-bottom: 15px;
+        }
+
+        .option-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .style-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .style-btn {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .style-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .style-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .size-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .size-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .size-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .size-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .advanced-settings {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .setting-label {
+            flex: 1;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .setting-input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .image-display {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .placeholder-image {
+            text-align: center;
+            color: #999;
+        }
+
+        .placeholder-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gallery-section {
+            margin-top: 20px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .gallery-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item-date {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 0.7em;
+            padding: 2px;
+            text-align: center;
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .export-btn {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .export-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .export-btn-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .export-btn-text {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .prompt-suggestions {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .suggestions-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .suggestion-chip {
+            background: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .suggestion-chip:hover {
+            background: #4caf50;
+            color: white;
+        }
+
+        @media (max-width: 968px) {
+            .main-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .ai-tabs {
+                flex-direction: column;
+            }
+            
+            .style-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🎨 画像生成 - AI画像作成</h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="ai-selector">
+            <div class="ai-tabs">
+                <div class="ai-tab active" onclick="selectAI('dalle')" data-ai="dalle">
+                    <div class="ai-icon">🎨</div>
+                    <div class="ai-name">DALL-E 3</div>
+                    <div class="ai-desc">OpenAI / 高品質</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('midjourney')" data-ai="midjourney">
+                    <div class="ai-icon">🖼️</div>
+                    <div class="ai-name">Midjourney</div>
+                    <div class="ai-desc">アート特化</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('stable')" data-ai="stable">
+                    <div class="ai-icon">🌟</div>
+                    <div class="ai-name">Stable Diffusion</div>
+                    <div class="ai-desc">オープンソース</div>
+                </div>
+                <div class="ai-tab" onclick="selectAI('canvas')" data-ai="canvas">
+                    <div class="ai-icon">✏️</div>
+                    <div class="ai-name">Canvas生成</div>
+                    <div class="ai-desc">ローカル処理</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="input-section">
+                <div class="section-header">
+                    <h2 class="section-title">📝 プロンプト入力</h2>
+                </div>
+
+                <textarea id="promptInput" class="prompt-area" placeholder="生成したい画像の説明を入力してください。
+
+例: 未来都市の夕暮れ、ネオンが輝く高層ビル群、空飛ぶ車、サイバーパンク風"></textarea>
+
+                <div class="prompt-suggestions">
+                    <div class="suggestions-title">💡 プロンプト補助</div>
+                    <div class="suggestion-chips">
+                        <span class="suggestion-chip" onclick="addToPrompt('高品質')">高品質</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('8K解像度')">8K解像度</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('写実的')">写実的</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('アニメ風')">アニメ風</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('水彩画風')">水彩画風</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('油絵風')">油絵風</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('ミニマリスト')">ミニマリスト</span>
+                        <span class="suggestion-chip" onclick="addToPrompt('暖色系')">暖色系</span>
+                    </div>
+                </div>
+
+                <div class="style-options">
+                    <div class="option-group">
+                        <label class="option-label">スタイル</label>
+                        <div class="style-selector">
+                            <button class="style-btn active" onclick="selectStyle('realistic')" data-style="realistic">
+                                写実的
+                            </button>
+                            <button class="style-btn" onclick="selectStyle('anime')" data-style="anime">
+                                アニメ
+                            </button>
+                            <button class="style-btn" onclick="selectStyle('3d')" data-style="3d">
+                                3D CG
+                            </button>
+                            <button class="style-btn" onclick="selectStyle('illustration')" data-style="illustration">
+                                イラスト
+                            </button>
+                            <button class="style-btn" onclick="selectStyle('abstract')" data-style="abstract">
+                                抽象画
+                            </button>
+                            <button class="style-btn" onclick="selectStyle('sketch')" data-style="sketch">
+                                スケッチ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label class="option-label">サイズ</label>
+                        <div class="size-selector">
+                            <button class="size-btn" onclick="selectSize('square')" data-size="square">
+                                1:1<br>正方形
+                            </button>
+                            <button class="size-btn active" onclick="selectSize('landscape')" data-size="landscape">
+                                16:9<br>横長
+                            </button>
+                            <button class="size-btn" onclick="selectSize('portrait')" data-size="portrait">
+                                9:16<br>縦長
+                            </button>
+                            <button class="size-btn" onclick="selectSize('banner')" data-size="banner">
+                                3:1<br>バナー
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advanced-settings">
+                    <div class="setting-row">
+                        <span class="setting-label">画像数:</span>
+                        <input type="number" class="setting-input" id="imageCount" value="1" min="1" max="4">
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">品質:</span>
+                        <select class="setting-input" id="quality">
+                            <option value="standard">標準</option>
+                            <option value="hd" selected>HD</option>
+                            <option value="4k">4K</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">シード値:</span>
+                        <input type="number" class="setting-input" id="seed" placeholder="ランダム">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="clearPrompt()">クリア</button>
+                    <button class="btn btn-primary" onclick="generateImage()">画像生成</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="section-header">
+                    <h2 class="section-title">🖼️ 生成結果</h2>
+                </div>
+
+                <div class="image-display" id="imageDisplay">
+                    <div class="placeholder-image">
+                        <div class="placeholder-icon">🎨</div>
+                        <div>生成された画像がここに表示されます</div>
+                    </div>
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                        <div>画像を生成中...</div>
+                        <div style="font-size: 0.9em; color: #666; margin-top: 10px;">10-30秒かかる場合があります</div>
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <button class="export-btn" onclick="downloadImage('png')">
+                        <div class="export-btn-icon">💾</div>
+                        <div class="export-btn-text">PNG保存</div>
+                    </button>
+                    <button class="export-btn" onclick="downloadImage('jpg')">
+                        <div class="export-btn-icon">📷</div>
+                        <div class="export-btn-text">JPG保存</div>
+                    </button>
+                    <button class="export-btn" onclick="copyToClipboard()">
+                        <div class="export-btn-icon">📋</div>
+                        <div class="export-btn-text">コピー</div>
+                    </button>
+                    <button class="export-btn" onclick="editImage()">
+                        <div class="export-btn-icon">✏️</div>
+                        <div class="export-btn-text">編集</div>
+                    </button>
+                </div>
+
+                <div class="gallery-section">
+                    <div class="gallery-header">
+                        <span class="gallery-title">📂 生成履歴</span>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85em;" onclick="clearHistory()">
+                            履歴クリア
+                        </button>
+                    </div>
+                    <div class="gallery-grid" id="galleryGrid">
+                        <!-- 履歴画像 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAI = 'dalle';
+        let currentStyle = 'realistic';
+        let currentSize = 'landscape';
+        let generatedImages = [];
+
+        // AI選択
+        function selectAI(ai) {
+            currentAI = ai;
+            document.querySelectorAll('.ai-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-ai="${ai}"]`).classList.add('active');
+            
+            // Canvas生成の場合は特別な処理
+            if (ai === 'canvas') {
+                document.getElementById('promptInput').placeholder = 
+                    'Canvas APIで図形やパターンを生成します。\n例: グラデーション背景、幾何学模様、ランダムパターン';
+            } else {
+                document.getElementById('promptInput').placeholder = 
+                    '生成したい画像の説明を入力してください。\n\n例: 未来都市の夕暮れ、ネオンが輝く高層ビル群、空飛ぶ車、サイバーパンク風';
+            }
+        }
+
+        // スタイル選択
+        function selectStyle(style) {
+            currentStyle = style;
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-style="${style}"]`).classList.add('active');
+        }
+
+        // サイズ選択
+        function selectSize(size) {
+            currentSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-size="${size}"]`).classList.add('active');
+        }
+
+        // プロンプトに追加
+        function addToPrompt(text) {
+            const input = document.getElementById('promptInput');
+            if (input.value) {
+                input.value += ', ' + text;
+            } else {
+                input.value = text;
+            }
+        }
+
+        // 画像生成
+        async function generateImage() {
+            const prompt = document.getElementById('promptInput').value;
+            if (!prompt) {
+                alert('プロンプトを入力してください');
+                return;
+            }
+
+            if (currentAI === 'canvas') {
+                generateCanvasImage(prompt);
+                return;
+            }
+
+            const apiKey = localStorage.getItem(`${currentAI}-api-key`);
+            if (!apiKey) {
+                alert(`${currentAI.toUpperCase()}のAPIキーが設定されていません。\nCanvas生成モードを使用するか、設定画面でAPIキーを登録してください。`);
+                return;
+            }
+
+            // ローディング表示
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            // デモ: 実際のAPI呼び出しの代わりにCanvas生成
+            setTimeout(() => {
+                generateCanvasImage(prompt);
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }, 2000);
+        }
+
+        // Canvas API で画像生成
+        function generateCanvasImage(prompt) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // サイズ設定
+            const sizes = {
+                square: [1024, 1024],
+                landscape: [1920, 1080],
+                portrait: [1080, 1920],
+                banner: [1920, 640]
+            };
+            
+            const [width, height] = sizes[currentSize];
+            canvas.width = width;
+            canvas.height = height;
+
+            // 背景グラデーション
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            
+            // プロンプトに基づいて色を決定
+            if (prompt.includes('夕暮れ') || prompt.includes('sunset')) {
+                gradient.addColorStop(0, '#ff6b6b');
+                gradient.addColorStop(0.5, '#ffd93d');
+                gradient.addColorStop(1, '#6a0dad');
+            } else if (prompt.includes('海') || prompt.includes('ocean')) {
+                gradient.addColorStop(0, '#00d2ff');
+                gradient.addColorStop(1, '#3a47d5');
+            } else if (prompt.includes('森') || prompt.includes('forest')) {
+                gradient.addColorStop(0, '#134e13');
+                gradient.addColorStop(1, '#8bc34a');
+            } else {
+                // デフォルト: ランダムグラデーション
+                gradient.addColorStop(0, `hsl(${Math.random() * 360}, 70%, 50%)`);
+                gradient.addColorStop(0.5, `hsl(${Math.random() * 360}, 70%, 50%)`);
+                gradient.addColorStop(1, `hsl(${Math.random() * 360}, 70%, 50%)`);
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // パターンやシェイプを追加
+            if (currentStyle === 'abstract') {
+                // 抽象的な円
+                for (let i = 0; i < 20; i++) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        Math.random() * width,
+                        Math.random() * height,
+                        Math.random() * 100 + 20,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = `hsla(${Math.random() * 360}, 70%, 50%, 0.3)`;
+                    ctx.fill();
+                }
+            } else if (currentStyle === 'sketch') {
+                // スケッチ風の線
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 50; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random() * width, Math.random() * height);
+                    ctx.lineTo(Math.random() * width, Math.random() * height);
+                    ctx.stroke();
+                }
+            } else {
+                // 幾何学模様
+                const pattern = ctx.createPattern(createPatternCanvas(), 'repeat');
+                ctx.fillStyle = pattern;
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            // プロンプトテキストを追加
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = `${Math.floor(height * 0.05)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 10;
+            ctx.fillText(prompt.substring(0, 50), width / 2, height - 50);
+
+            // 日時を追加
+            ctx.font = `${Math.floor(height * 0.025)}px Arial`;
+            ctx.fillText(new Date().toLocaleString('ja-JP'), width / 2, height - 20);
+
+            // 画像として表示
+            const imageUrl = canvas.toDataURL('image/png');
+            displayGeneratedImage(imageUrl);
+            saveToHistory(imageUrl, prompt);
+        }
+
+        // パターン用キャンバス作成
+        function createPatternCanvas() {
+            const patternCanvas = document.createElement('canvas');
+            patternCanvas.width = 50;
+            patternCanvas.height = 50;
+            const pctx = patternCanvas.getContext('2d');
+            
+            pctx.fillStyle = 'rgba(255,255,255,0.1)';
+            pctx.fillRect(0, 0, 25, 25);
+            pctx.fillRect(25, 25, 25, 25);
+            
+            return patternCanvas;
+        }
+
+        // 生成画像表示
+        function displayGeneratedImage(imageUrl) {
+            const display = document.getElementById('imageDisplay');
+            display.innerHTML = `<img src="${imageUrl}" class="generated-image" alt="Generated">`;
+            window.currentImageUrl = imageUrl;
+        }
+
+        // 履歴に保存
+        function saveToHistory(imageUrl, prompt) {
+            const history = {
+                url: imageUrl,
+                prompt: prompt,
+                date: new Date().toISOString(),
+                ai: currentAI,
+                style: currentStyle
+            };
+            
+            generatedImages.unshift(history);
+            generatedImages = generatedImages.slice(0, 12); // 最新12件のみ保持
+            
+            localStorage.setItem('generated-images', JSON.stringify(generatedImages));
+            updateGallery();
+        }
+
+        // ギャラリー更新
+        function updateGallery() {
+            const gallery = document.getElementById('galleryGrid');
+            
+            if (generatedImages.length === 0) {
+                gallery.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999;">履歴なし</div>';
+                return;
+            }
+            
+            gallery.innerHTML = generatedImages.map((img, index) => `
+                <div class="gallery-item" onclick="loadFromHistory(${index})">
+                    <img src="${img.url}" alt="${img.prompt}">
+                    <div class="gallery-item-date">${new Date(img.date).toLocaleDateString('ja-JP')}</div>
+                </div>
+            `).join('');
+        }
+
+        // 履歴から読み込み
+        function loadFromHistory(index) {
+            const image = generatedImages[index];
+            displayGeneratedImage(image.url);
+            document.getElementById('promptInput').value = image.prompt;
+        }
+
+        // ダウンロード
+        function downloadImage(format) {
+            if (!window.currentImageUrl) {
+                alert('画像を生成してください');
+                return;
+            }
+            
+            const a = document.createElement('a');
+            a.href = window.currentImageUrl;
+            a.download = `generated-${new Date().getTime()}.${format}`;
+            a.click();
+        }
+
+        // クリップボードにコピー
+        async function copyToClipboard() {
+            if (!window.currentImageUrl) {
+                alert('画像を生成してください');
+                return;
+            }
+            
+            try {
+                const response = await fetch(window.currentImageUrl);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                alert('クリップボードにコピーしました');
+            } catch (err) {
+                alert('コピーに失敗しました');
+            }
+        }
+
+        // 画像編集
+        function editImage() {
+            if (!window.currentImageUrl) {
+                alert('画像を生成してください');
+                return;
+            }
+            alert('画像編集機能は開発中です');
+        }
+
+        // プロンプトクリア
+        function clearPrompt() {
+            if (confirm('プロンプトをクリアしますか？')) {
+                document.getElementById('promptInput').value = '';
+            }
+        }
+
+        // 履歴クリア
+        function clearHistory() {
+            if (confirm('生成履歴をクリアしますか？')) {
+                generatedImages = [];
+                localStorage.removeItem('generated-images');
+                updateGallery();
+            }
+        }
+
+        // 初期化
+        window.addEventListener('load', () => {
+            // 履歴読み込み
+            const saved = localStorage.getItem('generated-images');
+            if (saved) {
+                generatedImages = JSON.parse(saved);
+                updateGallery();
+            }
+        });
+    </script>
+</body>
+</html>
