@@ -607,6 +607,92 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&apos;');
         }
+        
+        // MarkdownからHTMLへ変換（note.com対応）
+        function convertMarkdownToHtml(markdown) {
+            let html = markdown;
+            
+            // コードブロックを一時的に保護
+            const codeBlocks = [];
+            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+                const index = codeBlocks.length;
+                codeBlocks.push(`<pre><code>${escapeHtml(code.trim())}</code></pre>`);
+                return `__CODE_BLOCK_${index}__`;
+            });
+            
+            // インラインコード
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // 見出し
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // リスト
+            html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n)+/g, (match) => {
+                return '<ul>\n' + match + '</ul>\n';
+            });
+            
+            // テーブル
+            html = html.replace(/\|(.+)\|/g, (match, content) => {
+                const cells = content.split('|').map(cell => cell.trim());
+                const isHeader = cells.every(cell => cell.match(/^-+$/));
+                if (isHeader) return '';
+                
+                const cellTags = cells.map(cell => {
+                    return `<td>${cell}</td>`;
+                }).join('');
+                return `<tr>${cellTags}</tr>`;
+            });
+            
+            // テーブルを<table>で囲む
+            html = html.replace(/(<tr>.*<\/tr>\n)+/g, (match) => {
+                return '<table>\n' + match + '</table>\n';
+            });
+            
+            // 太字・斜体
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // リンク
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+            
+            // 水平線
+            html = html.replace(/^---$/gm, '<hr>');
+            
+            // 段落
+            html = html.split('\n\n').map(paragraph => {
+                paragraph = paragraph.trim();
+                if (!paragraph) return '';
+                if (paragraph.startsWith('<h') || 
+                    paragraph.startsWith('<ul') || 
+                    paragraph.startsWith('<table') ||
+                    paragraph.startsWith('<pre') ||
+                    paragraph.startsWith('<hr')) {
+                    return paragraph;
+                }
+                return `<p>${paragraph.replace(/\n/g, '<br>')}</p>`;
+            }).join('\n\n');
+            
+            // コードブロックを復元
+            codeBlocks.forEach((block, index) => {
+                html = html.replace(`__CODE_BLOCK_${index}__`, block);
+            });
+            
+            return html;
+        }
+        
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         // WXR生成
         function generateWXR() {
@@ -725,7 +811,7 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
         <dc:creator><![CDATA[yutapii]]></dc:creator>
         <guid isPermaLink="false">https://note.com/yutapii/n/n${postId}</guid>
         <description></description>
-        <content:encoded><![CDATA[${article.body}]]></content:encoded>
+        <content:encoded><![CDATA[${convertMarkdownToHtml(article.body)}]]></content:encoded>
         <excerpt:encoded><![CDATA[]]></excerpt:encoded>
         <wp:post_id>${postId}</wp:post_id>
         <wp:post_date>${postDate.toISOString()}</wp:post_date>
