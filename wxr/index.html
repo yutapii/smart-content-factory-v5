@@ -423,6 +423,13 @@
 
                 <div class="input-group">
                     <label class="input-label" for="articleInput">記事入力（Markdown形式対応）</label>
+                    <div style="margin-bottom: 10px;">
+                        <input type="file" id="mdFileInput" accept=".md,.txt" style="display: none;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('mdFileInput').click()">
+                            📁 .mdファイルを選択
+                        </button>
+                        <span id="fileName" style="margin-left: 10px; color: #666;"></span>
+                    </div>
                     <textarea id="articleInput" class="input-field" style="min-height: 400px;" placeholder="【タイトル】
 AIが変える未来の働き方 - 2025年の展望
 
@@ -531,7 +538,11 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
 
 #AI #働き方改革 #未来予測 #テクノロジー #DX #note
 
-※ Markdownファイル（.md）をそのまま貼り付けられます。
+💡 使い方：
+1. 上の「📁 .mdファイルを選択」ボタンから選択
+2. またはファイルをこのエリアにドラッグ&ドロップ
+3. または直接テキストを貼り付け
+
 ※ 1行目が # で始まる場合はタイトルとして認識
 ※ 最後に「ハッシュタグ」セクションがある場合はタグとして認識`;
             }
@@ -994,8 +1005,95 @@ AIと共生する新しい働き方を、私たち一人ひとりが模索して
             updateCounters();
         }
 
+        // ファイル読み込み処理
+        document.getElementById('mdFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // ファイル名を表示
+            document.getElementById('fileName').textContent = file.name;
+            
+            // ファイルを読み込む
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                document.getElementById('articleInput').value = content;
+                updateCounters();
+                
+                // 読み込み成功メッセージ
+                const fileNameSpan = document.getElementById('fileName');
+                fileNameSpan.style.color = '#4caf50';
+                fileNameSpan.textContent = `✅ ${file.name} を読み込みました`;
+                
+                // 3秒後にメッセージをリセット
+                setTimeout(() => {
+                    fileNameSpan.style.color = '#666';
+                    fileNameSpan.textContent = '';
+                }, 3000);
+            };
+            
+            reader.onerror = function() {
+                alert('ファイルの読み込みに失敗しました');
+                document.getElementById('fileName').textContent = '';
+            };
+            
+            // テキストとして読み込む
+            reader.readAsText(file, 'UTF-8');
+        });
+        
         // イベントリスナー
         document.getElementById('articleInput').addEventListener('input', updateCounters);
+        
+        // ドラッグ&ドロップ対応
+        const dropArea = document.getElementById('articleInput');
+        
+        // ドラッグオーバー時の処理
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.style.background = '#f0f8ff';
+            dropArea.style.border = '2px dashed #667eea';
+        });
+        
+        // ドラッグリーブ時の処理
+        dropArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropArea.style.background = '';
+            dropArea.style.border = '1px solid #ddd';
+        });
+        
+        // ドロップ時の処理
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.style.background = '';
+            dropArea.style.border = '1px solid #ddd';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                
+                // .mdまたは.txtファイルのみ受け付ける
+                if (file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        dropArea.value = event.target.result;
+                        updateCounters();
+                        
+                        // 読み込み成功メッセージ
+                        const fileName = document.getElementById('fileName');
+                        fileName.style.color = '#4caf50';
+                        fileName.textContent = `✅ ${file.name} をドロップで読み込みました`;
+                        
+                        setTimeout(() => {
+                            fileName.style.color = '#666';
+                            fileName.textContent = '';
+                        }, 3000);
+                    };
+                    reader.readAsText(file, 'UTF-8');
+                } else {
+                    alert('Markdownファイル（.md）またはテキストファイル（.txt）を選択してください');
+                }
+            }
+        });
 
         // 初期化
         updateCounters();
