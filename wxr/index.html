@@ -422,7 +422,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label class="input-label" for="articleInput">記事入力（統合フォーマット）</label>
+                    <label class="input-label" for="articleInput">記事入力（Markdown形式対応）</label>
                     <textarea id="articleInput" class="input-field" style="min-height: 400px;" placeholder="【タイトル】
 AIが変える未来の働き方 - 2025年の展望
 
@@ -441,7 +441,7 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
 
 【タグ】
 #AI #働き方改革 #未来予測 #テクノロジー #DX"></textarea>
-                    <div class="format-hint">【タイトル】【本文】【タグ】の順に記入してください。複数記事の場合は「---」で区切ります</div>
+                    <div class="format-hint">Markdownファイル（.md）をそのまま貼り付け可能。1行目の # がタイトル、最後の「ハッシュタグ」セクションがタグとして自動認識されます</div>
                 </div>
 
                 <!-- 旧入力欄（非表示） -->
@@ -513,10 +513,8 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
 【タグ】
 #タグ3 #タグ4`;
             } else {
-                document.getElementById('articleInput').placeholder = `【タイトル】
-AIが変える未来の働き方 - 2025年の展望
+                document.getElementById('articleInput').placeholder = `# APIって結局なに？生データへの直接アクセス
 
-【本文】
 ## はじめに
 AI技術の急速な発展により、私たちの働き方は大きく変化しています。
 
@@ -529,8 +527,13 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
 
 **重要なポイント**：人間とAIの協働が鍵となります。
 
-【タグ】
-#AI #働き方改革 #未来予測 #テクノロジー #DX`;
+## ハッシュタグ
+
+#AI #働き方改革 #未来予測 #テクノロジー #DX #note
+
+※ Markdownファイル（.md）をそのまま貼り付けられます。
+※ 1行目が # で始まる場合はタイトルとして認識
+※ 最後に「ハッシュタグ」セクションがある場合はタグとして認識`;
             }
         }
 
@@ -541,22 +544,71 @@ AIプロンプトエンジニアなど、新たな専門職が生まれていま
             let body = '';
             let tags = '';
             
-            // 【タイトル】セクションを抽出
-            const titleMatch = input.match(/【タイトル】([\s\S]*?)(?=【本文】|$)/);
-            if (titleMatch) {
-                title = titleMatch[1].trim();
-            }
+            // Markdown形式の自動認識（.mdファイル直接入力対応）
+            const lines = input.split('\n');
+            const firstLine = lines[0] || '';
             
-            // 【本文】セクションを抽出
-            const bodyMatch = input.match(/【本文】([\s\S]*?)(?=【タグ】|$)/);
-            if (bodyMatch) {
-                body = bodyMatch[1].trim();
+            // 1行目が # で始まる場合はタイトルとして認識
+            if (firstLine.startsWith('#') && !firstLine.startsWith('##')) {
+                title = firstLine.replace(/^#\s*/, '').trim();
+                
+                // 最後のセクションが「ハッシュタグ」という見出しの場合
+                const hashtagSectionIndex = lines.findIndex(line => 
+                    line === '## ハッシュタグ' || 
+                    line === '### ハッシュタグ' ||
+                    line === '# ハッシュタグ'
+                );
+                
+                if (hashtagSectionIndex !== -1) {
+                    // タグセクション以降をタグとして抽出
+                    const tagLines = lines.slice(hashtagSectionIndex + 1).join(' ');
+                    tags = tagLines.trim();
+                    
+                    // 本文はタイトルの次の行からタグセクションの前まで
+                    body = lines.slice(1, hashtagSectionIndex).join('\n').trim();
+                } else {
+                    // タグセクションがない場合、最後の行が#で始まるタグかチェック
+                    const lastLines = lines.slice(-3);
+                    const potentialTags = lastLines.filter(line => 
+                        line.trim().startsWith('#') && 
+                        !line.trim().startsWith('##') &&
+                        line.includes(' ')
+                    );
+                    
+                    if (potentialTags.length > 0) {
+                        tags = potentialTags.join(' ').trim();
+                        const tagStartIndex = lines.lastIndexOf(potentialTags[0]);
+                        body = lines.slice(1, tagStartIndex).join('\n').trim();
+                    } else {
+                        body = lines.slice(1).join('\n').trim();
+                    }
+                }
             }
-            
-            // 【タグ】セクションを抽出
-            const tagsMatch = input.match(/【タグ】([\s\S]*?)(?=---|$)/);
-            if (tagsMatch) {
-                tags = tagsMatch[1].trim();
+            // 【タイトル】形式の場合（従来の形式）
+            else if (input.includes('【タイトル】')) {
+                const titleMatch = input.match(/【タイトル】([\s\S]*?)(?=【本文】|$)/);
+                if (titleMatch) {
+                    title = titleMatch[1].trim();
+                }
+                
+                const bodyMatch = input.match(/【本文】([\s\S]*?)(?=【タグ】|$)/);
+                if (bodyMatch) {
+                    body = bodyMatch[1].trim();
+                }
+                
+                const tagsMatch = input.match(/【タグ】([\s\S]*?)(?=---|$)/);
+                if (tagsMatch) {
+                    tags = tagsMatch[1].trim();
+                }
+            }
+            // その他の場合（シンプルなテキスト）
+            else {
+                // 1行目をタイトル、残りを本文として扱う
+                const lines = input.split('\n');
+                if (lines.length > 0) {
+                    title = lines[0].trim();
+                    body = lines.slice(1).join('\n').trim();
+                }
             }
             
             // 旧形式互換性のため、隠しフィールドに値を設定
