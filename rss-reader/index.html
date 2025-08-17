@@ -552,7 +552,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📰 RSS一覧 - 配信元管理</h1>
+            <h1>📰 RSS一覧 - 配信元管理 <span id="feedCountBadge" style="font-size: 0.5em; background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 15px; margin-left: 10px;">(0件)</span></h1>
             <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
         </div>
     </div>
@@ -981,6 +981,12 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             const feeds = await getAllFeeds();
             document.getElementById('totalFeeds').textContent = feeds.length;
             document.getElementById('activeFeeds').textContent = feeds.filter(f => f.active && !f.fetchError).length;
+            
+            // ヘッダーの件数バッジも更新
+            const feedCountBadge = document.getElementById('feedCountBadge');
+            if (feedCountBadge) {
+                feedCountBadge.textContent = `(${feeds.length}件)`;
+            }
             
             // エラー数を表示（フィルターに反映）
             const errorCount = feeds.filter(f => f.fetchError).length;
