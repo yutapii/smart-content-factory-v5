@@ -945,6 +945,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                             ${feed.category ? `<span class="feed-category">${feed.category}</span>` : ''}
                             <span>最終更新: ${new Date(feed.lastUpdate).toLocaleString('ja-JP')}</span>
                             <span>ステータス: ${statusDisplay}</span>
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 3px; font-weight: bold;">📊 記事数: <span id="articleCount-${feed.id}">読込中...</span></span>
                             ${feed.fetchError ? `
                                 <span class="feed-error-badge" title="${feed.lastError || '取得エラーが発生しました'}">⚠️ ${feed.lastError || '取得エラー'}</span>
                                 ${(feed.lastError && (
@@ -974,6 +975,37 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             `}).join('');
             
             updateStats();
+            
+            // 各フィードの記事数を取得
+            updateArticleCounts(filteredFeeds);
+        }
+        
+        // 記事数を取得して表示
+        async function updateArticleCounts(feeds) {
+            if (!db) return;
+            
+            for (const feed of feeds) {
+                try {
+                    const transaction = db.transaction(['articles'], 'readonly');
+                    const store = transaction.objectStore('articles');
+                    const index = store.index('feedId');
+                    const countRequest = index.count(feed.id);
+                    
+                    countRequest.onsuccess = () => {
+                        const count = countRequest.result;
+                        const countElement = document.getElementById(`articleCount-${feed.id}`);
+                        if (countElement) {
+                            countElement.textContent = count || 0;
+                        }
+                    };
+                } catch (error) {
+                    // IndexedDBが使えない場合は0を表示
+                    const countElement = document.getElementById(`articleCount-${feed.id}`);
+                    if (countElement) {
+                        countElement.textContent = '0';
+                    }
+                }
+            }
         }
 
         // 統計更新
