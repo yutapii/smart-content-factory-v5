@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セキュリティ設定 - SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .security-status {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .status-item.secure {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .status-item.warning {
+            background: rgba(255, 193, 7, 0.3);
+        }
+
+        .status-item.danger {
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #f44336;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #ff9800;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #4caf50;
+        }
+
+        .password-suggestions {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            margin-left: 10px;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .api-key-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-key-info {
+            flex: 1;
+        }
+
+        .api-key-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .api-key-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .api-key-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+
+        .icon-btn:hover {
+            color: #667eea;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            color: #e65100;
+            border-left: 4px solid #ff9800;
+        }
+
+        .alert-danger {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close-modal {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .backup-restore {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-label:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 セキュリティ設定</h1>
+        <p class="subtitle">APIキーと認証情報の安全な管理</p>
+
+        <div class="security-status">
+            <h3>セキュリティステータス</h3>
+            <div class="status-grid">
+                <div class="status-item" id="encryptionStatus">
+                    <div>🔒 暗号化</div>
+                    <div id="encryptionText">未設定</div>
+                </div>
+                <div class="status-item" id="sessionStatus">
+                    <div>⏱️ セッション</div>
+                    <div id="sessionText">未認証</div>
+                </div>
+                <div class="status-item" id="apiKeyStatus">
+                    <div>🔑 APIキー</div>
+                    <div id="apiKeyText">0個</div>
+                </div>
+                <div class="status-item" id="lastAccessStatus">
+                    <div>📅 最終アクセス</div>
+                    <div id="lastAccessText">なし</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('setup')">初期設定</button>
+            <button class="tab" onclick="switchTab('keys')">APIキー管理</button>
+            <button class="tab" onclick="switchTab('security')">セキュリティ</button>
+            <button class="tab" onclick="switchTab('backup')">バックアップ</button>
+        </div>
+
+        <!-- 初期設定タブ -->
+        <div id="setup-tab" class="tab-content active">
+            <div class="form-section">
+                <h3>マスターパスワードの設定</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    APIキーを暗号化するためのマスターパスワードを設定してください。
+                </p>
+                
+                <div class="form-group">
+                    <label for="masterPassword">マスターパスワード</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="masterPassword" placeholder="12文字以上の強力なパスワード">
+                        <button class="toggle-password" onclick="togglePassword('masterPassword')">👁️</button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="passwordStrength"></div>
+                    </div>
+                    <div class="password-suggestions" id="passwordSuggestions"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">パスワードの確認</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="パスワードを再入力">
+                        <button class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="setupMasterPassword()">
+                    パスワードを設定
+                </button>
+            </div>
+        </div>
+
+        <!-- APIキー管理タブ -->
+        <div id="keys-tab" class="tab-content">
+            <div class="form-section">
+                <h3>APIキーの追加</h3>
+                
+                <div class="form-group">
+                    <label for="keyType">サービス</label>
+                    <select id="keyType">
+                        <option value="ANTHROPIC_API_KEY">Anthropic (Claude)</option>
+                        <option value="OPENAI_API_KEY">OpenAI (GPT)</option>
+                        <option value="GOOGLE_VISION_API_KEY">Google Vision</option>
+                        <option value="CUSTOM">カスタム</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="customKeyNameGroup" style="display: none;">
+                    <label for="customKeyName">キー名</label>
+                    <input type="text" id="customKeyName" placeholder="例: MY_CUSTOM_API_KEY">
+                </div>
+
+                <div class="form-group">
+                    <label for="apiKeyValue">APIキー</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="apiKeyValue" placeholder="APIキーを入力">
+                        <button class="toggle-password" onclick="togglePassword('apiKeyValue')">👁️</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="addApiKey()">
+                    APIキーを追加
+                </button>
+            </div>
+
+            <div class="form-section">
+                <h3>保存済みAPIキー</h3>
+                <div id="apiKeysList"></div>
+            </div>
+        </div>
+
+        <!-- セキュリティタブ -->
+        <div id="security-tab" class="tab-content">
+            <div class="form-section">
+                <h3>セキュリティ設定</h3>
+                
+                <div class="form-group">
+                    <label for="sessionTimeout">セッションタイムアウト（分）</label>
+                    <input type="number" id="sessionTimeout" value="30" min="5" max="1440">
+                </div>
+
+                <div class="form-group">
+                    <label for="maxLoginAttempts">最大ログイン試行回数</label>
+                    <input type="number" id="maxLoginAttempts" value="5" min="3" max="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="apiRotationDays">APIキーローテーション期間（日）</label>
+                    <input type="number" id="apiRotationDays" value="90" min="30" max="365">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enableEncryption" checked>
+                        APIキーの暗号化を有効にする
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enableDebugMode">
+                        デバッグモードを有効にする（開発用）
+                    </label>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSecuritySettings()">
+                    設定を保存
+                </button>
+
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    すべてのデータを削除
+                </button>
+            </div>
+
+            <div class="form-section">
+                <h3>アクセスログ</h3>
+                <div id="accessLog"></div>
+            </div>
+        </div>
+
+        <!-- バックアップタブ -->
+        <div id="backup-tab" class="tab-content">
+            <div class="form-section">
+                <h3>設定のエクスポート</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    暗号化されたAPIキーと設定をエクスポートします。
+                </p>
+                <button class="btn btn-primary" onclick="exportSettings()">
+                    設定をエクスポート
+                </button>
+            </div>
+
+            <div class="form-section">
+                <h3>設定のインポート</h3>
+                <div class="backup-restore">
+                    <p>バックアップファイルを選択してください</p>
+                    <input type="file" id="importFile" class="file-input" accept=".json" onchange="importSettings(event)">
+                    <label for="importFile" class="file-label">
+                        📁 ファイルを選択
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- パスワード入力モーダル -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <h2 class="modal-title">マスターパスワードの入力</h2>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">
+                暗号化されたデータにアクセスするにはマスターパスワードが必要です。
+            </p>
+            <div class="form-group">
+                <label for="modalPassword">マスターパスワード</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="modalPassword" placeholder="マスターパスワードを入力">
+                    <button class="toggle-password" onclick="togglePassword('modalPassword')">👁️</button>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="unlockWithPassword()">
+                ロック解除
+            </button>
+        </div>
+    </div>
+
+    <script src="api-key-manager.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="crypto-utils.js"></script>
+    <script>
+        // グローバル変数
+        let apiKeyManager;
+        let configLoader;
+        let cryptoUtils;
+        let currentPassword = null;
+
+        // 初期化
+        async function init() {
+            try {
+                apiKeyManager = new APIKeyManager();
+                configLoader = new ConfigLoader();
+                cryptoUtils = new CryptoUtils();
+                
+                await configLoader.init();
+                
+                updateSecurityStatus();
+                loadSavedKeys();
+                loadSecuritySettings();
+                
+                // パスワード強度チェック
+                document.getElementById('masterPassword').addEventListener('input', checkPasswordStrength);
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('初期化エラーが発生しました', 'danger');
+            }
+        }
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // すべてのタブとコンテンツを非アクティブに
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 選択されたタブをアクティブに
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // APIキー管理タブの場合、認証チェック
+            if (tabName === 'keys' && !currentPassword && apiKeyManager.hasStoredKeys()) {
+                showPasswordModal();
+            }
+        }
+
+        // パスワード表示切り替え
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // パスワード強度チェック
+        function checkPasswordStrength() {
+            const password = document.getElementById('masterPassword').value;
+            const result = cryptoUtils.checkPasswordStrength(password);
+            
+            const strengthBar = document.getElementById('passwordStrength');
+            strengthBar.className = `password-strength-bar ${result.strength}`;
+            
+            const suggestions = document.getElementById('passwordSuggestions');
+            if (result.suggestions.length > 0) {
+                suggestions.textContent = '改善点: ' + result.suggestions.join(', ');
+            } else {
+                suggestions.textContent = '✅ 強力なパスワードです';
+            }
+        }
+
+        // マスターパスワード設定
+        async function setupMasterPassword() {
+            const password = document.getElementById('masterPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirm) {
+                showAlert('パスワードが一致しません', 'danger');
+                return;
+            }
+            
+            const strength = cryptoUtils.checkPasswordStrength(password);
+            if (strength.strength === 'weak') {
+                showAlert('パスワードが弱すぎます。より強力なパスワードを設定してください。', 'warning');
+                return;
+            }
+            
+            try {
+                currentPassword = password;
+                showAlert('マスターパスワードが設定されました', 'success');
+                updateSecurityStatus();
+                
+                // 初期設定タブからAPIキー管理タブへ
+                document.querySelector('.tab:nth-child(2)').click();
+                
+            } catch (error) {
+                console.error('Password setup error:', error);
+                showAlert('パスワード設定エラー', 'danger');
+            }
+        }
+
+        // APIキー追加
+        async function addApiKey() {
+            if (!currentPassword) {
+                showPasswordModal();
+                return;
+            }
+            
+            const keyType = document.getElementById('keyType').value;
+            const keyName = keyType === 'CUSTOM' ? 
+                document.getElementById('customKeyName').value : keyType;
+            const keyValue = document.getElementById('apiKeyValue').value;
+            
+            if (!keyName || !keyValue) {
+                showAlert('すべてのフィールドを入力してください', 'warning');
+                return;
+            }
+            
+            // APIキーフォーマット検証
+            const keyTypeMap = {
+                'ANTHROPIC_API_KEY': 'anthropic',
+                'OPENAI_API_KEY': 'openai',
+                'GOOGLE_VISION_API_KEY': 'google'
+            };
+            
+            if (keyType !== 'CUSTOM') {
+                const isValid = apiKeyManager.validateAPIKey(keyValue, keyTypeMap[keyType] || 'generic');
+                if (!isValid) {
+                    showAlert('APIキーの形式が正しくありません', 'warning');
+                    return;
+                }
+            }
+            
+            try {
+                // 既存のキーを取得
+                let keys = {};
+                if (apiKeyManager.hasStoredKeys()) {
+                    keys = await apiKeyManager.getAPIKeys(currentPassword) || {};
+                }
+                
+                // 新しいキーを追加
+                keys[keyName] = keyValue;
+                
+                // 保存
+                await apiKeyManager.storeAPIKeys(keys, currentPassword);
+                
+                showAlert('APIキーが追加されました', 'success');
+                
+                // フォームをクリア
+                document.getElementById('apiKeyValue').value = '';
+                if (keyType === 'CUSTOM') {
+                    document.getElementById('customKeyName').value = '';
+                }
+                
+                // リスト更新
+                loadSavedKeys();
+                updateSecurityStatus();
+                
+            } catch (error) {
+                console.error('API key add error:', error);
+                showAlert('APIキーの追加に失敗しました', 'danger');
+            }
+        }
+
+        // 保存済みキーの読み込み
+        async function loadSavedKeys() {
+            const listElement = document.getElementById('apiKeysList');
+            
+            if (!apiKeyManager.hasStoredKeys()) {
+                listElement.innerHTML = '<p style="color: #666;">保存されたAPIキーはありません</p>';
+                return;
+            }
+            
+            if (!currentPassword) {
+                listElement.innerHTML = '<p style="color: #666;">APIキーを表示するにはマスターパスワードが必要です</p>';
+                return;
+            }
+            
+            try {
+                const keys = await apiKeyManager.getAPIKeys(currentPassword);
+                
+                if (!keys || Object.keys(keys).length === 0) {
+                    listElement.innerHTML = '<p style="color: #666;">保存されたAPIキーはありません</p>';
+                    return;
+                }
+                
+                let html = '';
+                for (const [name, value] of Object.entries(keys)) {
+                    const maskedValue = value.substring(0, 10) + '...' + value.substring(value.length - 4);
+                    html += `
+                        <div class="api-key-item">
+                            <div class="api-key-info">
+                                <div class="api-key-name">${name}</div>
+                                <div class="api-key-status">値: ${maskedValue}</div>
+                            </div>
+                            <div class="api-key-actions">
+                                <button class="icon-btn" onclick="copyApiKey('${name}')" title="コピー">📋</button>
+                                <button class="icon-btn" onclick="deleteApiKey('${name}')" title="削除">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                listElement.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Load keys error:', error);
+                listElement.innerHTML = '<p style="color: #f44336;">キーの読み込みに失敗しました</p>';
+            }
+        }
+
+        // APIキーコピー
+        async function copyApiKey(keyName) {
+            if (!currentPassword) {
+                showPasswordModal();
+                return;
+            }
+            
+            try {
+                const keys = await apiKeyManager.getAPIKeys(currentPassword);
+                const value = keys[keyName];
+                
+                await navigator.clipboard.writeText(value);
+                showAlert('APIキーをクリップボードにコピーしました', 'success');
+                
+            } catch (error) {
+                console.error('Copy error:', error);
+                showAlert('コピーに失敗しました', 'danger');
+            }
+        }
+
+        // APIキー削除
+        async function deleteApiKey(keyName) {
+            if (!confirm(`APIキー「${keyName}」を削除しますか？`)) {
+                return;
+            }
+            
+            try {
+                const keys = await apiKeyManager.getAPIKeys(currentPassword);
+                delete keys[keyName];
+                
+                await apiKeyManager.storeAPIKeys(keys, currentPassword);
+                
+                showAlert('APIキーが削除されました', 'success');
+                loadSavedKeys();
+                updateSecurityStatus();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                showAlert('削除に失敗しました', 'danger');
+            }
+        }
+
+        // セキュリティ設定の保存
+        function saveSecuritySettings() {
+            const settings = {
+                SESSION_TIMEOUT_MINUTES: parseInt(document.getElementById('sessionTimeout').value),
+                MAX_LOGIN_ATTEMPTS: parseInt(document.getElementById('maxLoginAttempts').value),
+                API_KEY_ROTATION_DAYS: parseInt(document.getElementById('apiRotationDays').value),
+                ENABLE_API_KEY_ENCRYPTION: document.getElementById('enableEncryption').checked,
+                ENABLE_DEBUG_MODE: document.getElementById('enableDebugMode').checked
+            };
+            
+            for (const [key, value] of Object.entries(settings)) {
+                configLoader.set(key, value);
+            }
+            
+            showAlert('セキュリティ設定が保存されました', 'success');
+        }
+
+        // セキュリティ設定の読み込み
+        function loadSecuritySettings() {
+            document.getElementById('sessionTimeout').value = configLoader.get('SESSION_TIMEOUT_MINUTES', 30);
+            document.getElementById('maxLoginAttempts').value = configLoader.get('MAX_LOGIN_ATTEMPTS', 5);
+            document.getElementById('apiRotationDays').value = configLoader.get('API_KEY_ROTATION_DAYS', 90);
+            document.getElementById('enableEncryption').checked = configLoader.get('ENABLE_API_KEY_ENCRYPTION', true);
+            document.getElementById('enableDebugMode').checked = configLoader.get('ENABLE_DEBUG_MODE', false);
+        }
+
+        // セキュリティステータス更新
+        function updateSecurityStatus() {
+            // 暗号化ステータス
+            const encryptionStatus = document.getElementById('encryptionStatus');
+            const encryptionText = document.getElementById('encryptionText');
+            if (apiKeyManager.hasStoredKeys()) {
+                encryptionStatus.className = 'status-item secure';
+                encryptionText.textContent = '有効';
+            } else {
+                encryptionStatus.className = 'status-item warning';
+                encryptionText.textContent = '未設定';
+            }
+            
+            // セッションステータス
+            const sessionStatus = document.getElementById('sessionStatus');
+            const sessionText = document.getElementById('sessionText');
+            if (currentPassword && apiKeyManager.validateSession()) {
+                sessionStatus.className = 'status-item secure';
+                sessionText.textContent = '認証済み';
+            } else {
+                sessionStatus.className = 'status-item danger';
+                sessionText.textContent = '未認証';
+            }
+            
+            // APIキー数
+            const apiKeyText = document.getElementById('apiKeyText');
+            if (apiKeyManager.hasStoredKeys()) {
+                apiKeyText.textContent = '設定済み';
+            } else {
+                apiKeyText.textContent = '0個';
+            }
+            
+            // 最終アクセス
+            const stored = localStorage.getItem('scf_v5_encrypted_keys');
+            if (stored) {
+                const data = JSON.parse(stored);
+                const lastAccess = new Date(data.lastAccess);
+                document.getElementById('lastAccessText').textContent = 
+                    lastAccess.toLocaleDateString('ja-JP');
+            }
+        }
+
+        // 設定エクスポート
+        function exportSettings() {
+            const exportData = {
+                config: configLoader.exportConfig(),
+                encryptedKeys: apiKeyManager.exportEncryptedKeys(),
+                exported: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], 
+                { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scf-v5-backup-${Date.now()}.json`;
+            a.click();
+            
+            showAlert('設定がエクスポートされました', 'success');
+        }
+
+        // 設定インポート
+        async function importSettings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                if (data.config) {
+                    configLoader.importConfig(data.config);
+                }
+                
+                if (data.encryptedKeys) {
+                    apiKeyManager.importEncryptedKeys(data.encryptedKeys);
+                }
+                
+                showAlert('設定がインポートされました', 'success');
+                
+                // リロード
+                loadSavedKeys();
+                loadSecuritySettings();
+                updateSecurityStatus();
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showAlert('インポートに失敗しました', 'danger');
+            }
+        }
+
+        // すべてのデータ削除
+        function clearAllData() {
+            if (!confirm('すべてのデータを削除しますか？この操作は取り消せません。')) {
+                return;
+            }
+            
+            if (!confirm('本当に削除してよろしいですか？')) {
+                return;
+            }
+            
+            apiKeyManager.clearAPIKeys();
+            configLoader.clearAll();
+            currentPassword = null;
+            
+            showAlert('すべてのデータが削除されました', 'success');
+            
+            // UIをリセット
+            loadSavedKeys();
+            loadSecuritySettings();
+            updateSecurityStatus();
+        }
+
+        // パスワードモーダル表示
+        function showPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+        }
+
+        // パスワードでロック解除
+        async function unlockWithPassword() {
+            const password = document.getElementById('modalPassword').value;
+            
+            try {
+                // パスワード検証
+                const keys = await apiKeyManager.getAPIKeys(password);
+                
+                currentPassword = password;
+                apiKeyManager.createSessionToken(password);
+                
+                closeModal();
+                showAlert('ロックが解除されました', 'success');
+                
+                // UI更新
+                loadSavedKeys();
+                updateSecurityStatus();
+                
+            } catch (error) {
+                console.error('Unlock error:', error);
+                showAlert('パスワードが正しくありません', 'danger');
+            }
+        }
+
+        // アラート表示
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            document.querySelector('.container').insertBefore(
+                alertDiv, 
+                document.querySelector('.security-status')
+            );
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // カスタムキー名フィールドの表示切り替え
+        document.getElementById('keyType').addEventListener('change', (e) => {
+            const customGroup = document.getElementById('customKeyNameGroup');
+            customGroup.style.display = e.target.value === 'CUSTOM' ? 'block' : 'none';
+        });
+
+        // 初期化実行
+        init();
+    </script>
+</body>
+</html>
