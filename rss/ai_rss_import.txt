@@ -1,0 +1,12 @@
+OpenAI Blog|https://openai.com/news/rss.xml|AI研究機関
+Google AI Blog|https://blog.google/technology/ai/rss/|AI研究機関
+DeepMind Blog|https://deepmind.google/blog/rss.xml|AI研究機関
+Microsoft AI Blog|https://blogs.microsoft.com/ai/feed/|AI研究機関
+arXiv AI|https://export.arxiv.org/rss/cs.AI|学術論文
+arXiv Machine Learning|https://export.arxiv.org/rss/cs.LG|学術論文
+arXiv Neural Computing|https://export.arxiv.org/rss/cs.NE|学術論文
+MIT CSAIL News|https://www.csail.mit.edu/rss.xml|大学研究機関
+理化学研究所 AIP|https://aip.riken.jp/feed/|日本のAI研究
+Preferred Networks|https://tech.preferred.jp/ja/blog/feed/|日本のAI企業
+Hugging Face Blog|https://huggingface.co/blog/feed.xml|AI企業
+AWS ML Blog|https://aws.amazon.com/blogs/machine-learning/feed/|クラウドAI

@@ -260,6 +260,9 @@
     </style>
 </head>
 <body>
+    <!-- APIステータスアラート表示用 -->
+    <div id="api-status-container"></div>
+    
     <div class="container">
         <header>
             <h1>
@@ -505,6 +508,54 @@
                     window.location.href = href;
                 }, 200);
             });
+        });
+    </script>
+    
+    <!-- APIステータスチェッカーを追加 -->
+    <script src="api_status_checker.js"></script>
+    <script>
+        // ページ読み込み後にAPIステータスをチェック
+        window.addEventListener('load', async function() {
+            // OCRサーバーの実際の状態を確認
+            try {
+                const response = await fetch('http://localhost:5001/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.type === 'real') {
+                    // Google Vision APIが稼働中の場合、警告を非表示
+                    console.log('✅ Google Cloud Vision API 稼働確認');
+                    const alertElement = document.getElementById('api-alert');
+                    if (alertElement) {
+                        alertElement.style.display = 'none';
+                    }
+                    
+                    // 成功メッセージを表示
+                    const container = document.getElementById('api-status-container');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="
+                                background: linear-gradient(135deg, #4caf50, #8bc34a);
+                                color: white;
+                                padding: 15px 20px;
+                                border-radius: 8px;
+                                margin: 20px auto;
+                                max-width: 1400px;
+                                box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+                                text-align: center;
+                            ">
+                                <strong>✅ Google Cloud Vision API 稼働中</strong> - OCR機能が利用可能です
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+            } catch (error) {
+                console.log('OCRサーバー未起動またはエラー:', error);
+            }
+            
+            // OCRサーバーが起動していない場合のみ、APIステータスチェックを実行
+            const status = await checkAPIStatus('api-status-container');
+            console.log('APIステータス:', status);
         });
     </script>
 </body>

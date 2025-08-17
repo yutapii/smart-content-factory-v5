@@ -10,6 +10,97 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        /* 探索中アニメーション */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        @keyframes searchMove {
+            0%, 100% { transform: translateX(0) rotate(-15deg); }
+            25% { transform: translateX(5px) rotate(-15deg); }
+            75% { transform: translateX(-5px) rotate(-15deg); }
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .searching-animation {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .search-icon-animated {
+            font-size: 2.5em;
+            animation: searchMove 1.5s ease-in-out infinite;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .dots-container {
+            display: inline-flex;
+            gap: 5px;
+        }
+        
+        .dots-container .pulse-dot:nth-child(1) { animation-delay: 0s; }
+        .dots-container .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+        .dots-container .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        .search-status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #667eea;
+        }
+        
+        .search-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .search-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            animation: progress 3s ease-out;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 60%; }
+            100% { width: 90%; }
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
@@ -507,9 +598,22 @@
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="フィードを検索...">
                 </div>
+                <select id="errorFilter" onchange="displayFeeds()" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: white;">
+                    <option value="all">全て表示</option>
+                    <option value="normal">✅ 正常のみ</option>
+                    <option value="error">❌ エラーのみ</option>
+                    <option value="html_error">📄 HTMLエラー</option>
+                    <option value="invalid_feed">⚠️ 無効なRSS</option>
+                    <option value="network_error">🌐 ネットワークエラー</option>
+                    <option value="restricted">🔒 アクセス制限</option>
+                    <option value="stopped">⏸️ 停止中</option>
+                </select>
                 <button class="btn btn-secondary" onclick="showImportModal()">📥 一括インポート</button>
-                <button class="btn btn-success" onclick="exportFeeds()">📤 エクスポート</button>
-                <button class="btn btn-primary" onclick="updateAllFeeds()">🔄 全て更新</button>
+                <button class="btn btn-success" onclick="showExportOptions()">📤 エクスポート</button>
+                <button class="btn btn-primary" onclick="showAIRSSFinder()">🤖 RSS探索</button>
+                <button class="btn btn-primary" onclick="showAutoTestModal()" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    🔄 自動テスト
+                </button>
             </div>
             <div class="category-tags" id="categoryFilter">
                 <span class="category-tag active" data-category="all">すべて</span>
@@ -760,6 +864,44 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 filteredFeeds = feeds.filter(f => f.category === filter);
             }
             
+            // エラーフィルタ
+            const errorFilter = document.getElementById('errorFilter')?.value || 'all';
+            if (errorFilter !== 'all') {
+                switch(errorFilter) {
+                    case 'normal':
+                        filteredFeeds = filteredFeeds.filter(f => !f.fetchError && f.active);
+                        break;
+                    case 'error':
+                        filteredFeeds = filteredFeeds.filter(f => f.fetchError);
+                        break;
+                    case 'html_error':
+                        filteredFeeds = filteredFeeds.filter(f => 
+                            f.lastError && f.lastError.includes('HTMLページが返されました')
+                        );
+                        break;
+                    case 'invalid_feed':
+                        filteredFeeds = filteredFeeds.filter(f => 
+                            f.lastError && f.lastError.includes('有効なRSSフィードではない')
+                        );
+                        break;
+                    case 'network_error':
+                        filteredFeeds = filteredFeeds.filter(f => 
+                            f.lastError && (f.lastError.includes('ネットワーク') || 
+                                          f.lastError.includes('Network') ||
+                                          f.lastError.includes('HTTP'))
+                        );
+                        break;
+                    case 'restricted':
+                        filteredFeeds = filteredFeeds.filter(f => 
+                            f.lastError && f.lastError.includes('アクセス制限')
+                        );
+                        break;
+                    case 'stopped':
+                        filteredFeeds = filteredFeeds.filter(f => !f.active);
+                        break;
+                }
+            }
+            
             // 検索フィルタ
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             if (searchTerm) {
@@ -780,7 +922,21 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 return;
             }
             
-            feedList.innerHTML = filteredFeeds.map(feed => `
+            feedList.innerHTML = filteredFeeds.map(feed => {
+                // ステータス表示のロジックを改善
+                let statusDisplay = '';
+                if (feed.fetchError) {
+                    // エラーがある場合
+                    statusDisplay = '❌ エラー';
+                } else if (!feed.active) {
+                    // 停止中の場合
+                    statusDisplay = '⏸️ 停止中';
+                } else {
+                    // 正常にアクティブな場合
+                    statusDisplay = '✅ 正常';
+                }
+                
+                return `
                 <div class="feed-item">
                     <div class="feed-info">
                         <div class="feed-name">${feed.name}</div>
@@ -788,8 +944,23 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                         <div class="feed-meta">
                             ${feed.category ? `<span class="feed-category">${feed.category}</span>` : ''}
                             <span>最終更新: ${new Date(feed.lastUpdate).toLocaleString('ja-JP')}</span>
-                            <span>ステータス: ${feed.active ? '✅ アクティブ' : '⏸️ 停止中'}</span>
-                            ${feed.fetchError ? `<span class="feed-error-badge" title="${feed.lastError || '取得エラーが発生しました'}">⚠️ 取得エラー</span>` : ''}
+                            <span>ステータス: ${statusDisplay}</span>
+                            ${feed.fetchError ? `
+                                <span class="feed-error-badge" title="${feed.lastError || '取得エラーが発生しました'}">⚠️ ${feed.lastError || '取得エラー'}</span>
+                                ${(feed.lastError && (
+                                    feed.lastError.includes('有効なRSSフィードではない') ||
+                                    feed.lastError.includes('HTMLページが返されました') ||
+                                    feed.lastError.includes('HTTP') ||
+                                    feed.lastError.includes('Network') ||
+                                    feed.lastError.includes('エラー')
+                                )) ? `
+                                    <button class="btn btn-small btn-success" onclick="findAlternativeRSS(${feed.id}, '${feed.name.replace(/'/g, "\\'")}')"
+                                            style="margin-left: 10px; font-size: 11px; padding: 3px 8px;" 
+                                            title="AIが代替RSSを探します">
+                                        🤖 代替を探す
+                                    </button>
+                                ` : ''}
+                            ` : ''}
                         </div>
                     </div>
                     <div class="feed-actions">
@@ -800,7 +971,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                         <button class="btn btn-small btn-danger" onclick="removeFeed(${feed.id})">削除</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
             updateStats();
         }
@@ -809,7 +980,28 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
         async function updateStats() {
             const feeds = await getAllFeeds();
             document.getElementById('totalFeeds').textContent = feeds.length;
-            document.getElementById('activeFeeds').textContent = feeds.filter(f => f.active).length;
+            document.getElementById('activeFeeds').textContent = feeds.filter(f => f.active && !f.fetchError).length;
+            
+            // エラー数を表示（フィルターに反映）
+            const errorCount = feeds.filter(f => f.fetchError).length;
+            const errorFilter = document.getElementById('errorFilter');
+            if (errorFilter) {
+                // エラー数をオプションテキストに表示
+                errorFilter.options[2].text = `❌ エラーのみ (${errorCount})`;
+                
+                // 各エラータイプの数を計算
+                const htmlErrors = feeds.filter(f => f.lastError && f.lastError.includes('HTMLページ')).length;
+                const invalidFeeds = feeds.filter(f => f.lastError && f.lastError.includes('有効なRSSフィードではない')).length;
+                const networkErrors = feeds.filter(f => f.lastError && (f.lastError.includes('ネットワーク') || f.lastError.includes('HTTP'))).length;
+                const restrictedSites = feeds.filter(f => f.lastError && f.lastError.includes('アクセス制限')).length;
+                const stoppedFeeds = feeds.filter(f => !f.active).length;
+                
+                if (htmlErrors > 0) errorFilter.options[3].text = `📄 HTMLエラー (${htmlErrors})`;
+                if (invalidFeeds > 0) errorFilter.options[4].text = `⚠️ 無効なRSS (${invalidFeeds})`;
+                if (networkErrors > 0) errorFilter.options[5].text = `🌐 ネットワークエラー (${networkErrors})`;
+                if (restrictedSites > 0) errorFilter.options[6].text = `🔒 アクセス制限 (${restrictedSites})`;
+                if (stoppedFeeds > 0) errorFilter.options[7].text = `⏸️ 停止中 (${stoppedFeeds})`;
+            }
             
             const categories = [...new Set(feeds.map(f => f.category).filter(c => c))];
             document.getElementById('categoryCount').textContent = categories.length;
@@ -884,9 +1076,9 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             }
         }
 
-        // フィードテスト（エラー情報をDBに保存）
+        // フィードテスト（エラー詳細情報を表示）
         async function testFeed(url, feedId = null) {
-            // 既知の問題があるドメインをスキップ
+            // 既知の問題があるドメインを特別処理
             const problematicDomains = [
                 'bmbf.de', 'bsi.bund.de', 'economie.gouv.fr', 
                 'ssi.gouv.fr', 'inria.fr', 'enisa.europa.eu',
@@ -894,11 +1086,105 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             ];
             
             const urlDomain = new URL(url).hostname;
-            if (problematicDomains.some(domain => urlDomain.includes(domain))) {
-                // ログを出さずに静かに処理
+            const isProblematicDomain = problematicDomains.some(domain => urlDomain.includes(domain));
+            
+            // 制限があるサイトの場合、代替プロキシを試す
+            if (isProblematicDomain) {
+                console.log(`制限付きドメイン検出: ${urlDomain}、代替方法を試します`);
+                
+                // 複数のプロキシサービスを試す
+                const proxyServices = [
+                    {
+                        name: 'RSS2JSON',
+                        url: `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+                        parseResponse: async (response) => {
+                            const data = await response.json();
+                            if (data.status === 'ok' && data.items) {
+                                return {
+                                    success: true,
+                                    message: `✅ ${data.items.length}件の記事を取得（RSS2JSON経由）`,
+                                    errorCode: null
+                                };
+                            }
+                            return {
+                                success: false,
+                                message: '❌ 取得失敗（RSS2JSON）',
+                                errorCode: 'RSS2JSON_FAILED'
+                            };
+                        }
+                    },
+                    {
+                        name: 'AllOrigins',
+                        url: `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                        parseResponse: async (response) => {
+                            const data = await response.json();
+                            if (data.contents && (data.contents.includes('<rss') || data.contents.includes('<feed'))) {
+                                const parser = new DOMParser();
+                                const xml = parser.parseFromString(data.contents, 'text/xml');
+                                const items = xml.querySelectorAll('item, entry');
+                                return {
+                                    success: true,
+                                    message: `✅ ${items.length}件の記事を取得（AllOrigins経由）`,
+                                    errorCode: null
+                                };
+                            }
+                            return {
+                                success: false,
+                                message: '❌ 取得失敗（AllOrigins）',
+                                errorCode: 'ALLORIGINS_FAILED'
+                            };
+                        }
+                    }
+                ];
+                
+                // 各プロキシサービスを順番に試す
+                for (const proxy of proxyServices) {
+                    try {
+                        console.log(`${proxy.name}を試しています...`);
+                        const response = await fetch(proxy.url, {
+                            mode: 'cors',
+                            credentials: 'omit'
+                        }).catch(err => ({ ok: false }));
+                        
+                        if (response.ok) {
+                            const result = await proxy.parseResponse(response);
+                            if (result.success) {
+                                // 成功した場合、DB更新
+                                if (feedId && db) {
+                                    try {
+                                        const transaction = db.transaction(['feeds'], 'readwrite');
+                                        const store = transaction.objectStore('feeds');
+                                        const feedRequest = store.get(feedId);
+                                        
+                                        feedRequest.onsuccess = () => {
+                                            const feed = feedRequest.result;
+                                            if (feed) {
+                                                feed.fetchError = false;
+                                                feed.lastError = null;
+                                                feed.lastErrorCode = null;
+                                                feed.lastChecked = new Date().toISOString();
+                                                feed.proxyRequired = proxy.name; // 使用したプロキシを記録
+                                                store.put(feed);
+                                            }
+                                        };
+                                    } catch (e) {
+                                        console.log('DB更新エラー:', e);
+                                    }
+                                }
+                                
+                                if (!feedId) alert(result.message);
+                                return result;
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`${proxy.name}でエラー:`, error.message);
+                    }
+                }
+                
+                // すべてのプロキシが失敗した場合
                 const errorInfo = {
                     success: false,
-                    message: '⚠️ このサイトは現在アクセス制限があります',
+                    message: '⚠️ このサイトは現在アクセス制限があります\n\n代替プロキシも試しましたが、アクセスできませんでした。',
                     errorCode: 'RESTRICTED_SITE'
                 };
                 
@@ -1068,50 +1354,61 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 }
             }
             
-            // UIへのアラート表示
-            alert(errorInfo.message);
+            // UIへのアラート表示（エラーの場合は詳細情報も含める）
+            if (!errorInfo.success && errorInfo.errorCode) {
+                let detailMessage = errorInfo.message;
+                
+                // エラーコードに応じた詳細説明を追加
+                switch(errorInfo.errorCode) {
+                    case 'NETWORK_ERROR':
+                        detailMessage += '\n\n【エラー詳細】\nネットワーク接続を確認してください。\nプロキシやファイアウォールの設定も確認してください。';
+                        break;
+                    case 'HTML_CONTENT':
+                        detailMessage += '\n\n【エラー詳細】\nURLがRSSフィードではなく、通常のWebページを指している可能性があります。\n正しいRSS/AtomフィードのURLか確認してください。';
+                        break;
+                    case 'INVALID_FEED':
+                        detailMessage += '\n\n【エラー詳細】\nXML形式が正しくないか、RSS/Atomフィードの仕様に準拠していません。\nフィード提供元に問題がある可能性があります。';
+                        break;
+                    case 'RESTRICTED_SITE':
+                        detailMessage += '\n\n【エラー詳細】\nこのサイトは地域制限またはアクセス制限があります。\nVPNを使用するか、別のRSSサービス経由でアクセスしてみてください。';
+                        break;
+                    case 'JSON_PARSE_ERROR':
+                        detailMessage += '\n\n【エラー詳細】\nサーバーからの応答を解析できませんでした。\nフィードが一時的に利用できない可能性があります。';
+                        break;
+                    default:
+                        if (errorInfo.errorCode.startsWith('HTTP_')) {
+                            const statusCode = errorInfo.errorCode.replace('HTTP_', '');
+                            detailMessage += `\n\n【エラー詳細】\nHTTPステータスコード: ${statusCode}\n`;
+                            
+                            // 一般的なHTTPエラーコードの説明
+                            switch(statusCode) {
+                                case '403':
+                                    detailMessage += 'アクセスが拒否されました。認証が必要か、アクセス権限がありません。';
+                                    break;
+                                case '404':
+                                    detailMessage += 'フィードが見つかりません。URLが正しいか確認してください。';
+                                    break;
+                                case '500':
+                                case '502':
+                                case '503':
+                                    detailMessage += 'サーバー側でエラーが発生しています。時間をおいて再度お試しください。';
+                                    break;
+                                case '429':
+                                    detailMessage += 'リクエスト制限に達しました。時間をおいて再度お試しください。';
+                                    break;
+                            }
+                        }
+                }
+                
+                alert(detailMessage);
+            } else {
+                alert(errorInfo.message);
+            }
             
             return errorInfo;
         }
 
-        // 全フィード更新
-        async function updateAllFeeds() {
-            const feeds = await getAllFeeds();
-            const activeFeeds = feeds.filter(f => f.active);
-            
-            if (activeFeeds.length === 0) {
-                alert('アクティブなフィードがありません');
-                return;
-            }
-            
-            alert(`${activeFeeds.length}個のフィードを更新中...`);
-            
-            let successCount = 0;
-            let errorCount = 0;
-            
-            for (const feed of activeFeeds) {
-                feed.lastUpdate = new Date().toISOString();
-                
-                // 各フィードをテストしてエラー情報を更新
-                const result = await testFeed(feed.url, feed.id);
-                if (result.success) {
-                    successCount++;
-                } else {
-                    errorCount++;
-                }
-                
-                await updateFeed(feed);
-            }
-            
-            displayFeeds();
-            
-            let message = '更新完了しました\n';
-            message += `✅ 成功: ${successCount}個\n`;
-            if (errorCount > 0) {
-                message += `❌ エラー: ${errorCount}個`;
-            }
-            alert(message);
-        }
+        // この関数は削除（「全て更新」ボタンを削除したため不要）
 
         // インポートモーダル
         function showImportModal() {
@@ -1688,20 +1985,897 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             previewContainer.style.display = 'block';
         }
 
-        // エクスポート
+        // エクスポートオプション表示
+        function showExportOptions() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <span class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                        <h2>📤 エクスポート設定</h2>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="exportWithStatus" checked>
+                            ステータス情報を含める
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="exportOnlyActive">
+                            正常なフィードのみエクスポート
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="exportWithErrors" checked>
+                            エラー詳細を含める
+                        </label>
+                    </div>
+                    <div style="text-align: right;">
+                        <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">キャンセル</button>
+                        <button class="btn btn-success" onclick="exportFeeds()" style="margin-left: 10px;">エクスポート</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // エクスポート実行
         async function exportFeeds() {
             const feeds = await getAllFeeds();
-            const exportData = feeds.map(f => `${f.name}|${f.url}|${f.category || ''}`).join('\n');
+            const withStatus = document.getElementById('exportWithStatus')?.checked ?? true;
+            const onlyActive = document.getElementById('exportOnlyActive')?.checked ?? false;
+            const withErrors = document.getElementById('exportWithErrors')?.checked ?? true;
             
-            const blob = new Blob([exportData], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rss-feeds-${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+            let filteredFeeds = feeds;
+            if (onlyActive) {
+                filteredFeeds = feeds.filter(f => f.active && !f.fetchError);
+            }
+            
+            let exportData = '';
+            
+            if (withStatus || withErrors) {
+                // 詳細フォーマット（JSON）
+                const exportObj = {
+                    exportDate: new Date().toISOString(),
+                    totalCount: filteredFeeds.length,
+                    feeds: filteredFeeds.map(f => {
+                        const feedData = {
+                            name: f.name,
+                            url: f.url,
+                            category: f.category || ''
+                        };
+                        
+                        if (withStatus) {
+                            feedData.active = f.active;
+                            feedData.lastUpdate = f.lastUpdate;
+                            feedData.lastChecked = f.lastChecked || null;
+                        }
+                        
+                        if (withErrors && f.fetchError) {
+                            feedData.error = {
+                                hasError: true,
+                                message: f.lastError || 'エラー詳細なし',
+                                errorCode: f.lastErrorCode || 'UNKNOWN'
+                            };
+                        }
+                        
+                        return feedData;
+                    })
+                };
+                exportData = JSON.stringify(exportObj, null, 2);
+                
+                const blob = new Blob([exportData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rss-feeds-detailed-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                // シンプルフォーマット（テキスト）
+                exportData = filteredFeeds.map(f => `${f.name}|${f.url}|${f.category || ''}`).join('\n');
+                
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rss-feeds-${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+            // モーダルを閉じる
+            document.querySelector('.modal.active')?.remove();
+            
+            alert(`✅ ${filteredFeeds.length}件のフィードをエクスポートしました`);
         }
 
+        // AI RSS探索機能
+        function showAIRSSFinder() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <span class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                        <h2>🤖 AI RSS探索</h2>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <p style="margin-bottom: 15px;">探したいサイトやトピックを入力してください：</p>
+                        <textarea id="aiSearchQuery" style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" 
+                                  placeholder="例：\n・日本のAI関連ニュースサイト\n・量子コンピュータの最新情報\n・スタートアップ企業のブログ\n・特定のサイト名（TechCrunch Japan など）"></textarea>
+                        
+                        <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <strong>💡 ヒント：</strong>
+                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em; color: #666;">
+                                <li>具体的なサイト名を入力すると、そのサイトのRSSフィードを探します</li>
+                                <li>トピックを入力すると、関連するサイトのRSSを提案します</li>
+                                <li>複数のキーワードをカンマで区切って入力できます</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="aiSearchResults" style="display: none; margin: 20px 0; max-height: 300px; overflow-y: auto;"></div>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">閉じる</button>
+                        <button class="btn btn-primary" onclick="searchRSSWithAI()" style="margin-left: 10px;">🔍 探索開始</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // AI RSS探索実行
+        async function searchRSSWithAI() {
+            const query = document.getElementById('aiSearchQuery').value.trim();
+            if (!query) {
+                alert('検索キーワードを入力してください');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('aiSearchResults');
+            resultsDiv.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div class="searching-animation">
+                        <div class="search-icon-animated">🔍</div>
+                        <div class="spinner"></div>
+                    </div>
+                    <div style="margin-top: 15px; color: #667eea;">
+                        「${query}」に関連するRSSを探しています...
+                    </div>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+            
+            // アニメーションを表示してから検索実行
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // よく知られたRSSフィードのデータベース（実際の運用では外部APIを使用）
+            const knownFeeds = {
+                'techcrunch': ['https://jp.techcrunch.com/feed/', 'TechCrunch Japan', 'テクノロジー'],
+                'gigazine': ['https://gigazine.net/news/rss_2.0/', 'GIGAZINE', 'テクノロジー'],
+                'itmedia': ['https://rss.itmedia.co.jp/rss/2.0/aiplus.xml', 'ITmedia AI+', 'AI・機械学習'],
+                'zdnet': ['https://japan.zdnet.com/rss/index.rdf', 'ZDNet Japan', 'テクノロジー'],
+                'cnet': ['https://japan.cnet.com/rss/index.rdf', 'CNET Japan', 'テクノロジー'],
+                'publickey': ['https://www.publickey1.jp/atom.xml', 'Publickey', 'テクノロジー'],
+                'gihyo': ['https://gihyo.jp/feed/rss2', '技術評論社', 'テクノロジー'],
+                'atmarkit': ['https://rss.itmedia.co.jp/rss/2.0/ait.xml', '@IT', 'テクノロジー'],
+                'wired': ['https://wired.jp/rssfeeder/', 'WIRED.jp', 'テクノロジー'],
+                'engadget': ['https://japanese.engadget.com/rss.xml', 'Engadget 日本版', 'ガジェット'],
+                'lifehacker': ['https://www.lifehacker.jp/index.xml', 'ライフハッカー', 'ライフスタイル'],
+                'business': ['https://www.businessinsider.jp/feed/index.xml', 'Business Insider Japan', 'ビジネス'],
+                'newspicks': ['https://newspicks.com/feed', 'NewsPicks', 'ビジネス'],
+                '経産省': ['https://www.meti.go.jp/news/news_rss.xml', '経済産業省', '官公庁'],
+                '総務省': ['https://www.soumu.go.jp/news/news_rss.xml', '総務省', '官公庁'],
+                'ai': ['https://ledge.ai/rss/', 'Ledge.ai', 'AI・機械学習'],
+                'quantum': ['https://quantum.fixstars.com/feed/', 'Fixstars Quantum', '量子コンピュータ'],
+                'startup': ['https://jp.startupdb.news/rss', 'STARTUP DB NEWS', 'スタートアップ']
+            };
+            
+            // キーワードマッチング
+            const queryLower = query.toLowerCase();
+            const matches = [];
+            
+            for (const [key, value] of Object.entries(knownFeeds)) {
+                if (queryLower.includes(key) || 
+                    value[1].toLowerCase().includes(queryLower) ||
+                    value[2].includes(query) ||
+                    (query.includes('AI') && value[2].includes('AI')) ||
+                    (query.includes('量子') && key.includes('quantum')) ||
+                    (query.includes('スタートアップ') && value[2].includes('スタートアップ'))) {
+                    matches.push(value);
+                }
+            }
+            
+            // カテゴリベースの推薦
+            if (query.includes('ニュース') || query.includes('news')) {
+                matches.push(
+                    ['https://news.yahoo.co.jp/rss/topics/it.xml', 'Yahoo!ニュース IT', 'ニュース'],
+                    ['https://www3.nhk.or.jp/rss/news/cat7.xml', 'NHK 科学・IT', 'ニュース']
+                );
+            }
+            
+            if (query.includes('ブログ') || query.includes('blog')) {
+                matches.push(
+                    ['https://blog.google/rss/', 'Google Blog', 'ブログ'],
+                    ['https://aws.amazon.com/jp/blogs/news/feed/', 'AWS News Blog', 'クラウド']
+                );
+            }
+            
+            // 結果表示
+            if (matches.length > 0) {
+                let html = `
+                    <h3 style="margin-bottom: 15px;">🎯 見つかったRSSフィード（${matches.length}件）</h3>
+                    <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                `;
+                
+                for (const [url, name, category] of matches) {
+                    html += `
+                        <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${name}</strong> 
+                                <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 3px; font-size: 0.85em; margin-left: 10px;">${category}</span>
+                                <div style="color: #666; font-size: 0.85em; margin-top: 5px;">${url}</div>
+                            </div>
+                            <button class="btn btn-small btn-primary" onclick="addAISuggestedFeed('${name}', '${url}', '${category}')">追加</button>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">😔</div>
+                        <div>該当するRSSフィードが見つかりませんでした</div>
+                        <div style="margin-top: 10px; font-size: 0.9em;">別のキーワードで試してみてください</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // エラー発生時の代替RSS探索
+        async function findAlternativeRSS(feedId, feedName) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <span class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                        <h2>🤖 代替RSS探索</h2>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <p style="margin-bottom: 15px;">
+                            <strong>${feedName}</strong> のRSSが取得できません。<br>
+                            代替のRSS URLを探しています...
+                        </p>
+                        <div id="alternativeResults" style="text-align: center; padding: 20px;">
+                            <div class="searching-animation">
+                                <div class="search-icon-animated">🔍</div>
+                                <div class="spinner"></div>
+                                <div class="dots-container">
+                                    <div class="pulse-dot"></div>
+                                    <div class="pulse-dot"></div>
+                                    <div class="pulse-dot"></div>
+                                </div>
+                            </div>
+                            <div class="search-status">
+                                <div id="searchStatusText">代替RSSを探索中...</div>
+                                <div class="search-progress">
+                                    <div class="search-progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // 遅延実行でモーダル表示後に探索開始
+            setTimeout(() => searchAlternativeFeeds(feedId, feedName), 100);
+        }
+        
+        // 代替RSSの探索実行
+        async function searchAlternativeFeeds(feedId, feedName) {
+            const resultsDiv = document.getElementById('alternativeResults');
+            const statusText = document.getElementById('searchStatusText');
+            
+            // ステータス更新関数
+            const updateStatus = (message) => {
+                if (statusText) {
+                    statusText.textContent = message;
+                }
+            };
+            
+            // 現在のフィード情報を取得
+            const feeds = await getAllFeeds();
+            const currentFeed = feeds.find(f => f.id === feedId);
+            const currentUrl = currentFeed ? currentFeed.url : '';
+            
+            // URLからドメインを抽出
+            let domain = '';
+            try {
+                const urlObj = new URL(currentUrl);
+                domain = urlObj.hostname;
+            } catch (e) {
+                // URLが無効な場合はフィード名から推測
+            }
+            
+            // サイト名からキーワードを抽出
+            const keywords = feedName.toLowerCase()
+                .replace(/日本版|日本|japan|jp/gi, '')
+                .replace(/rss|feed|news|ニュース/gi, '')
+                .trim();
+            
+            // 代替候補のパターン
+            const alternativePatterns = {
+                // サイト名から一般的なRSS URLパターンを生成
+                'techcrunch': [
+                    'https://jp.techcrunch.com/feed/',
+                    'https://techcrunch.com/feed/',
+                    'https://jp.techcrunch.com/rss',
+                    'https://techcrunch.com/category/artificial-intelligence/feed/'
+                ],
+                'gigazine': [
+                    'https://gigazine.net/news/rss_2.0/',
+                    'https://gigazine.net/news/rss_1.0/',
+                    'https://gigazine.net/feed/'
+                ],
+                'itmedia': [
+                    'https://rss.itmedia.co.jp/rss/2.0/aiplus.xml',
+                    'https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml',
+                    'https://rss.itmedia.co.jp/rss/2.0/it.xml',
+                    'https://www.itmedia.co.jp/rss/index.html'
+                ],
+                'zdnet': [
+                    'https://japan.zdnet.com/rss/index.rdf',
+                    'https://japan.zdnet.com/rss/news/index.rdf',
+                    'https://feeds.japan.zdnet.com/rss/zdnet/all.rdf'
+                ],
+                'cnet': [
+                    'https://japan.cnet.com/rss/index.rdf',
+                    'https://feeds.japan.cnet.com/rss/cnet/all.rdf',
+                    'https://japan.cnet.com/rss/'
+                ],
+                'wired': [
+                    'https://wired.jp/rssfeeder/',
+                    'https://wired.jp/feed/',
+                    'https://www.wired.jp/rss/index.xml'
+                ],
+                'engadget': [
+                    'https://japanese.engadget.com/rss.xml',
+                    'https://www.engadget.com/rss.xml',
+                    'https://japanese.engadget.com/feed/'
+                ],
+                'note': [
+                    'https://note.com/api/v2/rss',
+                    'https://note.mu/rss'
+                ],
+                'qiita': [
+                    'https://qiita.com/popular-items/feed',
+                    'https://qiita.com/tags/ai/feed',
+                    'https://qiita.com/tags/machinelearning/feed'
+                ],
+                'zenn': [
+                    'https://zenn.dev/feed',
+                    'https://zenn.dev/topics/ai/feed',
+                    'https://zenn.dev/topics/machinelearning/feed'
+                ]
+            };
+            
+            // マッチする代替候補を探す
+            let alternatives = [];
+            let matched = false;
+            
+            for (const [key, urls] of Object.entries(alternativePatterns)) {
+                if (keywords.includes(key) || feedName.toLowerCase().includes(key)) {
+                    matched = true;
+                    // 各URLをテスト
+                    for (const url of urls) {
+                        alternatives.push({
+                            url: url,
+                            name: `${feedName} (代替${alternatives.length + 1})`,
+                            status: 'testing'
+                        });
+                    }
+                    break;
+                }
+            }
+            
+            // マッチしない場合は一般的なURLパターンを試す
+            if (!matched) {
+                // 現在のドメインがある場合はそれを使用
+                if (domain) {
+                    // よく使われるRSSパス
+                    const commonPaths = [
+                        '/feed/', '/feeds/', '/rss/', '/rss',
+                        '/rss.xml', '/feed.xml', '/atom.xml', '/index.xml',
+                        '/index.rdf', '/rss2.xml', '/rss1.xml',
+                        '/blog/feed/', '/news/feed/', '/articles/feed/',
+                        '/posts/feed/', '/feed/rss/', '/feed/atom/',
+                        '/?feed=rss2', '/?feed=rss', '/?feed=atom',
+                        '/api/rss', '/api/feed', '/api/v1/rss',
+                        '/en/feed/', '/ja/feed/', '/jp/feed/',
+                        '/feeds/all.atom.xml', '/feeds/news.xml'
+                    ];
+                    
+                    for (const path of commonPaths) {
+                        alternatives.push({
+                            url: `https://${domain}${path}`,
+                            name: `${domain}${path}`,
+                            priority: path.includes('feed') || path.includes('rss') ? 1 : 2
+                        });
+                    }
+                    
+                    // サブドメインも試す
+                    if (!domain.startsWith('www.')) {
+                        alternatives.push(
+                            { url: `https://www.${domain}/feed/`, name: `www.${domain}/feed/`, priority: 2 },
+                            { url: `https://www.${domain}/rss/`, name: `www.${domain}/rss/`, priority: 2 }
+                        );
+                    }
+                    
+                    // 言語別パスも試す（ENISAなど国際機関向け）
+                    if (domain.includes('.eu') || domain.includes('.europa')) {
+                        alternatives.push(
+                            { url: `https://${domain}/rss-feeds`, name: `${domain}/rss-feeds`, priority: 1 },
+                            { url: `https://${domain}/news/rss`, name: `${domain}/news/rss`, priority: 1 },
+                            { url: `https://${domain}/media/news-items/RSS`, name: `${domain}/media/news-items/RSS`, priority: 2 }
+                        );
+                    }
+                } else {
+                    // ドメインがない場合はキーワードから推測
+                    const possibleDomains = [
+                        keywords.replace(/\s+/g, '') + '.com',
+                        keywords.replace(/\s+/g, '') + '.jp',
+                        keywords.replace(/\s+/g, '') + '.net',
+                        keywords.replace(/\s+/g, '') + '.org',
+                        keywords.replace(/\s+/g, '') + '.io'
+                    ];
+                    
+                    for (const d of possibleDomains.slice(0, 2)) { // 最初の2つだけ試す
+                        alternatives.push(
+                            { url: `https://${d}/feed/`, name: `${d}/feed/`, priority: 3 },
+                            { url: `https://${d}/rss/`, name: `${d}/rss/`, priority: 3 }
+                        );
+                    }
+                }
+                
+                // 優先度でソート
+                alternatives.sort((a, b) => (a.priority || 999) - (b.priority || 999));
+            }
+            
+            // 結果表示
+            if (alternatives.length > 0) {
+                let html = `
+                    <h3 style="margin-bottom: 15px;">🎯 代替候補（${alternatives.length}件）</h3>
+                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                `;
+                
+                // 各URLをテスト
+                const totalTests = Math.min(alternatives.length, 10);
+                let testedCount = 0;
+                
+                for (const alt of alternatives.slice(0, totalTests)) {
+                    testedCount++;
+                    updateStatus(`テスト中 (${testedCount}/${totalTests}): ${alt.name || alt.url}`);
+                    
+                    const testResult = await testFeedQuick(alt.url);
+                    
+                    if (testResult.success) {
+                        html += `
+                            <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #e8f5e9;">
+                                <div>
+                                    <div style="color: #2e7d32; font-weight: bold;">✅ ${alt.name || alt.url}</div>
+                                    <div style="color: #666; font-size: 0.85em; margin-top: 5px;">${alt.url}</div>
+                                    <div style="color: #4caf50; font-size: 0.85em;">${testResult.message}</div>
+                                </div>
+                                <button class="btn btn-small btn-primary" onclick="replaceRSSUrl(${feedId}, '${alt.url}')"
+                                        title="このURLに置き換え">
+                                    置き換え
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="padding: 10px; border-bottom: 1px solid #eee; opacity: 0.5;">
+                                <div style="color: #999;">❌ ${alt.name || alt.url}</div>
+                                <div style="color: #999; font-size: 0.85em;">${testResult.message}</div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += `
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>💡 ヒント：</strong>
+                        <ul style="margin: 10px 0 0 20px; font-size: 0.9em; color: #666;">
+                            <li>緑色の候補は正常に動作しているRSSフィードです</li>
+                            <li>「置き換え」をクリックすると、現在のURLを新しいURLに更新します</li>
+                            <li>表示されていない場合は、手動で正しいURLを入力してください</li>
+                        </ul>
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = html;
+            } else {
+                // アニメーションを停止して結果表示
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 2em; margin-bottom: 10px; animation: pulse 2s ease-in-out;">😔</div>
+                        <div>代替RSSが見つかりませんでした</div>
+                        <div style="margin-top: 10px; font-size: 0.9em;">
+                            サイトの公式ページからRSSリンクを探してみてください
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // クイックRSSテスト（タイムアウト付き）
+        async function testFeedQuick(url) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒タイムアウト
+                
+                const workerUrl = 'https://polished-snow-477a.yutapii.workers.dev';
+                const testUrl = `${workerUrl}?url=${encodeURIComponent(url)}`;
+                
+                const response = await fetch(testUrl, {
+                    mode: 'cors',
+                    credentials: 'omit',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('<rss') || text.includes('<feed') || text.includes('<item>') || text.includes('<entry>')) {
+                        const parser = new DOMParser();
+                        const xml = parser.parseFromString(text, 'text/xml');
+                        const items = xml.querySelectorAll('item, entry');
+                        return {
+                            success: true,
+                            message: `${items.length}件の記事を検出`
+                        };
+                    }
+                }
+                
+                return {
+                    success: false,
+                    message: `HTTP ${response.status}`
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.name === 'AbortError' ? 'タイムアウト' : 'エラー'
+                };
+            }
+        }
+        
+        // RSS URLの置き換え
+        async function replaceRSSUrl(feedId, newUrl) {
+            if (!confirm(`RSS URLを\n${newUrl}\nに置き換えますか？`)) {
+                return;
+            }
+            
+            try {
+                const feeds = await getAllFeeds();
+                const feed = feeds.find(f => f.id === feedId);
+                
+                if (feed) {
+                    feed.url = newUrl;
+                    feed.fetchError = false;
+                    feed.lastError = null;
+                    feed.lastErrorCode = null;
+                    feed.lastUpdate = new Date().toISOString();
+                    
+                    await updateFeed(feed);
+                    
+                    alert('✅ RSS URLを更新しました');
+                    
+                    // モーダルを閉じて一覧を更新
+                    document.querySelector('.modal.active')?.remove();
+                    await displayFeeds();
+                }
+            } catch (error) {
+                alert('❌ 更新に失敗しました: ' + error.message);
+            }
+        }
+        
+        // AI提案フィードの追加
+        async function addAISuggestedFeed(name, url, category) {
+            // 既存のフィードと重複チェック
+            const existingFeeds = await getAllFeeds();
+            if (existingFeeds.some(f => f.url === url)) {
+                alert('⚠️ このフィードは既に登録されています');
+                return;
+            }
+            
+            const feed = {
+                name: name,
+                url: url,
+                category: category
+            };
+            
+            try {
+                await addFeed(feed);
+                alert('✅ フィードを追加しました');
+                
+                // モーダルを閉じて一覧を更新
+                document.querySelector('.modal.active')?.remove();
+                await displayFeeds();
+            } catch (error) {
+                alert('❌ 追加に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 自動テスト機能
+        function showAutoTestModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <span class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                        <h2>🔄 自動テスト設定</h2>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <h3 style="margin-bottom: 15px;">テスト対象を選択：</h3>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin: 10px 0; cursor: pointer;">
+                                <input type="radio" name="testTarget" value="all" checked>
+                                <strong>全てのフィード</strong> - 登録されている全フィードをテスト
+                            </label>
+                            <label style="display: block; margin: 10px 0; cursor: pointer;">
+                                <input type="radio" name="testTarget" value="active">
+                                <strong>アクティブのみ</strong> - 有効化されているフィードのみ
+                            </label>
+                            <label style="display: block; margin: 10px 0; cursor: pointer;">
+                                <input type="radio" name="testTarget" value="error">
+                                <strong>エラーのみ</strong> - エラーが発生しているフィードのみ
+                            </label>
+                            <label style="display: block; margin: 10px 0; cursor: pointer;">
+                                <input type="radio" name="testTarget" value="category">
+                                <strong>カテゴリ別</strong> - 特定のカテゴリのみ
+                                <select id="testCategory" style="margin-left: 10px; padding: 5px;">
+                                    <option value="">選択してください</option>
+                                    <option value="テクノロジー">テクノロジー</option>
+                                    <option value="ビジネス">ビジネス</option>
+                                    <option value="AI・機械学習">AI・機械学習</option>
+                                    <option value="スタートアップ">スタートアップ</option>
+                                    <option value="官公庁">官公庁</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </label>
+                        </div>
+                        
+                        <h3 style="margin: 20px 0 15px 0;">オプション：</h3>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="autoFix" checked>
+                            <strong>エラーを自動修正</strong> - エラーが見つかった場合、代替RSSを自動探索
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="stopOnError">
+                            <strong>エラーで停止</strong> - エラーが発生したらテストを中断
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="detailedLog" checked>
+                            <strong>詳細ログ表示</strong> - テスト結果を詳細に表示
+                        </label>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <strong>💡 ヒント：</strong>
+                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em; color: #666;">
+                                <li>テストはバックグラウンドで実行されます</li>
+                                <li>エラー自動修正を有効にすると、代替RSSが見つかった場合自動的にURLを更新します</li>
+                                <li>テスト中でも他の操作は可能です</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="autoTestProgress" style="display: none; margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 5px;">
+                        <h3 style="margin-bottom: 10px;">🎯 テスト進行中...</h3>
+                        <div class="search-progress">
+                            <div id="testProgressBar" class="search-progress-bar" style="width: 0%; transition: width 0.5s;"></div>
+                        </div>
+                        <div id="testStatusText" style="margin-top: 10px; font-size: 0.9em;"></div>
+                        <div id="testResults" style="margin-top: 15px; max-height: 200px; overflow-y: auto; font-size: 0.85em;"></div>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">閉じる</button>
+                        <button id="startTestBtn" class="btn btn-success" onclick="startAutoTest()" style="margin-left: 10px;">
+                            🚀 テスト開始
+                        </button>
+                        <button id="stopTestBtn" class="btn btn-danger" onclick="stopAutoTest()" style="margin-left: 10px; display: none;">
+                            ⏹️ 中止
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        let autoTestRunning = false;
+        let autoTestAborted = false;
+        
+        // 自動テスト開始
+        async function startAutoTest() {
+            if (autoTestRunning) return;
+            
+            autoTestRunning = true;
+            autoTestAborted = false;
+            
+            // UI更新
+            document.getElementById('startTestBtn').style.display = 'none';
+            document.getElementById('stopTestBtn').style.display = 'inline-block';
+            document.getElementById('autoTestProgress').style.display = 'block';
+            
+            // 設定取得
+            const testTarget = document.querySelector('input[name="testTarget"]:checked').value;
+            const autoFix = document.getElementById('autoFix').checked;
+            const stopOnError = document.getElementById('stopOnError').checked;
+            const detailedLog = document.getElementById('detailedLog').checked;
+            const testCategory = document.getElementById('testCategory').value;
+            
+            // テスト対象フィードを取得
+            let feeds = await getAllFeeds();
+            let testFeeds = [];
+            
+            switch(testTarget) {
+                case 'all':
+                    testFeeds = feeds;
+                    break;
+                case 'active':
+                    testFeeds = feeds.filter(f => f.active);
+                    break;
+                case 'error':
+                    testFeeds = feeds.filter(f => f.fetchError);
+                    break;
+                case 'category':
+                    if (testCategory) {
+                        testFeeds = feeds.filter(f => f.category === testCategory);
+                    }
+                    break;
+            }
+            
+            if (testFeeds.length === 0) {
+                alert('テスト対象のフィードがありません');
+                autoTestRunning = false;
+                document.getElementById('startTestBtn').style.display = 'inline-block';
+                document.getElementById('stopTestBtn').style.display = 'none';
+                return;
+            }
+            
+            // テスト実行
+            const progressBar = document.getElementById('testProgressBar');
+            const statusText = document.getElementById('testStatusText');
+            const resultsDiv = document.getElementById('testResults');
+            
+            let successCount = 0;
+            let errorCount = 0;
+            let fixedCount = 0;
+            let results = [];
+            
+            statusText.textContent = `テスト中... (0/${testFeeds.length})`;
+            resultsDiv.innerHTML = '';
+            
+            for (let i = 0; i < testFeeds.length; i++) {
+                if (autoTestAborted) {
+                    statusText.textContent = 'テストが中断されました';
+                    break;
+                }
+                
+                const feed = testFeeds[i];
+                const progress = ((i + 1) / testFeeds.length) * 100;
+                progressBar.style.width = progress + '%';
+                statusText.textContent = `テスト中... (${i + 1}/${testFeeds.length}) - ${feed.name}`;
+                
+                // テスト実行
+                const result = await testFeed(feed.url, feed.id);
+                
+                if (result.success) {
+                    successCount++;
+                    if (detailedLog) {
+                        resultsDiv.innerHTML += `<div style="color: green;">✅ ${feed.name}: ${result.message}</div>`;
+                    }
+                } else {
+                    errorCount++;
+                    if (detailedLog) {
+                        resultsDiv.innerHTML += `<div style="color: red;">❌ ${feed.name}: ${result.message}</div>`;
+                    }
+                    
+                    // 自動修正
+                    if (autoFix && (result.errorCode === 'HTML_CONTENT' || result.errorCode === 'INVALID_FEED')) {
+                        statusText.textContent = `${feed.name} の代替RSSを探索中...`;
+                        
+                        // 代替RSSを探す
+                        const alternatives = await searchAlternativesQuietly(feed);
+                        if (alternatives.length > 0) {
+                            // 最初の有効な代替を使用
+                            const newUrl = alternatives[0].url;
+                            feed.url = newUrl;
+                            feed.fetchError = false;
+                            feed.lastError = null;
+                            await updateFeed(feed);
+                            fixedCount++;
+                            
+                            if (detailedLog) {
+                                resultsDiv.innerHTML += `<div style="color: blue;">🔧 ${feed.name}: URLを自動修正しました</div>`;
+                            }
+                        }
+                    }
+                    
+                    // エラーで停止
+                    if (stopOnError) {
+                        statusText.textContent = 'エラーが発生したためテストを停止しました';
+                        break;
+                    }
+                }
+                
+                // 少し待機（サーバー負荷軽減）
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // 完了
+            progressBar.style.width = '100%';
+            statusText.innerHTML = `
+                <strong>テスト完了！</strong><br>
+                ✅ 成功: ${successCount} | ❌ エラー: ${errorCount} | 🔧 自動修正: ${fixedCount}
+            `;
+            
+            // フィード一覧を更新
+            await displayFeeds();
+            
+            // UIリセット
+            autoTestRunning = false;
+            document.getElementById('startTestBtn').style.display = 'inline-block';
+            document.getElementById('stopTestBtn').style.display = 'none';
+        }
+        
+        // 自動テスト中止
+        function stopAutoTest() {
+            autoTestAborted = true;
+            autoTestRunning = false;
+            document.getElementById('startTestBtn').style.display = 'inline-block';
+            document.getElementById('stopTestBtn').style.display = 'none';
+        }
+        
+        // 静かに代替RSSを探す（モーダルを表示しない）
+        async function searchAlternativesQuietly(feed) {
+            const currentUrl = feed.url;
+            let domain = '';
+            try {
+                const urlObj = new URL(currentUrl);
+                domain = urlObj.hostname;
+            } catch (e) {
+                return [];
+            }
+            
+            if (!domain) return [];
+            
+            // 一般的なRSSパスを試す
+            const commonPaths = [
+                '/feed/', '/rss/', '/rss.xml', '/feed.xml', 
+                '/atom.xml', '/index.xml', '/index.rdf'
+            ];
+            
+            const alternatives = [];
+            for (const path of commonPaths) {
+                const testUrl = `https://${domain}${path}`;
+                const result = await testFeedQuick(testUrl);
+                if (result.success) {
+                    alternatives.push({ url: testUrl, success: true });
+                }
+            }
+            
+            return alternatives;
+        }
+        
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOMContentLoaded: 初期化開始');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配信RSS - 記事表示 | SCF V5</title>
+    <title>配信RSS - 記事表示 | 日刊AIゆたさん新聞</title>
     <style>
         * {
             margin: 0;
@@ -98,20 +98,133 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 14px;
         }
 
-        .date-filter {
+        /* 日刊AIゆたさん新聞 4分野フィルター */
+        .main-categories {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .category-header {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .category-filter {
             display: flex;
             gap: 10px;
-            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .date-filter input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            color: #666;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .category-btn.active {
+            color: white;
+            font-weight: 600;
+        }
+
+        .category-btn.active[data-category="all"] {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #667eea;
+        }
+
+        .category-btn.active[data-category="ai"] {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #667eea;
+        }
+
+        .category-btn.active[data-category="robot"] {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border-color: #f093fb;
+        }
+
+        .category-btn.active[data-category="auto"] {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-color: #4facfe;
+        }
+
+        .category-btn.active[data-category="telecom"] {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            border-color: #43e97b;
+        }
+
+        .category-btn.active[data-category="other"] {
+            background: linear-gradient(135deg, #a8a8a8, #636363);
+            border-color: #a8a8a8;
+        }
+
+        .category-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .category-btn:not(.active) .category-count {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        /* 記事カテゴリバッジ */
+        .article-category-badge {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .badge-ai {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .badge-robot {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .badge-auto {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .badge-telecom {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+        }
+
+        .badge-other {
+            background: #e0e0e0;
+            color: #666;
         }
 
         .btn {
@@ -121,7 +234,6 @@
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s;
-            white-space: nowrap;
         }
 
         .btn-primary {
@@ -139,93 +251,22 @@
             color: white;
         }
 
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .stats-bar {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .stats-info {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .stat-value {
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .view-toggle {
-            display: flex;
-            gap: 5px;
-        }
-
-        .view-btn {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .view-btn:first-child {
-            border-radius: 5px 0 0 5px;
-        }
-
-        .view-btn:last-child {
-            border-radius: 0 5px 5px 0;
-        }
-
-        .view-btn.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-color: #667eea;
-        }
-
         .articles-container {
-            display: grid;
-            gap: 20px;
-        }
-
-        .articles-container.grid-view {
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        }
-
-        .article-card {
             background: white;
             border-radius: 10px;
-            padding: 20px;
+            overflow: hidden;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
         }
 
-        .article-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        .article-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .article-item:hover {
+            background: #f8f9fa;
         }
 
         .article-header {
@@ -235,110 +276,47 @@
             margin-bottom: 10px;
         }
 
-        .article-source {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-
-        .article-date {
-            color: #999;
-            font-size: 0.85em;
+        .article-select {
+            margin-right: 15px;
         }
 
         .article-title {
-            font-size: 1.2em;
+            flex: 1;
+            font-size: 1.1em;
             font-weight: bold;
             color: #333;
-            margin-bottom: 10px;
+            text-decoration: none;
             line-height: 1.4;
+        }
+
+        .article-title:hover {
+            color: #667eea;
         }
 
         .article-description {
             color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .article-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-
-        .article-link {
-            color: #667eea;
-            text-decoration: none;
             font-size: 0.9em;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+
+        .article-meta {
             display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .article-link:hover {
-            text-decoration: underline;
-        }
-
-        .article-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
+            gap: 15px;
             font-size: 0.85em;
-            transition: all 0.3s;
-        }
-
-        .action-btn:hover {
-            background: #f8f9fa;
-        }
-
-        .action-btn.saved {
-            background: #e8f5e9;
-            border-color: #4caf50;
-            color: #2e7d32;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
             color: #999;
+            align-items: center;
         }
 
-        .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .article-source {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 3px;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            background: white;
-            border-radius: 10px;
             color: #999;
         }
 
@@ -348,760 +326,585 @@
         }
 
         .empty-state-text {
-            font-size: 1.2em;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.5em;
-            color: #333;
+            font-size: 1.1em;
             margin-bottom: 10px;
         }
 
-        .modal-meta {
+        .stats-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
             color: #666;
-            font-size: 0.9em;
-        }
-
-        .modal-body {
-            line-height: 1.8;
-            color: #333;
-        }
-
-        .close-modal {
-            float: right;
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .close-modal:hover {
-            color: #333;
-        }
-
-        @media (max-width: 768px) {
-            .control-row {
-                flex-direction: column;
-            }
-            
-            .articles-container.grid-view {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-info {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
+            font-size: 0.85em;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📡 配信RSS - 記事表示</h1>
+            <h1>📡 配信RSS - 日刊AIゆたさん新聞</h1>
             <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
         </div>
     </div>
 
     <div class="container">
+        <!-- 統計バー -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalArticles">0</div>
+                <div class="stat-label">全記事数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="aiArticles">0</div>
+                <div class="stat-label">AI関連</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="robotArticles">0</div>
+                <div class="stat-label">ロボット</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="autoArticles">0</div>
+                <div class="stat-label">自動運転</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="telecomArticles">0</div>
+                <div class="stat-label">通信</div>
+            </div>
+        </div>
+
+        <!-- メイン4分野フィルター -->
+        <div class="main-categories">
+            <div class="category-header">📰 日刊AIゆたさん新聞 - メインカテゴリで絞り込み</div>
+            <div class="category-filter" id="categoryFilter">
+                <button class="category-btn active" data-category="all" onclick="filterByMainCategory('all')">
+                    <span>🌐 全て表示</span>
+                    <span class="category-count" id="count-all">0</span>
+                </button>
+                <button class="category-btn" data-category="ai" onclick="filterByMainCategory('ai')">
+                    <span>🤖 AI</span>
+                    <span class="category-count" id="count-ai">0</span>
+                </button>
+                <button class="category-btn" data-category="robot" onclick="filterByMainCategory('robot')">
+                    <span>🦾 ロボット</span>
+                    <span class="category-count" id="count-robot">0</span>
+                </button>
+                <button class="category-btn" data-category="auto" onclick="filterByMainCategory('auto')">
+                    <span>🚗 自動運転</span>
+                    <span class="category-count" id="count-auto">0</span>
+                </button>
+                <button class="category-btn" data-category="telecom" onclick="filterByMainCategory('telecom')">
+                    <span>📡 通信</span>
+                    <span class="category-count" id="count-telecom">0</span>
+                </button>
+                <button class="category-btn" data-category="other" onclick="filterByMainCategory('other')">
+                    <span>📰 その他</span>
+                    <span class="category-count" id="count-other">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- コントロール -->
         <div class="controls">
             <div class="control-row">
                 <div class="feed-selector">
                     <select id="feedSelector">
-                        <option value="all">すべてのフィード</option>
+                        <option value="all">全てのフィード</option>
                     </select>
                 </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="記事を検索...">
+                    <input type="text" id="searchInput" placeholder="記事をキーワード検索...">
                 </div>
                 <button class="btn btn-primary" onclick="fetchArticles()">🔄 更新</button>
-                <button class="btn btn-secondary" onclick="clearCache()">🗑️ キャッシュクリア</button>
-            </div>
-            <div class="control-row">
-                <div class="date-filter">
-                    <label>期間:</label>
-                    <input type="date" id="dateFrom">
-                    <span>〜</span>
-                    <input type="date" id="dateTo">
-                </div>
-                <button class="btn btn-success" onclick="exportArticles()">📥 エクスポート</button>
+                <button class="btn btn-secondary" onclick="saveSelectedArticles()">💾 選択を保存</button>
             </div>
         </div>
 
-        <div class="stats-bar">
-            <div class="stats-info">
-                <div class="stat-item">
-                    <span class="stat-label">記事数:</span>
-                    <span class="stat-value" id="articleCount">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">フィード数:</span>
-                    <span class="stat-value" id="feedCount">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">最終更新:</span>
-                    <span class="stat-value" id="lastUpdate">--:--</span>
-                </div>
-            </div>
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="setView('list')">📋 リスト</button>
-                <button class="view-btn" onclick="setView('grid')">📰 グリッド</button>
-            </div>
-        </div>
-
+        <!-- 記事一覧 -->
         <div class="articles-container" id="articlesContainer">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>記事を読み込み中...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 記事詳細モーダル -->
-    <div class="modal" id="articleModal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle"></h2>
-                <div class="modal-meta" id="modalMeta"></div>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button class="btn btn-secondary" onclick="closeModal()">閉じる</button>
-                <button class="btn btn-primary" onclick="saveArticle()" style="margin-left: 10px;">記事として保存</button>
+            <div class="empty-state">
+                <div class="empty-state-icon">📡</div>
+                <div class="empty-state-text">記事を取得するには</div>
+                <div class="empty-state-text">フィードを選択して更新ボタンをクリックしてください</div>
             </div>
         </div>
     </div>
 
     <script>
-        // IndexedDB設定
-        let db;
-        const DB_NAME = 'SCFV5_RSS';
-        const DB_VERSION = 2;
-
+        let allArticles = [];
+        let displayedArticles = [];
+        let savedArticles = [];
+        let currentCategoryFilter = 'all';
+        let db = null;
+        
+        // キーワードマッピング（日刊AIゆたさん新聞の4分野）
+        const categoryKeywords = {
+            ai: [
+                'AI', '人工知能', 'ChatGPT', 'GPT', 'Claude', 'Gemini', 'Copilot', 'LLM', '機械学習',
+                'ディープラーニング', '深層学習', 'ニューラルネット', 'OpenAI', 'Anthropic', 'Google AI',
+                '生成AI', '画像AI', '音声AI', 'Stable Diffusion', 'Midjourney', 'DALL-E',
+                'データサイエンス', 'ビッグデータ', '自然言語処理', 'NLP', 'AGI', '汎用人工知能',
+                'プロンプト', 'ファインチューニング', 'トランスフォーマー', 'Transformer',
+                'Hugging Face', 'LangChain', 'Vector', 'Embedding', 'RAG'
+            ],
+            robot: [
+                'ロボット', 'ロボ', 'ドローン', 'アンドロイド', 'サイボーグ', 'ボット',
+                'ヒューマノイド', '産業ロボット', 'サービスロボット', '介護ロボット',
+                'アシストスーツ', 'コボット', 'Boston Dynamics', 'Spot', 'Atlas',
+                'ロボティクス', 'ROS', 'メカトロニクス', 'オートメーション', '自動化',
+                'パワードスーツ', 'エクソスケルトン', 'ソフトロボット', '協働ロボット',
+                'AMR', 'AGV', 'モビリティロボット'
+            ],
+            auto: [
+                '自動運転', '自律走行', 'Tesla', 'テスラ', 'Waymo', 'Cruise', 'Robotaxi',
+                'ADAS', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'LiDAR', 'ライダー',
+                'EV', '電気自動車', 'BEV', 'FSD', 'Autopilot', 'MaaS', 'CASE',
+                'コネクテッドカー', '車載AI', 'V2X', '高度運転支援', 'センサーフュージョン',
+                'ミリ波レーダー', 'カメラセンサー', '自動駐車', 'OTA', 'ADAS',
+                'モビリティ', 'スマートカー', '完全自動運転'
+            ],
+            telecom: [
+                '5G', '6G', '通信', 'ネットワーク', 'IoT', 'エッジコンピューティング',
+                'クラウド', 'AWS', 'Azure', 'GCP', 'サーバー', 'データセンター',
+                'Wi-Fi', 'Bluetooth', 'NFC', 'セキュリティ', 'サイバーセキュリティ',
+                'ブロックチェーン', '量子通信', '衛星通信', 'Starlink', 'スターリンク',
+                'API', 'インフラ', 'CDN', 'VPN', '暗号化', 'ゼロトラスト',
+                'SD-WAN', 'NFV', 'ローカル5G', 'Beyond 5G', 'Open RAN',
+                '光ファイバー', 'FTTH', 'メタバース通信', 'XR通信'
+            ]
+        };
+        
+        // 記事をカテゴリ分類
+        function categorizeArticle(article) {
+            const text = (article.title + ' ' + (article.description || '')).toLowerCase();
+            
+            // 各カテゴリのスコアを計算
+            const scores = {
+                ai: 0,
+                robot: 0,
+                auto: 0,
+                telecom: 0
+            };
+            
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+                for (const keyword of keywords) {
+                    if (text.includes(keyword.toLowerCase())) {
+                        scores[category] += keyword.length > 5 ? 2 : 1; // 長いキーワードは重み付け
+                    }
+                }
+            }
+            
+            // 最高スコアのカテゴリを返す
+            let maxScore = 0;
+            let assignedCategory = 'other';
+            
+            for (const [category, score] of Object.entries(scores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                    assignedCategory = category;
+                }
+            }
+            
+            return maxScore > 0 ? assignedCategory : 'other';
+        }
+        
+        // メインカテゴリでフィルタリング
+        function filterByMainCategory(category) {
+            currentCategoryFilter = category;
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 記事をフィルタリングして表示
+            applyFilters();
+        }
+        
+        // カテゴリカウントを更新
+        function updateCategoryCounts(articles = allArticles) {
+            const counts = {
+                all: articles.length,
+                ai: 0,
+                robot: 0,
+                auto: 0,
+                telecom: 0,
+                other: 0
+            };
+            
+            articles.forEach(article => {
+                if (!article.category) {
+                    article.category = categorizeArticle(article);
+                }
+                counts[article.category]++;
+            });
+            
+            // カウントを表示
+            for (const [category, count] of Object.entries(counts)) {
+                const element = document.getElementById(`count-${category}`);
+                if (element) {
+                    element.textContent = count;
+                }
+            }
+            
+            // 統計バーも更新
+            document.getElementById('totalArticles').textContent = counts.all;
+            document.getElementById('aiArticles').textContent = counts.ai;
+            document.getElementById('robotArticles').textContent = counts.robot;
+            document.getElementById('autoArticles').textContent = counts.auto;
+            document.getElementById('telecomArticles').textContent = counts.telecom;
+        }
+        
+        // フィルターを適用
+        function applyFilters() {
+            let filtered = [...allArticles];
+            
+            // カテゴリフィルター
+            if (currentCategoryFilter !== 'all') {
+                filtered = filtered.filter(article => {
+                    if (!article.category) {
+                        article.category = categorizeArticle(article);
+                    }
+                    return article.category === currentCategoryFilter;
+                });
+            }
+            
+            // 検索フィルター
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(article => {
+                    return article.title.toLowerCase().includes(searchTerm) ||
+                           (article.description && article.description.toLowerCase().includes(searchTerm)) ||
+                           (article.source && article.source.toLowerCase().includes(searchTerm));
+                });
+            }
+            
+            displayedArticles = filtered;
+            displayArticles(filtered);
+        }
+        
+        // 記事表示
+        function displayArticles(articles) {
+            const container = document.getElementById('articlesContainer');
+            
+            // カテゴリカウントを更新
+            updateCategoryCounts(allArticles);
+            
+            if (articles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div class="empty-state-text">記事が見つかりません</div>
+                        <div class="empty-state-text">別のカテゴリや検索条件を試してください</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // カテゴリを割り当て
+            articles.forEach(article => {
+                if (!article.category) {
+                    article.category = categorizeArticle(article);
+                }
+            });
+            
+            const categoryBadgeClass = {
+                ai: 'badge-ai',
+                robot: 'badge-robot',
+                auto: 'badge-auto',
+                telecom: 'badge-telecom',
+                other: 'badge-other'
+            };
+            
+            const categoryNames = {
+                ai: 'AI',
+                robot: 'ロボット',
+                auto: '自動運転',
+                telecom: '通信',
+                other: 'その他'
+            };
+            
+            container.innerHTML = articles.map((article, index) => `
+                <div class="article-item">
+                    <div class="article-header">
+                        <input type="checkbox" class="article-select" data-index="${index}">
+                        <a href="${article.link}" target="_blank" class="article-title">
+                            ${article.title}
+                        </a>
+                    </div>
+                    <div class="article-description">${article.description || ''}</div>
+                    <div class="article-meta">
+                        <span class="article-source">${article.source || '不明'}</span>
+                        <span class="article-date">${article.pubDate ? new Date(article.pubDate).toLocaleString('ja-JP') : ''}</span>
+                        <span class="article-category-badge ${categoryBadgeClass[article.category]}">
+                            ${categoryNames[article.category]}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 記事取得
+        async function fetchArticles() {
+            const feedSelector = document.getElementById('feedSelector');
+            const selectedFeed = feedSelector.value;
+            
+            const workerUrl = 'https://polished-snow-477a.yutapii.workers.dev';
+            let feedsToFetch = [];
+            
+            if (selectedFeed === 'all') {
+                // 全てのフィードを取得
+                const options = feedSelector.options;
+                for (let i = 1; i < options.length; i++) { // index 0は「全てのフィード」なのでスキップ
+                    try {
+                        const feed = JSON.parse(options[i].value);
+                        feedsToFetch.push(feed);
+                    } catch (e) {
+                        console.error('フィードのパースエラー:', e);
+                    }
+                }
+                
+                if (feedsToFetch.length === 0) {
+                    alert('取得可能なフィードがありません');
+                    return;
+                }
+                
+                // プログレス表示
+                const container = document.getElementById('articlesContainer');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⏳</div>
+                        <div class="empty-state-text">全フィードから記事を取得中...</div>
+                        <div class="empty-state-text">0 / ${feedsToFetch.length} 完了</div>
+                    </div>
+                `;
+            } else {
+                feedsToFetch = [JSON.parse(selectedFeed)];
+            }
+            
+            allArticles = [];
+            let successCount = 0;
+            let errorCount = 0;
+            
+            // 各フィードから記事を取得
+            for (let i = 0; i < feedsToFetch.length; i++) {
+                const feed = feedsToFetch[i];
+                
+                // プログレス更新（全フィードの場合）
+                if (selectedFeed === 'all') {
+                    const container = document.getElementById('articlesContainer');
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⏳</div>
+                            <div class="empty-state-text">全フィードから記事を取得中...</div>
+                            <div class="empty-state-text">${i + 1} / ${feedsToFetch.length} 処理中</div>
+                            <div class="empty-state-text" style="font-size: 0.9em; margin-top: 10px;">
+                                現在: ${feed.name}<br>
+                                成功: ${successCount} / エラー: ${errorCount}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                try {
+                    const response = await fetch(`${workerUrl}?url=${encodeURIComponent(feed.url)}`);
+                    const text = await response.text();
+                    
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, 'text/xml');
+                    
+                    const items = xml.querySelectorAll('item, entry');
+                    const articles = Array.from(items).map(item => {
+                        const getElementText = (tagName) => {
+                            const elem = item.querySelector(tagName);
+                            return elem ? elem.textContent : '';
+                        };
+                        
+                        return {
+                            title: getElementText('title'),
+                            link: getElementText('link') || getElementText('id'),
+                            description: getElementText('description') || getElementText('summary') || getElementText('content'),
+                            pubDate: getElementText('pubDate') || getElementText('published') || getElementText('updated'),
+                            source: feed.name,
+                            feedId: feed.id
+                        };
+                    });
+                    
+                    allArticles.push(...articles);
+                    successCount++;
+                    
+                } catch (error) {
+                    console.error(`${feed.name}の取得エラー:`, error);
+                    errorCount++;
+                }
+                
+                // レート制限を避けるため少し待機（全フィードの場合）
+                if (selectedFeed === 'all' && i < feedsToFetch.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
+            // 全記事にカテゴリを割り当て
+            allArticles.forEach(article => {
+                article.category = categorizeArticle(article);
+            });
+            
+            // 日付でソート（新しい順）
+            allArticles.sort((a, b) => {
+                const dateA = new Date(a.pubDate || 0);
+                const dateB = new Date(b.pubDate || 0);
+                return dateB - dateA;
+            });
+            
+            // 完了メッセージ（全フィードの場合）
+            if (selectedFeed === 'all') {
+                console.log(`取得完了: ${allArticles.length}件の記事 (成功: ${successCount}, エラー: ${errorCount})`);
+            }
+            
+            applyFilters();
+        }
+        
+        // 選択記事を保存
+        function saveSelectedArticles() {
+            const checkboxes = document.querySelectorAll('.article-select:checked');
+            const selected = Array.from(checkboxes).map(cb => displayedArticles[cb.dataset.index]);
+            
+            if (selected.length === 0) {
+                alert('保存する記事を選択してください');
+                return;
+            }
+            
+            const saved = JSON.parse(localStorage.getItem('saved-articles') || '[]');
+            saved.push(...selected);
+            localStorage.setItem('saved-articles', JSON.stringify(saved));
+            
+            alert(`${selected.length}件の記事を保存しました`);
+        }
+        
+        // 検索機能
+        document.getElementById('searchInput').addEventListener('input', () => {
+            applyFilters();
+        });
+        
         // IndexedDB初期化
         async function initDB() {
             return new Promise((resolve, reject) => {
-                // 既存のDBを閉じる
-                try {
-                    if (db) {
-                        db.close();
-                        db = null;
-                    }
-                } catch (e) {
-                    console.log('DB close error:', e);
-                }
-                
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                const request = indexedDB.open('SCFV5_RSS', 2);
                 
                 request.onerror = () => {
-                    console.error('DB open error:', request.error);
-                    // エラーでも続行
+                    console.error('DB接続エラー');
                     resolve(null);
                 };
                 
                 request.onsuccess = () => {
                     db = request.result;
-                    console.log('DB initialized successfully');
                     resolve(db);
                 };
                 
                 request.onupgradeneeded = (event) => {
                     db = event.target.result;
                     
-                    // feeds store
                     if (!db.objectStoreNames.contains('feeds')) {
-                        const feedStore = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
-                        feedStore.createIndex('name', 'name', { unique: false });
+                        const store = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('name', 'name', { unique: false });
+                        store.createIndex('category', 'category', { unique: false });
                     }
                     
-                    // articles store
                     if (!db.objectStoreNames.contains('articles')) {
                         const articleStore = db.createObjectStore('articles', { keyPath: 'id', autoIncrement: true });
                         articleStore.createIndex('feedId', 'feedId', { unique: false });
                         articleStore.createIndex('pubDate', 'pubDate', { unique: false });
-                        articleStore.createIndex('saved', 'saved', { unique: false });
                     }
-                };
-                
-                request.onblocked = () => {
-                    console.warn('DB blocked - 他のタブで使用中の可能性があります');
-                    resolve(null);
                 };
             });
         }
-
+        
         // フィード取得
         async function getFeeds() {
             if (!db) {
-                console.log('DB not available, using localStorage');
-                // LocalStorageからフィードを取得
-                try {
-                    const stored = localStorage.getItem('rss-feeds');
-                    if (stored) {
-                        return JSON.parse(stored);
-                    }
-                } catch (e) {
-                    console.error('Failed to load feeds from localStorage:', e);
-                }
-                return [];
+                const stored = localStorage.getItem('rss-feeds');
+                return stored ? JSON.parse(stored) : [];
             }
             
-            try {
-                const transaction = db.transaction(['feeds'], 'readonly');
-                const store = transaction.objectStore('feeds');
-                
-                return new Promise((resolve, reject) => {
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result || []);
-                    request.onerror = () => {
-                        console.error('Failed to get feeds from DB:', request.error);
-                        resolve([]);
-                    };
-                });
-            } catch (e) {
-                console.error('Transaction error:', e);
-                return [];
-            }
-        }
-
-        // 記事保存
-        async function saveArticleToDb(article) {
-            const transaction = db.transaction(['articles'], 'readwrite');
-            const store = transaction.objectStore('articles');
-            
-            // 既存チェック
-            const existing = await getArticleByUrl(article.link);
-            if (existing) {
-                article.id = existing.id;
-                return store.put(article);
-            }
-            
-            return store.add(article);
-        }
-
-        // URL で記事取得
-        async function getArticleByUrl(url) {
-            const transaction = db.transaction(['articles'], 'readonly');
-            const store = transaction.objectStore('articles');
-            const articles = await store.getAll();
+            const transaction = db.transaction(['feeds'], 'readonly');
+            const store = transaction.objectStore('feeds');
             
             return new Promise((resolve) => {
-                articles.onsuccess = () => {
-                    const found = articles.result.find(a => a.link === url);
-                    resolve(found);
-                };
-            });
-        }
-
-        // 記事取得
-        async function getArticles() {
-            const transaction = db.transaction(['articles'], 'readonly');
-            const store = transaction.objectStore('articles');
-            
-            return new Promise((resolve, reject) => {
                 const request = store.getAll();
-                request.onsuccess = () => {
-                    const articles = request.result;
-                    // 日付でソート（新しい順）
-                    articles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-                    resolve(articles);
-                };
-                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => resolve([]);
             });
         }
-
-        // RSS取得（複数のプロキシサービスを試行）
-        async function fetchRSS(url) {
-            // デバッグモードでのみログ出力
-            const debugMode = localStorage.getItem('debug-mode') === 'true';
-            if (debugMode) {
-                console.log('RSS取得開始:', url);
-            }
-            
-            // 方法1: Cloudflare Worker（優先使用）
-            const workerUrl = 'https://polished-snow-477a.yutapii.workers.dev';
-            try {
-                const proxyUrl = `${workerUrl}?url=${encodeURIComponent(url)}`;
-                
-                const response = await fetch(proxyUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-                    },
-                    mode: 'cors',
-                    credentials: 'omit'
-                }).catch(err => {
-                    // ネットワークエラーを静かに処理（ログなし）
-                    return { ok: false, status: 0 };
-                });
-                
-                if (response.ok) {
-                    const text = await response.text();
-                    
-                    if (text.length > 0) {
-                        const articles = parseRSS(text);
-                        if (articles.length > 0) {
-                            if (debugMode) {
-                                console.log(`Worker経由で${articles.length}件の記事を取得`);
-                            }
-                            return articles;
-                        }
-                    }
-                }
-                // エラーログを出さない
-            } catch (error) {
-                // エラーを静かに処理
-            }
-            
-            // 方法2: AllOrigins プロキシ（スキップ - エラーが多いため）
-            // AllOriginsは現在不安定なためスキップ
-            
-            // 方法3: RSS2JSON サービス
-            try {
-                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-                const response = await fetch(apiUrl, {
-                    mode: 'cors',
-                    credentials: 'omit'
-                }).catch(err => {
-                    // エラーを静かに処理
-                    return { ok: false };
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'ok' && data.items && data.items.length > 0) {
-                        if (debugMode) {
-                            console.log(`RSS2JSON経由で${data.items.length}件の記事を取得`);
-                        }
-                        return data.items.map(item => ({
-                            title: item.title || '',
-                            link: item.link || '',
-                            description: item.description || '',
-                            pubDate: item.pubDate || new Date().toISOString(),
-                            guid: item.guid || item.link || ''
-                        }));
-                    }
-                }
-            } catch (error) {
-                // エラーを静かに処理
-            }
-            
-            // 方法4: CORS Anywhere（スキップ - 制限が厳しいため）
-            // CORS Anywhereは使用制限があるためスキップ
-            
-            // 全取得方法失敗時もログを出さない
-            // 空配列を返す代わりに、エラー情報を含む配列を返す
-            return [{
-                title: `⚠️ フィード取得エラー: ${url}`,
-                link: url,
-                description: 'このフィードの取得に失敗しました。URLが正しいか、フィードが有効か確認してください。',
-                pubDate: new Date().toISOString(),
-                guid: `error-${url}-${Date.now()}`,
-                isError: true
-            }];
-        }
-
-        // RSS パース
-        function parseRSS(xmlText) {
-            if (!xmlText) return [];
-            
-            // HTMLが混入している場合は除外
-            if (xmlText.trim().startsWith('<!DOCTYPE') || xmlText.trim().startsWith('<html')) {
-                console.error('HTMLコンテンツが検出されました（RSSではありません）');
-                return [];
-            }
-            
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(xmlText, 'text/xml');
-            
-            // パースエラーチェック
-            const parseError = xml.querySelector('parsererror');
-            if (parseError) {
-                console.error('XMLパースエラー:', parseError.textContent.substring(0, 200));
-                return [];
-            }
-            
-            // RSS 2.0形式のitem要素を取得
-            let items = xml.querySelectorAll('item');
-            
-            // Atom形式の場合はentry要素を取得
-            if (items.length === 0) {
-                items = xml.querySelectorAll('entry');
-            }
-            
-            const articles = [];
-            
-            items.forEach(item => {
-                // RSS 2.0形式
-                let title = item.querySelector('title')?.textContent || '';
-                let link = item.querySelector('link')?.textContent || '';
-                let description = item.querySelector('description')?.textContent || '';
-                let pubDate = item.querySelector('pubDate')?.textContent || '';
-                
-                // Atom形式の場合
-                if (!link && item.querySelector('link')) {
-                    link = item.querySelector('link').getAttribute('href') || '';
-                }
-                if (!description) {
-                    description = item.querySelector('summary')?.textContent || 
-                                 item.querySelector('content')?.textContent || '';
-                }
-                if (!pubDate) {
-                    pubDate = item.querySelector('published')?.textContent || 
-                             item.querySelector('updated')?.textContent || 
-                             new Date().toISOString();
-                }
-                
-                articles.push({
-                    title: title,
-                    link: link,
-                    description: description,
-                    pubDate: pubDate,
-                    guid: item.querySelector('guid')?.textContent || link
-                });
-            });
-            
-            return articles;
-        }
-
-        // 記事取得
-        async function fetchArticles() {
-            const container = document.getElementById('articlesContainer');
-            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>記事を読み込み中...</p></div>';
-            
-            const feeds = await getFeeds();
-            const activeFeeds = feeds.filter(f => f.active);
-            
-            if (activeFeeds.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📰</div>
-                        <div class="empty-state-text">アクティブなフィードがありません</div>
-                        <div class="empty-state-text">RSS一覧から登録してください</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const selectedFeed = document.getElementById('feedSelector').value;
-            const feedsToFetch = selectedFeed === 'all' ? activeFeeds : activeFeeds.filter(f => f.id == selectedFeed);
-            
-            let allArticles = [];
-            
-            // 並列でRSS取得（最大10同時）
-            const batchSize = 10;
-            for (let i = 0; i < feedsToFetch.length; i += batchSize) {
-                const batch = feedsToFetch.slice(i, i + batchSize);
-                const promises = batch.map(async feed => {
-                    const articles = await fetchRSS(feed.url);
-                    return articles.map(article => ({
-                        ...article,
-                        feedId: feed.id,
-                        feedName: feed.name,
-                        feedCategory: feed.category
-                    }));
-                });
-                
-                const results = await Promise.all(promises);
-                results.forEach(articles => {
-                    allArticles = allArticles.concat(articles);
-                });
-            }
-            
-            // DB保存（60日以内）
-            const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - 60);
-            
-            // トランザクションエラーを防ぐため、バッチで保存
-            const articlesToSave = allArticles.filter(article => {
-                const pubDate = new Date(article.pubDate);
-                return pubDate > cutoffDate && !article.isError;
-            });
-            
-            if (articlesToSave.length > 0 && db) {
-                try {
-                    const transaction = db.transaction(['articles'], 'readwrite');
-                    const store = transaction.objectStore('articles');
-                    
-                    for (const article of articlesToSave) {
-                        try {
-                            // 既存チェックは省略してputを使用
-                            store.put({
-                                ...article,
-                                id: article.guid || article.link,
-                                savedAt: new Date().toISOString()
-                            });
-                        } catch (e) {
-                            console.error('記事保存エラー:', e);
-                        }
-                    }
-                    
-                    transaction.oncomplete = () => {
-                        console.log(`${articlesToSave.length}件の記事を保存しました`);
-                    };
-                } catch (e) {
-                    console.error('トランザクションエラー:', e);
-                }
-            }
-            
-            displayArticles();
-        }
-
-        // 記事表示
-        async function displayArticles() {
-            const articles = await getArticles();
-            const container = document.getElementById('articlesContainer');
-            
-            // フィルタリング
-            let filteredArticles = articles;
-            
-            // フィード フィルタ
-            const selectedFeed = document.getElementById('feedSelector').value;
-            if (selectedFeed !== 'all') {
-                filteredArticles = filteredArticles.filter(a => a.feedId == selectedFeed);
-            }
-            
-            // 検索フィルタ
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            if (searchTerm) {
-                filteredArticles = filteredArticles.filter(a => 
-                    a.title.toLowerCase().includes(searchTerm) ||
-                    a.description.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // 日付フィルタ
-            const dateFrom = document.getElementById('dateFrom').value;
-            const dateTo = document.getElementById('dateTo').value;
-            if (dateFrom) {
-                filteredArticles = filteredArticles.filter(a => 
-                    new Date(a.pubDate) >= new Date(dateFrom)
-                );
-            }
-            if (dateTo) {
-                const endDate = new Date(dateTo);
-                endDate.setHours(23, 59, 59);
-                filteredArticles = filteredArticles.filter(a => 
-                    new Date(a.pubDate) <= endDate
-                );
-            }
-            
-            // 統計更新
-            document.getElementById('articleCount').textContent = filteredArticles.length;
-            document.getElementById('feedCount').textContent = new Set(filteredArticles.map(a => a.feedId)).size;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-            
-            if (filteredArticles.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📰</div>
-                        <div class="empty-state-text">記事が見つかりません</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // 記事カード生成
-            container.innerHTML = filteredArticles.map(article => {
-                const pubDate = new Date(article.pubDate);
-                const dateStr = pubDate.toLocaleDateString('ja-JP');
-                const timeStr = pubDate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-                
-                return `
-                    <div class="article-card" onclick="showArticle('${encodeURIComponent(JSON.stringify(article))}')">
-                        <div class="article-header">
-                            <span class="article-source">${article.feedName || 'Unknown'}</span>
-                            <span class="article-date">${dateStr} ${timeStr}</span>
-                        </div>
-                        <h3 class="article-title">${article.title}</h3>
-                        <p class="article-description">${stripHtml(article.description)}</p>
-                        <div class="article-footer">
-                            <a href="${article.link}" class="article-link" target="_blank" onclick="event.stopPropagation()">
-                                記事を読む →
-                            </a>
-                            <div class="article-actions">
-                                <button class="action-btn ${article.saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSave('${article.id}')">
-                                    ${article.saved ? '★ 保存済み' : '☆ 保存'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // HTML タグ除去
-        function stripHtml(html) {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            return doc.body.textContent || '';
-        }
-
-        // 記事詳細表示
-        function showArticle(encodedArticle) {
-            const article = JSON.parse(decodeURIComponent(encodedArticle));
-            document.getElementById('modalTitle').textContent = article.title;
-            document.getElementById('modalMeta').textContent = `${article.feedName} | ${new Date(article.pubDate).toLocaleString('ja-JP')}`;
-            document.getElementById('modalBody').innerHTML = article.description;
-            document.getElementById('articleModal').classList.add('active');
-            
-            // 現在の記事を保存
-            window.currentArticle = article;
-        }
-
-        // モーダル閉じる
-        function closeModal() {
-            document.getElementById('articleModal').classList.remove('active');
-        }
-
-        // 記事保存切り替え
-        async function toggleSave(articleId) {
-            const transaction = db.transaction(['articles'], 'readwrite');
-            const store = transaction.objectStore('articles');
-            const article = await store.get(parseInt(articleId));
-            
-            article.onsuccess = async () => {
-                const art = article.result;
-                art.saved = !art.saved;
-                await store.put(art);
-                displayArticles();
-            };
-        }
-
-        // 記事を執筆用に保存
-        function saveArticle() {
-            if (window.currentArticle) {
-                let savedArticles = JSON.parse(localStorage.getItem('saved-articles') || '[]');
-                savedArticles.push({
-                    ...window.currentArticle,
-                    savedAt: new Date().toISOString()
-                });
-                localStorage.setItem('saved-articles', JSON.stringify(savedArticles));
-                alert('記事を保存しました');
-                closeModal();
-            }
-        }
-
-        // ビュー切り替え
-        function setView(view) {
-            const container = document.getElementById('articlesContainer');
-            const buttons = document.querySelectorAll('.view-btn');
-            
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (view === 'grid') {
-                container.classList.add('grid-view');
-            } else {
-                container.classList.remove('grid-view');
-            }
-        }
-
-        // キャッシュクリア
-        async function clearCache() {
-            if (confirm('キャッシュをクリアしますか？保存した記事は残ります。')) {
-                const transaction = db.transaction(['articles'], 'readwrite');
-                const store = transaction.objectStore('articles');
-                const articles = await store.getAll();
-                
-                articles.onsuccess = async () => {
-                    for (const article of articles.result) {
-                        if (!article.saved) {
-                            await store.delete(article.id);
-                        }
-                    }
-                    alert('キャッシュをクリアしました');
-                    fetchArticles();
-                };
-            }
-        }
-
-        // エクスポート
-        async function exportArticles() {
-            const articles = await getArticles();
-            const filteredArticles = articles.filter(a => a.saved);
-            
-            if (filteredArticles.length === 0) {
-                alert('保存された記事がありません');
-                return;
-            }
-            
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                articles: filteredArticles
-            };
-            
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `articles-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // フィードセレクター更新
-        async function updateFeedSelector() {
-            const feeds = await getFeeds();
-            const selector = document.getElementById('feedSelector');
-            
-            selector.innerHTML = '<option value="all">すべてのフィード</option>' +
-                feeds.filter(f => f.active).map(feed => 
-                    `<option value="${feed.id}">${feed.name}</option>`
-                ).join('');
-        }
-
-        // 検索イベント
-        document.getElementById('searchInput').addEventListener('input', displayArticles);
-        document.getElementById('dateFrom').addEventListener('change', displayArticles);
-        document.getElementById('dateTo').addEventListener('change', displayArticles);
-        document.getElementById('feedSelector').addEventListener('change', displayArticles);
-
+        
         // 初期化
-        (async () => {
+        async function init() {
             await initDB();
-            await updateFeedSelector();
+            const feeds = await getFeeds();
             
-            // 今日の日付をセット
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dateTo').value = today;
+            console.log('取得したフィード数:', feeds.length);
             
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+            const feedSelector = document.getElementById('feedSelector');
             
-            await fetchArticles();
-        })();
+            if (feeds.length === 0) {
+                // フィードがない場合はローカルストレージから取得を試みる
+                const storedFeeds = localStorage.getItem('rss-feeds');
+                if (storedFeeds) {
+                    const parsedFeeds = JSON.parse(storedFeeds);
+                    parsedFeeds.forEach(feed => {
+                        const option = document.createElement('option');
+                        option.value = JSON.stringify(feed);
+                        option.textContent = `${feed.name} (${feed.category || 'その他'})`;
+                        feedSelector.appendChild(option);
+                    });
+                    console.log('LocalStorageから', parsedFeeds.length, '件のフィードをロード');
+                } else {
+                    console.log('フィードが見つかりません');
+                    // デフォルトのAIフィードを追加
+                    const defaultFeeds = [
+                        {id: 1, name: "OpenAI Blog", url: "https://openai.com/news/rss.xml", category: "AI研究機関"},
+                        {id: 2, name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", category: "AI研究機関"},
+                        {id: 3, name: "DeepMind Blog", url: "https://deepmind.google/blog/rss.xml", category: "AI研究機関"}
+                    ];
+                    defaultFeeds.forEach(feed => {
+                        const option = document.createElement('option');
+                        option.value = JSON.stringify(feed);
+                        option.textContent = `${feed.name} (${feed.category})`;
+                        feedSelector.appendChild(option);
+                    });
+                    console.log('デフォルトフィードを追加');
+                }
+            } else {
+                feeds.forEach(feed => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(feed);
+                    option.textContent = `${feed.name} (${feed.category || 'その他'})`;
+                    feedSelector.appendChild(option);
+                });
+                console.log('IndexedDBから', feeds.length, '件のフィードをロード');
+            }
+        }
+        
+        init();
     </script>
 </body>
 </html>

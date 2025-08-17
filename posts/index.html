@@ -498,6 +498,9 @@
             <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
         </div>
     </div>
+    
+    <!-- APIステータスアラート表示用 -->
+    <div id="api-status-container" style="max-width: 1200px; margin: 20px auto; padding: 0 20px;"></div>
 
     <div class="container">
         <div class="stats-overview">
@@ -554,6 +557,7 @@
                     <div class="ai-input-header">
                         <span>🤖</span>
                         <span>AI一括入力</span>
+                        <span id="ocr-status" style="font-size: 0.8em; padding: 2px 8px; border-radius: 12px; margin-left: 10px;">確認中...</span>
                     </div>
                     <div class="screenshot-area" id="screenshotArea">
                         <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
@@ -566,6 +570,9 @@
                     <button class="btn btn-primary" onclick="analyzeScreenshot()">
                         AIで解析して一括入力
                     </button>
+                    <div id="ocr-info" style="margin-top: 10px; padding: 10px; border-radius: 5px; font-size: 0.85em;">
+                        <!-- OCRステータス情報がここに表示される -->
+                    </div>
                 </div>
 
                 <div class="ranking-section">
@@ -624,54 +631,8 @@
     </div>
 
     <script>
-        // サンプルデータ
-        let posts = [
-            {
-                id: 1,
-                title: 'AIが変える未来の働き方 - 2025年の展望',
-                url: 'https://note.com/sample1',
-                date: '2025-01-10',
-                views: 5234,
-                likes: 156,
-                status: 'published'
-            },
-            {
-                id: 2,
-                title: 'ChatGPT活用術: ビジネスで差をつける10の方法',
-                url: 'https://note.com/sample2',
-                date: '2025-01-09',
-                views: 3421,
-                likes: 89,
-                status: 'published'
-            },
-            {
-                id: 3,
-                title: 'プロンプトエンジニアリング入門',
-                url: 'https://note.com/sample3',
-                date: '2025-01-08',
-                views: 2890,
-                likes: 67,
-                status: 'published'
-            },
-            {
-                id: 4,
-                title: '【速報】OpenAI新モデル発表の衝撃',
-                url: 'https://note.com/sample4',
-                date: '2025-01-07',
-                views: 8901,
-                likes: 234,
-                status: 'published'
-            },
-            {
-                id: 5,
-                title: '生成AIビジネス活用事例集',
-                url: 'https://note.com/sample5',
-                date: '2025-01-06',
-                views: 1567,
-                likes: 45,
-                status: 'draft'
-            }
-        ];
+        // 投稿データの初期化（LocalStorageから読み込み）
+        let posts = [];
 
         // 初期化
         function init() {
@@ -686,6 +647,10 @@
             const saved = localStorage.getItem('posts-data');
             if (saved) {
                 posts = JSON.parse(saved);
+            } else {
+                // LocalStorageにデータがない場合は空配列を使用
+                posts = [];
+                localStorage.setItem('posts-data', JSON.stringify(posts));
             }
             displayPosts();
         }
@@ -707,7 +672,18 @@
             const list = document.getElementById('postsList');
             
             if (filteredPosts.length === 0) {
-                list.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">投稿がありません</div>';
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">📝</div>
+                        <div style="color: #666; font-size: 1.1em; margin-bottom: 20px;">
+                            まだ投稿データがありません
+                        </div>
+                        <div style="color: #999; font-size: 0.9em; line-height: 1.6;">
+                            右側の「AI一括入力」からnote.comのデータをインポートするか、<br>
+                            「新規追加」ボタンから手動で投稿を追加してください。
+                        </div>
+                    </div>
+                `;
                 return;
             }
             
@@ -743,14 +719,26 @@
         // 統計更新
         function updateStats() {
             const totalPosts = posts.length;
-            const totalViews = posts.reduce((sum, p) => sum + p.views, 0);
-            const totalLikes = posts.reduce((sum, p) => sum + p.likes, 0);
+            const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+            const totalLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0);
             const avgEngagement = totalViews > 0 ? ((totalLikes / totalViews) * 100).toFixed(1) : 0;
             
             document.getElementById('totalPosts').textContent = totalPosts;
             document.getElementById('totalViews').textContent = totalViews.toLocaleString();
             document.getElementById('totalLikes').textContent = totalLikes.toLocaleString();
             document.getElementById('avgEngagement').textContent = avgEngagement + '%';
+            
+            // 統計の変化表示も更新
+            const statsCards = document.querySelectorAll('.stat-card');
+            if (totalPosts === 0) {
+                // データがない場合は変化表示を非表示
+                statsCards.forEach(card => {
+                    const changeDiv = card.querySelector('.stat-change');
+                    if (changeDiv) {
+                        changeDiv.style.display = 'none';
+                    }
+                });
+            }
         }
 
         // ランキング更新
@@ -767,18 +755,28 @@
                 return;
             }
             
-            list.innerHTML = sorted.map((post, index) => `
-                <div class="ranking-item">
-                    <div class="ranking-number">${index + 1}</div>
-                    <div class="ranking-content">
-                        <div class="ranking-title">${post.title.substring(0, 30)}...</div>
-                        <div class="ranking-stats">${post.views.toLocaleString()} PV | ${post.likes} いいね</div>
+            list.innerHTML = sorted.map((post, index) => {
+                // タイトルの処理を改善
+                const displayTitle = post.title.length > 30 
+                    ? post.title.substring(0, 30) + '...' 
+                    : post.title;
+                
+                return `
+                    <div class="ranking-item">
+                        <div class="ranking-number">${index + 1}</div>
+                        <div class="ranking-content">
+                            <div class="ranking-title">${displayTitle}</div>
+                            <div class="ranking-stats">
+                                <span style="color: #00BFA5;">👁 ${post.views.toLocaleString()}</span>
+                                <span style="color: #ff6b6b;">❤️ ${post.likes}</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        // グラフ描画
+        // グラフ描画（実データ版）
         function drawChart() {
             const canvas = document.getElementById('chartCanvas');
             const ctx = canvas.getContext('2d');
@@ -791,54 +789,161 @@
             ctx.fillStyle = '#f8f9fa';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // サンプルデータ（過去30日）
-            const days = 30;
+            // 実データから過去30日分を集計
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const dailyData = {};
+            
+            // 日付ごとにデータを集計
+            posts.forEach(post => {
+                const postDate = new Date(post.date);
+                if (postDate >= thirtyDaysAgo && postDate <= today) {
+                    const dateKey = postDate.toISOString().split('T')[0];
+                    if (!dailyData[dateKey]) {
+                        dailyData[dateKey] = { views: 0, likes: 0, count: 0 };
+                    }
+                    dailyData[dateKey].views += post.views || 0;
+                    dailyData[dateKey].likes += post.likes || 0;
+                    dailyData[dateKey].count++;
+                }
+            });
+            
+            // 30日分のデータ配列を作成
             const data = [];
-            for (let i = 0; i < days; i++) {
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+                const dateKey = date.toISOString().split('T')[0];
+                const dayData = dailyData[dateKey] || { views: 0, likes: 0, count: 0 };
                 data.push({
-                    day: i + 1,
-                    views: Math.floor(Math.random() * 1000) + 100,
-                    likes: Math.floor(Math.random() * 50) + 5
+                    date: dateKey,
+                    day: date.getDate(),
+                    views: dayData.views,
+                    likes: dayData.likes,
+                    count: dayData.count
                 });
+            }
+            
+            // データがない場合の表示
+            if (posts.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('データがありません', canvas.width / 2, canvas.height / 2);
+                ctx.font = '12px Arial';
+                ctx.fillText('投稿データをインポートまたは追加してください', canvas.width / 2, canvas.height / 2 + 25);
+                return;
+            }
+            
+            const hasData = data.some(d => d.views > 0 || d.likes > 0);
+            if (!hasData) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('過去30日間のデータがありません', canvas.width / 2, canvas.height / 2);
+                return;
             }
             
             // グラフ描画
             const padding = 40;
             const graphWidth = canvas.width - padding * 2;
             const graphHeight = canvas.height - padding * 2;
-            const barWidth = graphWidth / days;
+            const barWidth = graphWidth / 30;
             
-            const maxViews = Math.max(...data.map(d => d.views));
+            const maxViews = Math.max(...data.map(d => d.views), 1);
+            const maxLikes = Math.max(...data.map(d => d.likes), 1);
             
-            // PVバー（青）
-            ctx.fillStyle = 'rgba(102, 126, 234, 0.6)';
+            // グリッド線を描画
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (graphHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+            }
+            
+            // PVバー（緑）
+            ctx.fillStyle = 'rgba(0, 191, 165, 0.6)';
             data.forEach((d, i) => {
-                const height = (d.views / maxViews) * graphHeight;
-                const x = padding + i * barWidth;
-                const y = canvas.height - padding - height;
-                ctx.fillRect(x, y, barWidth * 0.8, height);
+                if (d.views > 0) {
+                    const height = (d.views / maxViews) * graphHeight;
+                    const x = padding + i * barWidth;
+                    const y = canvas.height - padding - height;
+                    ctx.fillRect(x + barWidth * 0.1, y, barWidth * 0.8, height);
+                }
             });
             
-            // いいね線（赤）
+            // スキ数の線グラフ（赤）
             ctx.strokeStyle = '#ff6b6b';
             ctx.lineWidth = 2;
             ctx.beginPath();
+            let firstPoint = true;
             data.forEach((d, i) => {
-                const x = padding + i * barWidth + barWidth / 2;
-                const y = canvas.height - padding - (d.likes / 50) * graphHeight;
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
+                if (d.likes > 0 || !firstPoint) {
+                    const x = padding + i * barWidth + barWidth / 2;
+                    const y = canvas.height - padding - (d.likes / maxLikes) * graphHeight;
+                    if (firstPoint) {
+                        ctx.moveTo(x, y);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
                 }
             });
-            ctx.stroke();
+            if (!firstPoint) ctx.stroke();
+            
+            // スキ数のポイント
+            ctx.fillStyle = '#ff6b6b';
+            data.forEach((d, i) => {
+                if (d.likes > 0) {
+                    const x = padding + i * barWidth + barWidth / 2;
+                    const y = canvas.height - padding - (d.likes / maxLikes) * graphHeight;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
             
             // 軸ラベル
             ctx.fillStyle = '#666';
             ctx.font = '12px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('過去30日間のPV（棒）といいね（線）の推移', canvas.width / 2, 20);
+            ctx.fillText('過去30日間のビュー数（棒）とスキ数（線）の推移', canvas.width / 2, 20);
+            
+            // 日付ラベル（5日ごと）
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#999';
+            data.forEach((d, i) => {
+                if (i % 5 === 0 || i === 29) {
+                    const x = padding + i * barWidth + barWidth / 2;
+                    ctx.fillText(d.day + '日', x, canvas.height - 20);
+                }
+            });
+            
+            // Y軸ラベル
+            ctx.textAlign = 'right';
+            ctx.fillText(maxViews + ' PV', padding - 5, padding);
+            ctx.fillText('0', padding - 5, canvas.height - padding);
+            
+            // 凡例
+            const legendY = 35;
+            // ビュー数の凡例
+            ctx.fillStyle = 'rgba(0, 191, 165, 0.6)';
+            ctx.fillRect(canvas.width - 150, legendY, 15, 10);
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'left';
+            ctx.fillText('ビュー数', canvas.width - 130, legendY + 8);
+            
+            // スキ数の凡例
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 150, legendY + 20);
+            ctx.lineTo(canvas.width - 135, legendY + 20);
+            ctx.stroke();
+            ctx.fillStyle = '#666';
+            ctx.fillText('スキ数', canvas.width - 130, legendY + 23);
         }
 
         // フィルター
@@ -893,20 +998,76 @@
             document.getElementById('postLikes').value = '';
         }
 
-        // 投稿編集（簡易実装）
+        // 投稿編集（改善版）
         function editPost(id) {
             const post = posts.find(p => p.id === id);
             if (post) {
-                const newViews = prompt('PV数を更新:', post.views);
-                const newLikes = prompt('いいね数を更新:', post.likes);
+                // カスタムダイアログを表示
+                const editHtml = `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>${post.title}</strong>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #666;">ビュー数:</label>
+                        <input type="number" id="editViews" value="${post.views}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #666;">スキ数:</label>
+                        <input type="number" id="editLikes" value="${post.likes}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button onclick="saveEdit(${id})" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">保存</button>
+                        <button onclick="deletePost(${id})" style="flex: 1; padding: 10px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">削除</button>
+                        <button onclick="cancelEdit()" style="flex: 1; padding: 10px; background: #999; color: white; border: none; border-radius: 5px; cursor: pointer;">キャンセル</button>
+                    </div>
+                `;
                 
-                if (newViews !== null) post.views = parseInt(newViews) || post.views;
-                if (newLikes !== null) post.likes = parseInt(newLikes) || post.likes;
+                // モーダルとして表示
+                const modal = document.createElement('div');
+                modal.id = 'editModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;';
+                modal.innerHTML = `
+                    <div style="background: white; padding: 20px; border-radius: 10px; width: 400px; max-width: 90%;">
+                        <h3 style="margin: 0 0 15px 0;">投稿を編集</h3>
+                        ${editHtml}
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+        
+        // 編集を保存
+        function saveEdit(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.views = parseInt(document.getElementById('editViews').value) || 0;
+                post.likes = parseInt(document.getElementById('editLikes').value) || 0;
                 
                 localStorage.setItem('posts-data', JSON.stringify(posts));
                 loadPosts();
                 updateStats();
                 updateRanking();
+            }
+            cancelEdit();
+        }
+        
+        // 投稿を削除
+        function deletePost(id) {
+            if (confirm('この投稿を削除してもよろしいですか？')) {
+                posts = posts.filter(p => p.id !== id);
+                localStorage.setItem('posts-data', JSON.stringify(posts));
+                loadPosts();
+                updateStats();
+                updateRanking();
+                cancelEdit();
+            }
+        }
+        
+        // 編集をキャンセル
+        function cancelEdit() {
+            const modal = document.getElementById('editModal');
+            if (modal) {
+                modal.remove();
             }
         }
 
@@ -945,18 +1106,424 @@
         });
 
         function processScreenshot(file) {
-            // 実際のOCR処理はここに実装
-            alert('スクリーンショットを受け付けました。AI解析機能は開発中です。');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    // プレビュー表示
+                    const screenshotArea = document.getElementById('screenshotArea');
+                    screenshotArea.innerHTML = `
+                        <img src="${e.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 5px;">
+                        <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                            画像を読み込みました<br>
+                            下のボタンをクリックして解析開始
+                        </div>
+                    `;
+                    
+                    // データを一時保存
+                    window.uploadedImage = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         function analyzeScreenshot() {
-            alert('AI解析を開始します。この機能は設定されたAPIキーで動作します。');
+            if (!window.uploadedImage) {
+                alert('まず画像をアップロードしてください');
+                return;
+            }
+            
+            // テンプレート解析モードの選択
+            const analysisMode = confirm(
+                '解析モードを選択してください\n\n' +
+                'OK: note.comダッシュボード形式（ビュー、コメント、スキ）\n' +
+                'キャンセル: 手動でデータ入力'
+            );
+            
+            if (analysisMode) {
+                // note.com形式の模擬解析
+                simulateNoteAnalysis();
+            } else {
+                // カスタム形式の入力
+                showManualInputDialog();
+            }
+        }
+        
+        function simulateNoteAnalysis() {
+            // note.comの実際のダッシュボード形式に基づく模擬解析
+            const mockData = [
+                {
+                    title: '【2025年版】CPUコア数の選び方 - 4コアで十分？16コア必要？用途別完全ガイド',
+                    views: 22,
+                    comments: 0,
+                    likes: 0,
+                    date: '2025-08-17'
+                },
+                {
+                    title: '冷たいGPT-5sを理想の恋人&嫁友に変える禁断テクニック大公開！',
+                    views: 21,
+                    comments: 0,
+                    likes: 2,
+                    date: '2025-08-17'
+                },
+                {
+                    title: 'OpenAI初のオープンソースモデル「GPT-OSS-20b」徹底解説 - 自宅PCで動く現実解',
+                    views: 17,
+                    comments: 0,
+                    likes: 1,
+                    date: '2025-08-17'
+                },
+                {
+                    title: 'Claude Code徹底解説 - ターミナルに住むAIが変える開発現場',
+                    views: 13,
+                    comments: 0,
+                    likes: 2,
+                    date: '2025-08-16'
+                },
+                {
+                    title: '禁酒34日目で分かったこと',
+                    views: 9,
+                    comments: 0,
+                    likes: 0,
+                    date: '2025-08-16'
+                },
+                {
+                    title: 'サッカーファンが最強GPU情報源だったRTX5090を25%安く買える可能性が見えた記入',
+                    views: 8,
+                    comments: 0,
+                    likes: 0,
+                    date: '2025-08-15'
+                },
+                {
+                    title: 'AIメガネがないと出世できない',
+                    views: 8,
+                    comments: 0,
+                    likes: 0,
+                    date: '2025-08-15'
+                }
+            ];
+            
+            // 解析結果の表示（note.comダッシュボード形式）
+            const totalViews = mockData.reduce((sum, item) => sum + item.views, 0);
+            const totalLikes = mockData.reduce((sum, item) => sum + item.likes, 0);
+            
+            const resultHtml = `
+                <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">🤖 模擬解析結果（サンプルデータ）</h4>
+                    <div style="font-size: 0.9em; color: #666;">
+                        ${mockData.length}件の記事データを検出しました
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #00BFA5; font-size: 1.5em; font-weight: bold;">${totalViews}</div>
+                            <div style="font-size: 0.8em; color: #666;">全体ビュー</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #999; font-size: 1.5em; font-weight: bold;">0</div>
+                            <div style="font-size: 0.8em; color: #666;">コメント</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #ff6b6b; font-size: 1.5em; font-weight: bold;">${totalLikes}</div>
+                            <div style="font-size: 0.8em; color: #666;">スキ</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${mockData.map((item, index) => `
+                        <div style="background: white; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #e0e0e0;">
+                            <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 0.9em;">
+                                ${item.title.length > 40 ? item.title.substring(0, 40) + '...' : item.title}
+                            </div>
+                            <div style="display: flex; gap: 15px; font-size: 0.85em; color: #666;">
+                                <span>📅 ${item.date}</span>
+                                <span style="color: #00BFA5;">👁 ${item.views}</span>
+                                <span style="color: #999;">💬 ${item.comments}</span>
+                                <span style="color: #ff6b6b;">❤️ ${item.likes}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="importAnalyzedData(${JSON.stringify(mockData).replace(/"/g, '&quot;')})" style="margin-top: 15px;">
+                    この内容でインポート
+                </button>
+            `;
+            
+            // 結果を表示エリアに設定
+            document.getElementById('screenshotArea').innerHTML = resultHtml;
+        }
+        
+        function showManualInputDialog() {
+            const inputHtml = `
+                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">✏️ 手動入力モード</h4>
+                    <div style="font-size: 0.9em; color: #666;">
+                        note.com形式でデータを入力
+                    </div>
+                </div>
+                <textarea id="manualDataInput" style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 0.9em;" placeholder="例：&#10;記事タイトル1, ビュー数, コメント数, スキ数&#10;【2025年版】CPUコア数の選び方, 22, 0, 0&#10;Claude Code徹底解説, 13, 0, 2&#10;&#10;形式: タイトル, ビュー, コメント, スキ"></textarea>
+                <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 0.85em;">
+                    <strong>入力形式：</strong><br>
+                    タイトル, ビュー数, コメント数, スキ数<br>
+                    ※カンマ区切りで入力してください
+                </div>
+                <button class="btn btn-primary" onclick="parseManualInput()" style="margin-top: 10px;">
+                    データを解析
+                </button>
+            `;
+            
+            document.getElementById('screenshotArea').innerHTML = inputHtml;
+        }
+        
+        function parseManualInput() {
+            const input = document.getElementById('manualDataInput').value;
+            if (!input.trim()) {
+                alert('データを入力してください');
+                return;
+            }
+            
+            const lines = input.trim().split('\n');
+            const parsedData = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length >= 2) {
+                    parsedData.push({
+                        title: parts[0],
+                        views: parseInt(parts[1]) || 0,
+                        comments: parseInt(parts[2]) || 0,
+                        likes: parseInt(parts[3]) || 0,
+                        date: new Date().toISOString().split('T')[0]
+                    });
+                }
+            });
+            
+            if (parsedData.length === 0) {
+                alert('有効なデータが見つかりませんでした');
+                return;
+            }
+            
+            // 確認画面を表示（note.com形式）
+            const totalViews = parsedData.reduce((sum, item) => sum + item.views, 0);
+            const totalComments = parsedData.reduce((sum, item) => sum + item.comments, 0);
+            const totalLikes = parsedData.reduce((sum, item) => sum + item.likes, 0);
+            
+            const confirmHtml = `
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">✅ 解析完了</h4>
+                    <div style="font-size: 0.9em; color: #666;">
+                        ${parsedData.length}件のデータを検出しました
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #00BFA5; font-weight: bold;">${totalViews}</div>
+                            <div style="font-size: 0.8em; color: #666;">ビュー</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #999; font-weight: bold;">${totalComments}</div>
+                            <div style="font-size: 0.8em; color: #666;">コメント</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #ff6b6b; font-weight: bold;">${totalLikes}</div>
+                            <div style="font-size: 0.8em; color: #666;">スキ</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    ${parsedData.map((item, index) => `
+                        <div style="background: white; padding: 8px; margin-bottom: 8px; border-radius: 5px; border: 1px solid #e0e0e0;">
+                            <div style="font-size: 0.9em; color: #333;">
+                                ${index + 1}. ${item.title.length > 30 ? item.title.substring(0, 30) + '...' : item.title}
+                            </div>
+                            <div style="font-size: 0.85em; color: #666;">
+                                👁 ${item.views} | 💬 ${item.comments} | ❤️ ${item.likes}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="importAnalyzedData(${JSON.stringify(parsedData).replace(/"/g, '&quot;')})" style="margin-top: 10px;">
+                    インポート実行
+                </button>
+            `;
+            
+            document.getElementById('screenshotArea').innerHTML = confirmHtml;
+        }
+        
+        function importAnalyzedData(data) {
+            let importCount = 0;
+            
+            data.forEach(item => {
+                const newPost = {
+                    id: Date.now() + Math.random(),
+                    title: item.title,
+                    url: `https://note.com/imported_${Date.now()}`,
+                    date: item.date,
+                    views: item.views,
+                    likes: item.likes,
+                    status: 'published'
+                };
+                
+                posts.unshift(newPost);
+                importCount++;
+            });
+            
+            // データを保存
+            localStorage.setItem('posts-data', JSON.stringify(posts));
+            
+            // UIを更新
+            loadPosts();
+            updateStats();
+            updateRanking();
+            
+            // インポート完了表示
+            const successHtml = `
+                <div style="background: linear-gradient(135deg, #4caf50, #8bc34a); padding: 30px; border-radius: 10px; text-align: center; color: white;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">✅</div>
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.5em;">インポート完了！</h3>
+                    <div style="font-size: 1.1em;">
+                        ${importCount}件のデータを正常に取り込みました
+                    </div>
+                    <div style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
+                        3秒後に自動的にリセットされます...
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('screenshotArea').innerHTML = successHtml;
+            
+            // 3秒後にリセット
+            setTimeout(() => {
+                resetScreenshotArea();
+            }, 3000);
+        }
+        
+        function resetScreenshotArea() {
+            // エリアを初期状態にリセット
+            const screenshotArea = document.getElementById('screenshotArea');
+            screenshotArea.innerHTML = `
+                <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
+                <div class="screenshot-icon">📸</div>
+                <div class="screenshot-text">
+                    スクリーンショットをドラッグ&ドロップ<br>
+                    またはクリックして選択
+                </div>
+            `;
+            
+            // イベントリスナーを再設定
+            const newInput = document.getElementById('screenshotInput');
+            
+            screenshotArea.onclick = () => {
+                newInput.click();
+            };
+            
+            newInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    processScreenshot(file);
+                }
+            });
+            
+            // ドラッグ&ドロップイベントを再設定
+            screenshotArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                screenshotArea.classList.add('drag-over');
+            });
+            
+            screenshotArea.addEventListener('dragleave', () => {
+                screenshotArea.classList.remove('drag-over');
+            });
+            
+            screenshotArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                screenshotArea.classList.remove('drag-over');
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    processScreenshot(file);
+                }
+            });
+            
+            // アップロード済み画像をクリア
+            window.uploadedImage = null;
         }
 
+        // OCRサーバーステータスチェック
+        async function checkOCRServerStatus() {
+            const statusElement = document.getElementById('ocr-status');
+            const infoElement = document.getElementById('ocr-info');
+            
+            try {
+                console.log('OCRサーバーステータスチェック開始...');
+                const response = await fetch('http://localhost:5001/health');
+                console.log('レスポンス受信:', response.status);
+                const data = await response.json();
+                console.log('レスポンスデータ:', data);
+                
+                if (data.status === 'ok') {
+                    if (data.type === 'mock') {
+                        // モックサーバー
+                        statusElement.textContent = 'モック版';
+                        statusElement.style.background = '#ffc107';
+                        statusElement.style.color = '#fff';
+                        infoElement.innerHTML = `
+                            <div style="background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404;">
+                                <strong>ℹ️ モックOCRサーバー稼働中</strong><br>
+                                デモデータを使用した模擬解析が可能です。
+                            </div>
+                        `;
+                    } else {
+                        // 実OCRサーバー
+                        statusElement.textContent = '✅ 実OCR';
+                        statusElement.style.background = '#28a745';
+                        statusElement.style.color = '#fff';
+                        infoElement.innerHTML = `
+                            <div style="background: #d4edda; padding: 10px; border-radius: 5px; color: #155724;">
+                                <strong>✅ Google Vision API 利用可能</strong><br>
+                                実際の画像からテキストを抽出できます。<br>
+                                <small>無料枠: 1,000回/月</small>
+                            </div>
+                        `;
+                    }
+                } else {
+                    throw new Error('Server not ready');
+                }
+            } catch (error) {
+                // サーバー未起動
+                statusElement.textContent = '❌ 未接続';
+                statusElement.style.background = '#dc3545';
+                statusElement.style.color = '#fff';
+                infoElement.innerHTML = `
+                    <div style="background: #f8d7da; padding: 10px; border-radius: 5px; color: #721c24;">
+                        <strong>⚠️ OCRサーバーが起動していません</strong><br>
+                        手動入力モードのみ利用可能です。<br>
+                        <small>起動方法: cd ~/smart-content-factory-v5 && python ocr_server.py</small>
+                    </div>
+                `;
+            }
+        }
+        
         // 初期化
         window.addEventListener('load', () => {
             init();
+            checkOCRServerStatus();
+            // 5秒ごとにステータスを更新
+            setInterval(checkOCRServerStatus, 5000);
         });
+    </script>
+    
+    <!-- OCR統合スクリプトを追加 -->
+    <script src="ocr_integration.js"></script>
+    <script>
+        // 既存のanalyzeScreenshot関数を上書き
+        window.analyzeScreenshot = analyzeNoteScreenshot;
+    </script>
+    
+    <!-- APIステータスチェッカーは一時的に無効化
+    <script src="../api_status_checker.js"></script>
+    -->
+    <script>
+        // APIステータスチェッカーを無効化してOCRサーバーのみチェック
+        console.log('APIステータスチェッカーを無効化しました');
     </script>
 </body>
 </html>

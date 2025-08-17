@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS一覧 - 配信元管理 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .stats-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .add-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .add-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .feed-list {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .feed-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .feed-item:hover {
+            background: #f8f9fa;
+        }
+
+        .feed-info {
+            flex: 1;
+        }
+
+        .feed-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .feed-url {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .feed-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .feed-category {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+
+        .feed-error-badge {
+            background: #ffebee;
+            color: #c62828;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            cursor: help;
+            animation: errorPulse 2s infinite;
+        }
+
+        @keyframes errorPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .feed-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .import-area {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .file-input-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .import-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .import-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .import-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .import-panel {
+            display: none;
+        }
+
+        .import-panel.active {
+            display: block;
+        }
+
+        .import-preview {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .import-preview-item {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+
+        .import-preview-item:last-child {
+            border-bottom: none;
+        }
+
+        .import-preview-item.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .import-preview-item.duplicate {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .import-preview-item.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .category-tag {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .category-tag:hover {
+            background: #e0e0e0;
+        }
+
+        .category-tag.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .control-row {
+                flex-direction: column;
+            }
+            
+            .add-form {
+                flex-direction: column;
+            }
+            
+            .feed-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .feed-actions {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📰 RSS一覧 - 配信元管理</h1>
+            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalFeeds">0</div>
+                <div class="stat-label">登録フィード数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="activeFeeds">0</div>
+                <div class="stat-label">アクティブ</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="categoryCount">0</div>
+                <div class="stat-label">カテゴリ数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="lastUpdate">--:--</div>
+                <div class="stat-label">最終更新</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <form class="add-form" id="addFeedForm">
+                    <input type="text" id="feedName" placeholder="フィード名（例：TechCrunch）" required>
+                    <input type="url" id="feedUrl" placeholder="RSS URL（https://...）" required>
+                    <select id="feedCategory">
+                        <option value="">カテゴリ選択</option>
+                        <option value="テクノロジー">テクノロジー</option>
+                        <option value="ビジネス">ビジネス</option>
+                        <option value="AI・機械学習">AI・機械学習</option>
+                        <option value="スタートアップ">スタートアップ</option>
+                        <option value="官公庁">官公庁</option>
+                        <option value="その他">その他</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">追加</button>
+                </form>
+            </div>
+            <div class="control-row">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="フィードを検索...">
+                </div>
+                <button class="btn btn-secondary" onclick="showImportModal()">📥 一括インポート</button>
+                <button class="btn btn-success" onclick="exportFeeds()">📤 エクスポート</button>
+                <button class="btn btn-primary" onclick="updateAllFeeds()">🔄 全て更新</button>
+            </div>
+            <div class="category-tags" id="categoryFilter">
+                <span class="category-tag active" data-category="all">すべて</span>
+            </div>
+        </div>
+
+        <div class="feed-list" id="feedList">
+            <div class="empty-state">
+                <div class="empty-state-icon">📡</div>
+                <div class="empty-state-text">まだフィードが登録されていません</div>
+                <div class="empty-state-text">上のフォームから追加してください</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- インポートモーダル -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-modal" onclick="closeImportModal()">&times;</span>
+                <h2>RSSフィード一括インポート</h2>
+            </div>
+            
+            <div class="import-tabs">
+                <button class="import-tab active" onclick="switchImportTab('text')">テキスト入力</button>
+                <button class="import-tab" onclick="switchImportTab('file')">ファイルアップロード</button>
+            </div>
+            
+            <!-- テキスト入力パネル -->
+            <div id="textImportPanel" class="import-panel active">
+                <p>1行1フィードで入力してください（名前|URL|カテゴリ）</p>
+                <textarea class="import-area" id="importData" placeholder="TechCrunch|https://techcrunch.com/feed/|テクノロジー
+Bloomberg|https://www.bloomberg.com/feed/|ビジネス
+MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></textarea>
+            </div>
+            
+            <!-- ファイルアップロードパネル -->
+            <div id="fileImportPanel" class="import-panel">
+                <div class="file-input-container">
+                    <label for="fileInput" class="file-input-label">
+                        📁 ファイルを選択
+                    </label>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.csv,.tsv,.json" onchange="handleFileSelect(event)">
+                    <div class="file-info" id="fileInfo">対応形式: .txt, .csv, .tsv, .json</div>
+                </div>
+                <div id="filePreview" style="display: none;">
+                    <h4 style="margin-bottom: 10px;">プレビュー:</h4>
+                    <div class="import-preview" id="fileImportPreview"></div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
+                <button type="button" class="btn btn-primary" id="importBtn" style="margin-left: 10px;">インポート</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB設定
+        let db;
+        const DB_NAME = 'SCFV5_RSS';
+        const DB_VERSION = 2; // バージョンを2に統一
+
+        // IndexedDB初期化（改善版）
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                // 既存のDB接続を閉じる
+                if (db) {
+                    try {
+                        db.close();
+                        db = null;
+                    } catch (e) {
+                        console.log('既存DB接続のクローズ中のエラー（無視可）:', e);
+                    }
+                }
+                
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error('IndexedDB接続エラー:', request.error);
+                    // エラーでもLocalStorageで動作継続
+                    db = null;
+                    resolve(null);
+                };
+                
+                request.onsuccess = () => {
+                    db = request.result;
+                    console.log('IndexedDB接続成功: バージョン', db.version);
+                    
+                    // DB接続が切れた場合の処理
+                    db.onversionchange = () => {
+                        db.close();
+                        db = null;
+                        console.log('DBバージョンが変更されたため接続を閉じました');
+                    };
+                    
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    const oldVersion = event.oldVersion;
+                    const newVersion = event.newVersion;
+                    
+                    console.log(`DBアップグレード: ${oldVersion} → ${newVersion}`);
+                    
+                    // feeds store（RSS一覧用）
+                    if (!db.objectStoreNames.contains('feeds')) {
+                        const store = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('name', 'name', { unique: false });
+                        store.createIndex('category', 'category', { unique: false });
+                        store.createIndex('active', 'active', { unique: false });
+                        console.log('feeds storeを作成しました');
+                    }
+                    
+                    // articles store（配信RSS用、バージョン2で追加）
+                    if (!db.objectStoreNames.contains('articles')) {
+                        const articleStore = db.createObjectStore('articles', { keyPath: 'id', autoIncrement: true });
+                        articleStore.createIndex('feedId', 'feedId', { unique: false });
+                        articleStore.createIndex('pubDate', 'pubDate', { unique: false });
+                        articleStore.createIndex('saved', 'saved', { unique: false });
+                        console.log('articles storeを作成しました');
+                    }
+                };
+                
+                request.onblocked = () => {
+                    console.warn('DB接続がブロックされています - 他のタブを閉じてください');
+                    alert('データベース接続がブロックされています。\n他のタブを閉じてからページをリロードしてください。');
+                };
+            });
+        }
+
+        // フィード追加
+        async function addFeed(feed) {
+            // dbが未定義の場合は初期化
+            if (!db) {
+                await initDB();
+                
+                // それでもdbがnullの場合はLocalStorageを使用
+                if (!db) {
+                    console.log('LocalStorageにフィードを保存');
+                    let feeds = [];
+                    try {
+                        const stored = localStorage.getItem('rss-feeds');
+                        if (stored) {
+                            feeds = JSON.parse(stored);
+                        }
+                    } catch (e) {
+                        console.error('LocalStorage読み込みエラー:', e);
+                        feeds = [];
+                    }
+                    
+                    // 新しいフィードを追加
+                    feed.id = Date.now() + Math.random();
+                    feed.createdAt = new Date().toISOString();
+                    feed.lastUpdate = new Date().toISOString();
+                    feed.active = true;
+                    feeds.push(feed);
+                    
+                    localStorage.setItem('rss-feeds', JSON.stringify(feeds));
+                    return Promise.resolve(feed);
+                }
+            }
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['feeds'], 'readwrite');
+                const store = transaction.objectStore('feeds');
+                
+                feed.active = true;
+                feed.lastUpdate = new Date().toISOString();
+                feed.createdAt = new Date().toISOString();
+                
+                const request = store.add(feed);
+                
+                request.onsuccess = () => {
+                    console.log('フィード追加成功:', feed.name);
+                    resolve(request.result);
+                };
+                
+                request.onerror = () => {
+                    console.error('フィード追加エラー:', request.error);
+                    reject(request.error);
+                };
+            });
+        }
+
+        // 全フィード取得
+        async function getAllFeeds() {
+            // dbが未定義の場合は初期化
+            if (!db) {
+                await initDB();
+                
+                // それでもdbがnullの場合はLocalStorageから取得
+                if (!db) {
+                    console.log('LocalStorageからフィードを取得');
+                    try {
+                        const stored = localStorage.getItem('rss-feeds');
+                        if (stored) {
+                            return JSON.parse(stored);
+                        }
+                    } catch (e) {
+                        console.error('LocalStorage読み込みエラー:', e);
+                    }
+                    return [];
+                }
+            }
+            
+            const transaction = db.transaction(['feeds'], 'readonly');
+            const store = transaction.objectStore('feeds');
+            
+            return new Promise((resolve, reject) => {
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // フィード削除
+        async function deleteFeed(id) {
+            if (!db) {
+                await initDB();
+            }
+            const transaction = db.transaction(['feeds'], 'readwrite');
+            const store = transaction.objectStore('feeds');
+            return store.delete(id);
+        }
+
+        // フィード更新
+        async function updateFeed(feed) {
+            if (!db) {
+                await initDB();
+            }
+            const transaction = db.transaction(['feeds'], 'readwrite');
+            const store = transaction.objectStore('feeds');
+            feed.lastUpdate = new Date().toISOString();
+            return store.put(feed);
+        }
+
+        // フィード表示
+        async function displayFeeds(filter = '') {
+            const feeds = await getAllFeeds();
+            const feedList = document.getElementById('feedList');
+            
+            // フィルタリング
+            let filteredFeeds = feeds;
+            if (filter && filter !== 'all') {
+                filteredFeeds = feeds.filter(f => f.category === filter);
+            }
+            
+            // 検索フィルタ
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filteredFeeds = filteredFeeds.filter(f => 
+                    f.name.toLowerCase().includes(searchTerm) ||
+                    f.url.toLowerCase().includes(searchTerm) ||
+                    (f.category && f.category.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            if (filteredFeeds.length === 0) {
+                feedList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div class="empty-state-text">フィードが見つかりません</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            feedList.innerHTML = filteredFeeds.map(feed => `
+                <div class="feed-item">
+                    <div class="feed-info">
+                        <div class="feed-name">${feed.name}</div>
+                        <div class="feed-url">${feed.url}</div>
+                        <div class="feed-meta">
+                            ${feed.category ? `<span class="feed-category">${feed.category}</span>` : ''}
+                            <span>最終更新: ${new Date(feed.lastUpdate).toLocaleString('ja-JP')}</span>
+                            <span>ステータス: ${feed.active ? '✅ アクティブ' : '⏸️ 停止中'}</span>
+                            ${feed.fetchError ? `<span class="feed-error-badge" title="${feed.lastError || '取得エラーが発生しました'}">⚠️ 取得エラー</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="feed-actions">
+                        <button class="btn btn-small btn-primary" onclick="testFeed('${feed.url}', ${feed.id})">テスト</button>
+                        <button class="btn btn-small btn-secondary" onclick="toggleFeed(${feed.id})">
+                            ${feed.active ? '停止' : '開始'}
+                        </button>
+                        <button class="btn btn-small btn-danger" onclick="removeFeed(${feed.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateStats();
+        }
+
+        // 統計更新
+        async function updateStats() {
+            const feeds = await getAllFeeds();
+            document.getElementById('totalFeeds').textContent = feeds.length;
+            document.getElementById('activeFeeds').textContent = feeds.filter(f => f.active).length;
+            
+            const categories = [...new Set(feeds.map(f => f.category).filter(c => c))];
+            document.getElementById('categoryCount').textContent = categories.length;
+            
+            // カテゴリフィルター更新
+            const categoryFilter = document.getElementById('categoryFilter');
+            categoryFilter.innerHTML = `
+                <span class="category-tag active" data-category="all" onclick="filterByCategory('all')">すべて</span>
+                ${categories.map(cat => 
+                    `<span class="category-tag" data-category="${cat}" onclick="filterByCategory('${cat}')">${cat}</span>`
+                ).join('')}
+            `;
+            
+            // 最終更新時刻
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // カテゴリフィルター
+        function filterByCategory(category) {
+            document.querySelectorAll('.category-tag').forEach(tag => {
+                tag.classList.remove('active');
+                if (tag.dataset.category === category) {
+                    tag.classList.add('active');
+                }
+            });
+            displayFeeds(category);
+        }
+
+        // フィード追加フォーム
+        document.getElementById('addFeedForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const feed = {
+                name: document.getElementById('feedName').value,
+                url: document.getElementById('feedUrl').value,
+                category: document.getElementById('feedCategory').value
+            };
+            
+            try {
+                await addFeed(feed);
+                e.target.reset();
+                displayFeeds();
+                alert('フィードを追加しました');
+            } catch (error) {
+                alert('エラー: ' + error.message);
+            }
+        });
+
+        // 検索
+        document.getElementById('searchInput').addEventListener('input', () => {
+            displayFeeds(document.querySelector('.category-tag.active').dataset.category);
+        });
+
+        // フィード削除
+        async function removeFeed(id) {
+            if (confirm('このフィードを削除しますか？')) {
+                await deleteFeed(id);
+                displayFeeds();
+            }
+        }
+
+        // フィード有効/無効切り替え
+        async function toggleFeed(id) {
+            const feeds = await getAllFeeds();
+            const feed = feeds.find(f => f.id === id);
+            if (feed) {
+                feed.active = !feed.active;
+                await updateFeed(feed);
+                displayFeeds();
+            }
+        }
+
+        // フィードテスト（エラー情報をDBに保存）
+        async function testFeed(url, feedId = null) {
+            // 既知の問題があるドメインをスキップ
+            const problematicDomains = [
+                'bmbf.de', 'bsi.bund.de', 'economie.gouv.fr', 
+                'ssi.gouv.fr', 'inria.fr', 'enisa.europa.eu',
+                'digital.canada.ca', 'nrc.canada.ca'
+            ];
+            
+            const urlDomain = new URL(url).hostname;
+            if (problematicDomains.some(domain => urlDomain.includes(domain))) {
+                // ログを出さずに静かに処理
+                const errorInfo = {
+                    success: false,
+                    message: '⚠️ このサイトは現在アクセス制限があります',
+                    errorCode: 'RESTRICTED_SITE'
+                };
+                
+                // DB更新
+                if (feedId && db) {
+                    try {
+                        const transaction = db.transaction(['feeds'], 'readwrite');
+                        const store = transaction.objectStore('feeds');
+                        const feedRequest = store.get(feedId);
+                        
+                        feedRequest.onsuccess = () => {
+                            const feed = feedRequest.result;
+                            if (feed) {
+                                feed.fetchError = true;
+                                feed.lastError = errorInfo.message;
+                                feed.lastErrorCode = errorInfo.errorCode;
+                                feed.lastChecked = new Date().toISOString();
+                                store.put(feed);
+                            }
+                        };
+                    } catch (e) {
+                        console.log('DB更新スキップ');
+                    }
+                }
+                
+                if (!feedId) alert(errorInfo.message);
+                return errorInfo;
+            }
+            
+            // 設定済みのCloudflare Worker URLを使用
+            const workerUrl = 'https://polished-snow-477a.yutapii.workers.dev';
+            let errorInfo = null;
+            
+            try {
+                // console.logを条件付きに変更（デバッグモード以外は表示しない）
+                if (localStorage.getItem('debug-mode') === 'true') {
+                    console.log('接続テスト開始:', url);
+                }
+                const testUrl = `${workerUrl}?url=${encodeURIComponent(url)}`;
+                // エラーを事前にキャッチ
+                let response;
+                try {
+                    response = await fetch(testUrl, {
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                } catch (fetchError) {
+                    // ネットワークエラーを静かに処理（ログを出さない）
+                    return { 
+                        success: false, 
+                        message: `❌ ネットワークエラー`,
+                        errorCode: 'NETWORK_ERROR'
+                    };
+                }
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    // HTMLチェック
+                    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                        errorInfo = {
+                            success: false,
+                            message: 'HTMLページが返されました（RSSではありません）',
+                            errorCode: 'HTML_CONTENT'
+                        };
+                    } else if (text.includes('<rss') || text.includes('<feed') || text.includes('<item>') || text.includes('<entry>')) {
+                        const parser = new DOMParser();
+                        const xml = parser.parseFromString(text, 'text/xml');
+                        const items = xml.querySelectorAll('item, entry');
+                        errorInfo = {
+                            success: true,
+                            message: `✅ ${items.length}件の記事を取得`,
+                            errorCode: null
+                        };
+                    } else {
+                        errorInfo = {
+                            success: false,
+                            message: '⚠️ 有効なRSSフィードではない可能性があります',
+                            errorCode: 'INVALID_FEED'
+                        };
+                    }
+                } else {
+                    errorInfo = {
+                        success: false,
+                        message: `❌ HTTP ${response.status}`,
+                        errorCode: `HTTP_${response.status}`
+                    };
+                }
+            } catch (firstError) {
+                console.error('接続テストエラー:', firstError);
+                // フォールバック: RSS2JSON
+                try {
+                    const fallbackUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+                    const response = await fetch(fallbackUrl, {
+                        mode: 'cors',
+                        credentials: 'omit'
+                    }).catch(err => {
+                        console.log('RSS2JSON error caught:', err.message);
+                        return { ok: false, status: 0 };
+                    });
+                    
+                    if (response.ok) {
+                        try {
+                            const responseData = await response.json();
+                            if (responseData && responseData.status === 'ok') {
+                                errorInfo = {
+                                    success: true,
+                                    message: `✅ ${responseData.items ? responseData.items.length : 0}件の記事を取得（RSS2JSON経由）`,
+                                    errorCode: null
+                                };
+                            } else {
+                                const errorMsg = responseData?.message || 'Unknown error';
+                                errorInfo = {
+                                    success: false,
+                                    message: `❌ ${errorMsg}`,
+                                    errorCode: 'RSS2JSON_ERROR'
+                                };
+                            }
+                        } catch (jsonError) {
+                            console.error('JSON parse error:', jsonError);
+                            errorInfo = {
+                                success: false,
+                                message: '❌ Invalid response format',
+                                errorCode: 'JSON_PARSE_ERROR'
+                            };
+                        }
+                    } else {
+                        errorInfo = {
+                            success: false,
+                            message: `❌ HTTP ${response.status}`,
+                            errorCode: `HTTP_${response.status}`
+                        };
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback error:', fallbackError);
+                    errorInfo = {
+                        success: false,
+                        message: '❌ Network error',
+                        errorCode: 'NETWORK_ERROR'
+                    };
+                }
+            }
+            
+            // フィードIDが指定されていればDB更新
+            if (feedId && db) {
+                try {
+                    const transaction = db.transaction(['feeds'], 'readwrite');
+                    const store = transaction.objectStore('feeds');
+                    const feedRequest = store.get(feedId);
+                    
+                    feedRequest.onsuccess = () => {
+                        const feed = feedRequest.result;
+                        if (feed) {
+                            feed.fetchError = !errorInfo.success;
+                            feed.lastError = errorInfo.success ? null : errorInfo.message;
+                            feed.lastErrorCode = errorInfo.errorCode;
+                            feed.lastChecked = new Date().toISOString();
+                            store.put(feed);
+                        }
+                    };
+                    
+                    transaction.oncomplete = () => {
+                        // トランザクション完了後にUI更新
+                        displayFeeds();
+                    };
+                } catch (e) {
+                    console.error('フィードステータス更新エラー:', e);
+                }
+            }
+            
+            // UIへのアラート表示
+            alert(errorInfo.message);
+            
+            return errorInfo;
+        }
+
+        // 全フィード更新
+        async function updateAllFeeds() {
+            const feeds = await getAllFeeds();
+            const activeFeeds = feeds.filter(f => f.active);
+            
+            if (activeFeeds.length === 0) {
+                alert('アクティブなフィードがありません');
+                return;
+            }
+            
+            alert(`${activeFeeds.length}個のフィードを更新中...`);
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const feed of activeFeeds) {
+                feed.lastUpdate = new Date().toISOString();
+                
+                // 各フィードをテストしてエラー情報を更新
+                const result = await testFeed(feed.url, feed.id);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+                
+                await updateFeed(feed);
+            }
+            
+            displayFeeds();
+            
+            let message = '更新完了しました\n';
+            message += `✅ 成功: ${successCount}個\n`;
+            if (errorCount > 0) {
+                message += `❌ エラー: ${errorCount}個`;
+            }
+            alert(message);
+        }
+
+        // インポートモーダル
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+            
+            // モーダルが開かれた時にもボタンイベントを設定
+            setTimeout(() => {
+                const importBtn = document.getElementById('importBtn');
+                if (importBtn) {
+                    // 既存のイベントリスナーを削除
+                    const newImportBtn = importBtn.cloneNode(true);
+                    importBtn.parentNode.replaceChild(newImportBtn, importBtn);
+                    
+                    // 新しいイベントリスナーを追加
+                    newImportBtn.addEventListener('click', async function() {
+                        console.log('インポートボタンがクリックされました（モーダル内）');
+                        await performImport();
+                    });
+                }
+            }, 100);
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importData').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').textContent = '対応形式: .txt, .csv, .tsv, .json';
+            document.getElementById('filePreview').style.display = 'none';
+            fileContent = '';
+            currentImportTab = 'text';
+            
+            // タブをリセット
+            document.querySelectorAll('.import-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.import-tab').classList.add('active');
+            document.getElementById('textImportPanel').classList.add('active');
+            document.getElementById('fileImportPanel').classList.remove('active');
+        }
+
+        // フィード一括インポート
+        let fileContent = '';
+        let currentImportTab = 'text';
+        
+        async function performImport() {
+            try {
+                console.log('インポート開始');
+                console.log('currentImportTab:', currentImportTab);
+                console.log('fileContent length:', fileContent.length);
+                
+                // DBを強制的に初期化（既存の状態に関わらず）
+                console.log('DBを初期化中...');
+                try {
+                    await initDB();
+                    console.log('DB初期化完了, db=', db);
+                } catch (dbError) {
+                    console.error('DB初期化エラー:', dbError);
+                    alert('データベースの初期化に失敗しました。ページをリロードしてください。');
+                    return;
+                }
+                
+                let data;
+                if (currentImportTab === 'text') {
+                    data = document.getElementById('importData').value;
+                } else {
+                    data = fileContent;
+                }
+                
+                if (!data || !data.trim()) {
+                    alert('インポートするデータがありません');
+                    return;
+                }
+                
+                await importFeeds(data);
+                
+            } catch (error) {
+                console.error('performImport エラー:', error);
+                alert('インポート処理中にエラーが発生しました: ' + error.message);
+            }
+        }
+        
+        async function importFeeds(data) {
+            console.log('importFeeds called with data length:', data.length);
+            
+            // DBの確認
+            if (!db) {
+                console.log('importFeeds: DBが未初期化のため再初期化');
+                await initDB();
+            }
+            
+            const lines = data.trim().split('\n');
+            let imported = 0;
+            let skipped = 0;
+            let errors = [];
+            
+            // 既存のフィードを取得して重複チェック用
+            let existingFeeds = [];
+            let existingUrls = [];
+            
+            try {
+                existingFeeds = await getAllFeeds();
+                existingUrls = existingFeeds.map(f => f.url.toLowerCase());
+                console.log('既存フィード数:', existingFeeds.length);
+            } catch (e) {
+                console.error('既存フィード取得エラー:', e);
+                existingFeeds = [];
+                existingUrls = [];
+            }
+            
+            // JSON形式の場合の処理
+            if (isJsonFormat(data)) {
+                try {
+                    const jsonData = JSON.parse(data);
+                    const result = await importJsonFeeds(jsonData, existingUrls);
+                    imported = result.imported;
+                    skipped = result.skipped;
+                    errors = result.errors;
+                } catch (e) {
+                    errors.push(`JSONパースエラー: ${e.message}`);
+                }
+            } else {
+                // テキスト形式の処理
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    
+                    let parts;
+                    // CSVまたはTSVの場合
+                    if (line.includes('\t')) {
+                        parts = line.split('\t');
+                    } else if (line.includes(',') && !line.includes('|')) {
+                        // CSVの場合（カンマ区切り）
+                        parts = parseCSVLine(line);
+                    } else {
+                        // パイプ区切り（デフォルト）
+                        parts = line.split('|');
+                    }
+                    
+                    if (parts.length >= 2) {
+                        const feedUrl = parts[1].trim();
+                        
+                        // URL検証
+                        try {
+                            new URL(feedUrl);
+                        } catch (e) {
+                            errors.push(`無効なURL: ${feedUrl}`);
+                            continue;
+                        }
+                        
+                        // 重複チェック
+                        if (existingUrls.includes(feedUrl.toLowerCase())) {
+                            skipped++;
+                            continue;
+                        }
+                        
+                        const feed = {
+                            name: parts[0].trim(),
+                            url: feedUrl,
+                            category: parts[2] ? parts[2].trim() : 'その他'
+                        };
+                        
+                        try {
+                            await addFeed(feed);
+                            imported++;
+                            existingUrls.push(feedUrl.toLowerCase());
+                        } catch (error) {
+                            console.error('Import error:', error);
+                            errors.push(`インポートエラー: ${feed.name}`);
+                        }
+                    }
+                }
+            }
+            
+            closeImportModal();
+            
+            // インポート成功後にフィード一覧を更新
+            await displayFeeds();
+            
+            let message = `✅ ${imported}個のフィードをインポートしました`;
+            if (skipped > 0) {
+                message += `\n⚠️ ${skipped}個は既に登録済みのためスキップ`;
+            }
+            if (errors.length > 0) {
+                message += `\n❌ エラー: ${errors.length}個\n${errors.slice(0, 5).join('\n')}`;
+                if (errors.length > 5) {
+                    message += `\n...他${errors.length - 5}個のエラー`;
+                }
+            }
+            
+            console.log('インポート完了:', message);
+            alert(message);
+            
+            // ページをリロードして最新状態を表示
+            if (imported > 0) {
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+        
+        // JSON形式かどうかを判定
+        function isJsonFormat(data) {
+            const trimmed = data.trim();
+            return (trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+                   (trimmed.startsWith('[') && trimmed.endsWith(']'));
+        }
+        
+        // JSONフィードのインポート処理
+        async function importJsonFeeds(jsonData, existingUrlsArray) {
+            let imported = 0;
+            let skipped = 0;
+            let errors = [];
+            
+            // existingUrlsを配列のコピーとして作成（元の配列を変更しないため）
+            const existingUrls = [...existingUrlsArray];
+            
+            // フラットなフィード配列を作成
+            let feedsToImport = [];
+            
+            console.log('JSONデータ構造:', jsonData); // デバッグログ
+            
+            // v4形式のJSON構造に対応（ネストされたカテゴリ構造）
+            if (jsonData.feeds && Array.isArray(jsonData.feeds)) {
+                console.log('v4形式を検出');
+                for (const categoryGroup of jsonData.feeds) {
+                    const category = categoryGroup.category || 'その他';
+                    if (categoryGroup.feeds && Array.isArray(categoryGroup.feeds)) {
+                        for (const feed of categoryGroup.feeds) {
+                            feedsToImport.push({
+                                name: feed.name || feed.title || '無題',
+                                url: feed.url || feed.link || '',
+                                category: category,
+                                description: feed.description || '',
+                                tags: feed.tags || [],
+                                priority: feed.priority || 'normal',
+                                language: feed.language || 'ja'
+                            });
+                        }
+                    }
+                }
+            }
+            // フラット配列形式のJSON
+            else if (Array.isArray(jsonData)) {
+                console.log('配列形式を検出');
+                feedsToImport = jsonData.map(feed => ({
+                    name: feed.name || feed.title || '無題',
+                    url: feed.url || feed.link || '',
+                    category: feed.category || 'その他',
+                    description: feed.description || ''
+                }));
+            }
+            // 単一オブジェクト形式
+            else if (jsonData.name && jsonData.url) {
+                console.log('単一オブジェクト形式を検出');
+                feedsToImport = [{
+                    name: jsonData.name,
+                    url: jsonData.url,
+                    category: jsonData.category || 'その他'
+                }];
+            }
+            
+            console.log(`インポート対象: ${feedsToImport.length}件`);
+            
+            // 各フィードをインポート
+            for (const feedData of feedsToImport) {
+                if (!feedData.url) {
+                    errors.push(`URLが空: ${feedData.name}`);
+                    continue;
+                }
+                
+                // URL検証
+                try {
+                    new URL(feedData.url);
+                } catch (e) {
+                    errors.push(`無効なURL: ${feedData.url}`);
+                    continue;
+                }
+                
+                // 重複チェック
+                if (existingUrls.includes(feedData.url.toLowerCase())) {
+                    skipped++;
+                    console.log(`重複スキップ: ${feedData.name}`);
+                    continue;
+                }
+                
+                const feed = {
+                    name: feedData.name,
+                    url: feedData.url,
+                    category: feedData.category
+                };
+                
+                // 追加のメタデータがあれば保存
+                if (feedData.description) feed.description = feedData.description;
+                if (feedData.tags) feed.tags = feedData.tags;
+                if (feedData.priority) feed.priority = feedData.priority;
+                if (feedData.language) feed.language = feedData.language;
+                
+                try {
+                    await addFeed(feed);
+                    imported++;
+                    existingUrls.push(feedData.url.toLowerCase());
+                    console.log(`インポート成功: ${feedData.name}`);
+                } catch (error) {
+                    console.error('Import error for', feedData.name, ':', error);
+                    // エラーの詳細を記録
+                    const errorMsg = error?.message || error?.toString() || '不明なエラー';
+                    errors.push(`${feedData.name}: ${errorMsg}`);
+                }
+            }
+            
+            console.log(`結果: 成功=${imported}, スキップ=${skipped}, エラー=${errors.length}`);
+            return { imported, skipped, errors };
+        }
+        
+        // CSV行のパース（カンマ区切り、引用符対応）
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            
+            return result.map(s => s.replace(/^"|"$/g, ''));
+        }
+        
+        // タブ切り替え
+        function switchImportTab(tab) {
+            currentImportTab = tab;
+            
+            // タブボタンの状態を更新
+            document.querySelectorAll('.import-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // パネルの表示を切り替え
+            document.getElementById('textImportPanel').classList.toggle('active', tab === 'text');
+            document.getElementById('fileImportPanel').classList.toggle('active', tab === 'file');
+        }
+        
+        // ファイル選択ハンドラ
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                fileContent = '';
+                return;
+            }
+            
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.textContent = `選択: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            
+            console.log('ファイル選択:', file.name, file.type, file.size);
+            
+            try {
+                fileContent = await readFile(file);
+                console.log('ファイル読み込み成功, サイズ:', fileContent.length);
+                showFilePreview(fileContent);
+            } catch (error) {
+                console.error('ファイル読み込みエラー:', error);
+                alert('ファイルの読み込みに失敗しました: ' + error.message);
+                fileContent = '';
+            }
+        }
+        
+        // ファイル読み込み
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('ファイル読み込みエラー'));
+                reader.readAsText(file, 'UTF-8');
+            });
+        }
+        
+        // ファイルプレビュー表示
+        async function showFilePreview(content) {
+            const previewContainer = document.getElementById('filePreview');
+            const preview = document.getElementById('fileImportPreview');
+            
+            if (!content.trim()) {
+                previewContainer.style.display = 'none';
+                return;
+            }
+            
+            const lines = content.trim().split('\n').slice(0, 10); // 最初の10行を表示
+            const existingFeeds = await getAllFeeds();
+            const existingUrls = existingFeeds.map(f => f.url.toLowerCase());
+            
+            let previewHtml = '';
+            let validCount = 0;
+            let duplicateCount = 0;
+            let errorCount = 0;
+            
+            // JSON形式の場合の処理
+            if (isJsonFormat(content)) {
+                try {
+                    const jsonData = JSON.parse(content);
+                    
+                    // プレビュー用のフィード配列を作成（実際のインポートはしない）
+                    const feedsToShow = [];
+                    let allFeeds = [];
+                    
+                    // v4形式のJSON構造を解析
+                    if (jsonData.feeds && Array.isArray(jsonData.feeds)) {
+                        for (const categoryGroup of jsonData.feeds) {
+                            const category = categoryGroup.category || 'その他';
+                            if (categoryGroup.feeds && Array.isArray(categoryGroup.feeds)) {
+                                for (const feed of categoryGroup.feeds) {
+                                    allFeeds.push({
+                                        name: feed.name || feed.title || '無題',
+                                        url: feed.url || feed.link || '',
+                                        category: category
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    // フラット配列形式
+                    else if (Array.isArray(jsonData)) {
+                        allFeeds = jsonData.map(feed => ({
+                            name: feed.name || feed.title || '無題',
+                            url: feed.url || feed.link || '',
+                            category: feed.category || 'その他'
+                        }));
+                    }
+                    // 単一オブジェクト形式
+                    else if (jsonData.name && jsonData.url) {
+                        allFeeds = [{
+                            name: jsonData.name,
+                            url: jsonData.url,
+                            category: jsonData.category || 'その他'
+                        }];
+                    }
+                    
+                    // 統計情報を計算
+                    for (const feed of allFeeds) {
+                        if (!feed.url) {
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        try {
+                            new URL(feed.url);
+                            if (existingUrls.includes(feed.url.toLowerCase())) {
+                                duplicateCount++;
+                            } else {
+                                validCount++;
+                            }
+                        } catch (e) {
+                            errorCount++;
+                        }
+                    }
+                    
+                    // プレビュー表示（最初の10件）
+                    for (const feed of allFeeds.slice(0, 10)) {
+                        const url = feed.url;
+                        let className = 'success';
+                        let status = '✅ 新規';
+                        
+                        if (!url) {
+                            className = 'error';
+                            status = '❌ URLなし';
+                        } else {
+                            try {
+                                new URL(url);
+                                if (existingUrls.includes(url.toLowerCase())) {
+                                    className = 'duplicate';
+                                    status = '⚠️ 重複';
+                                }
+                            } catch (e) {
+                                className = 'error';
+                                status = '❌ 無効';
+                            }
+                        }
+                        
+                        previewHtml += `
+                            <div class="import-preview-item ${className}">
+                                ${status} | ${feed.name} | ${feed.category}
+                            </div>
+                        `;
+                    }
+                    
+                    if (allFeeds.length > 10) {
+                        previewHtml += `<div style="text-align: center; color: #666; margin-top: 10px;">... 他 ${allFeeds.length - 10} 件のフィード</div>`;
+                    }
+                    
+                } catch (e) {
+                    previewHtml += `
+                        <div class="import-preview-item error">
+                            ❌ JSONパースエラー: ${e.message}
+                        </div>
+                    `;
+                    errorCount++;
+                }
+            } else {
+                // テキスト形式の処理
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    
+                    let parts;
+                    if (line.includes('\t')) {
+                        parts = line.split('\t');
+                    } else if (line.includes(',') && !line.includes('|')) {
+                        parts = parseCSVLine(line);
+                    } else {
+                        parts = line.split('|');
+                    }
+                    
+                    if (parts.length >= 2) {
+                    const url = parts[1].trim();
+                    let className = 'success';
+                    let status = '✅ 新規';
+                    
+                    try {
+                        new URL(url);
+                        if (existingUrls.includes(url.toLowerCase())) {
+                            className = 'duplicate';
+                            status = '⚠️ 重複';
+                            duplicateCount++;
+                        } else {
+                            validCount++;
+                        }
+                    } catch (e) {
+                        className = 'error';
+                        status = '❌ 無効';
+                        errorCount++;
+                    }
+                    
+                    previewHtml += `
+                        <div class="import-preview-item ${className}">
+                            ${status} | ${parts[0].trim()} | ${url}
+                        </div>
+                    `;
+                    } else {
+                        previewHtml += `
+                            <div class="import-preview-item error">
+                                ❌ 無効な形式: ${line.substring(0, 50)}...
+                            </div>
+                        `;
+                        errorCount++;
+                    }
+                }
+            }
+            
+            const totalLines = content.trim().split('\n').length;
+            if (totalLines > 10) {
+                previewHtml += `<div style="text-align: center; color: #666; margin-top: 10px;">... 他 ${totalLines - 10} 行</div>`;
+            }
+            
+            previewHtml = `
+                <div style="margin-bottom: 10px; font-weight: bold;">
+                    ✅ 新規: ${validCount} | ⚠️ 重複: ${duplicateCount} | ❌ エラー: ${errorCount}
+                </div>
+                ${previewHtml}
+            `;
+            
+            preview.innerHTML = previewHtml;
+            previewContainer.style.display = 'block';
+        }
+
+        // エクスポート
+        async function exportFeeds() {
+            const feeds = await getAllFeeds();
+            const exportData = feeds.map(f => `${f.name}|${f.url}|${f.category || ''}`).join('\n');
+            
+            const blob = new Blob([exportData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rss-feeds-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded: 初期化開始');
+            
+            try {
+                await initDB();
+                console.log('初期DB初期化完了');
+            } catch (e) {
+                console.error('初期DB初期化エラー:', e);
+            }
+            
+            await displayFeeds();
+            
+            // サンプルデータ（初回のみ）
+            const feeds = await getAllFeeds();
+            if (feeds.length === 0) {
+                const samples = [
+                    { name: 'TechCrunch Japan', url: 'https://jp.techcrunch.com/feed/', category: 'テクノロジー' },
+                    { name: 'GIGAZINE', url: 'https://gigazine.net/news/rss_2.0/', category: 'テクノロジー' },
+                    { name: 'ITmedia AI+', url: 'https://rss.itmedia.co.jp/rss/2.0/aiplus.xml', category: 'AI・機械学習' }
+                ];
+                
+                for (const sample of samples) {
+                    await addFeed(sample);
+                }
+                displayFeeds();
+            }
+            
+            // インポートボタンにイベントリスナーを追加
+            const importBtn = document.getElementById('importBtn');
+            if (importBtn) {
+                importBtn.addEventListener('click', async function() {
+                    console.log('インポートボタンがクリックされました');
+                    await performImport();
+                });
+            } else {
+                console.error('インポートボタンが見つかりません');
+            }
+        });
+    </script>
+</body>
+</html>
