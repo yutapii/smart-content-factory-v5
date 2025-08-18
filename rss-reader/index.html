@@ -765,6 +765,10 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
         </div>
     </div>
 
+    <!-- エラーハンドリング・ログシステム -->
+    <script src="../js/logger.js"></script>
+    <script src="../js/error-handler.js"></script>
+    
     <script>
         // IndexedDB設定
         let db;
@@ -1331,8 +1335,9 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             }
         }
 
-        // フィードテスト（エラー詳細情報を表示）
+        // フィードテスト（エラー詳細情報を表示 + エラーハンドリング統合）
         async function testFeed(url, feedId = null) {
+            await Logger.info(`Testing feed: ${url}`, { context: 'testFeed', feedId });
             // 既知の問題があるドメインを特別処理
             const problematicDomains = [
                 'bmbf.de', 'bsi.bund.de', 'economie.gouv.fr', 
@@ -1487,7 +1492,22 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                         credentials: 'omit'
                     });
                 } catch (fetchError) {
-                    // ネットワークエラーを静かに処理（ログを出さない）
+                    // エラーハンドラーで処理
+                    await ErrorHandler.handle(fetchError, 'testFeed-fetch', { url, feedId });
+                    
+                    // リトライ判定
+                    const recovery = await ErrorHandler.attemptRecovery(
+                        ErrorHandler.classify(fetchError),
+                        'testFeed-fetch',
+                        { url, feedId }
+                    );
+                    
+                    if (recovery.retry && recovery.delay) {
+                        await new Promise(resolve => setTimeout(resolve, recovery.delay));
+                        // リトライ
+                        return testFeed(url, feedId);
+                    }
+                    
                     return { 
                         success: false, 
                         message: `❌ ネットワークエラー`,
@@ -1518,6 +1538,15 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                             errorCode: null,
                             feedFormat: feedFormat
                         };
+                        
+                        // 成功をログに記録
+                        await Logger.info(`Feed test successful: ${items.length} items`, {
+                            context: 'testFeed',
+                            url,
+                            feedId,
+                            feedFormat,
+                            itemCount: items.length
+                        });
                     } else {
                         errorInfo = {
                             success: false,
