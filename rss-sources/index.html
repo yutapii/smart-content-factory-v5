@@ -452,6 +452,8 @@
         </div>
     </div>
 
+    <!-- 共通ユーティリティ -->
+    <script src="../js/utils.js"></script>
     <script>
         let allArticles = [];
         let displayedArticles = [];
@@ -573,11 +575,14 @@
             }
             
             // 統計バーも更新
-            document.getElementById('totalArticles').textContent = counts.all;
-            document.getElementById('aiArticles').textContent = counts.ai;
-            document.getElementById('robotArticles').textContent = counts.robot;
-            document.getElementById('autoArticles').textContent = counts.auto;
-            document.getElementById('telecomArticles').textContent = counts.telecom;
+            // Utils.updateElementsで一括更新（高速化）
+            Utils.updateElements([
+                { element: document.getElementById('totalArticles'), property: 'text', value: counts.all },
+                { element: document.getElementById('aiArticles'), property: 'text', value: counts.ai },
+                { element: document.getElementById('robotArticles'), property: 'text', value: counts.robot },
+                { element: document.getElementById('autoArticles'), property: 'text', value: counts.auto },
+                { element: document.getElementById('telecomArticles'), property: 'text', value: counts.telecom }
+            ]);
         }
         
         // フィルターを適用
