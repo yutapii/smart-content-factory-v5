@@ -838,7 +838,7 @@ Markdownの記法に対応しています。</div>
             const title = document.getElementById('titleInput').value;
             const lead = document.getElementById('leadInput').value;
             const currentBody = document.getElementById('bodyInput').value;
-            const template = document.querySelector('.template-card.active').dataset.template;
+            // template変数は不要（常に日刊ニュース形式）
             
             if (!title && !currentBody) {
                 alert('タイトルまたは本文の骨子を入力してください');
@@ -893,7 +893,7 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
                     temperature: 0.7,
                     system: systemPrompt,
                     messages: [
-                        { role: 'user', content: prompts[template] }
+                        { role: 'user', content: prompt }  // prompt変数を直接使用
                     ]
                 };
 
