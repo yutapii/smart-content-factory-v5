@@ -292,19 +292,19 @@
         .feed-url {
             color: #666;
             font-size: 0.9em;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             word-break: break-all;
+            line-height: 1.6;
         }
         
         .feed-url a {
-            color: #1976d2;
             text-decoration: none;
             transition: all 0.3s ease;
         }
         
         .feed-url a:hover {
-            color: #1565c0;
             text-decoration: underline;
+            opacity: 0.8;
         }
 
         .feed-meta {
@@ -947,15 +947,32 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                     statusDisplay = '✅ 正常';
                 }
                 
+                // URLからホームページURLを推定
+                let homepageUrl = '';
+                try {
+                    const url = new URL(feed.url);
+                    homepageUrl = `${url.protocol}//${url.hostname}`;
+                } catch (e) {
+                    homepageUrl = feed.url;
+                }
+                
                 return `
                 <div class="feed-item">
                     <div class="feed-info">
                         <div class="feed-name">${feed.name}</div>
                         <div class="feed-url">
-                            <a href="${feed.url}" target="_blank" rel="noopener noreferrer" style="color: #1976d2; text-decoration: none;">
-                                ${feed.url} 
-                                <span style="font-size: 0.8em; margin-left: 5px;">🔗</span>
-                            </a>
+                            <div style="margin-bottom: 3px;">
+                                <span style="color: #666; font-size: 0.85em;">🏠 ホーム:</span>
+                                <a href="${homepageUrl}" target="_blank" rel="noopener noreferrer" style="color: #4caf50; text-decoration: none; margin-left: 5px;">
+                                    ${homepageUrl}
+                                </a>
+                            </div>
+                            <div>
+                                <span style="color: #666; font-size: 0.85em;">📡 RSS:</span>
+                                <a href="${feed.url}" target="_blank" rel="noopener noreferrer" style="color: #1976d2; text-decoration: none; margin-left: 5px;">
+                                    ${feed.url}
+                                </a>
+                            </div>
                         </div>
                         <div class="feed-meta">
                             ${feed.category ? `<span class="feed-category">${feed.category}</span>` : ''}
