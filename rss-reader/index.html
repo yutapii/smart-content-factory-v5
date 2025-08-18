@@ -558,9 +558,91 @@
                 justify-content: flex-start;
             }
         }
+        
+        /* 通知トースト */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+            max-width: 400px;
+            pointer-events: auto;
+            animation: slideIn 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #f44336;
+        }
+        
+        .toast.warning {
+            border-left: 4px solid #ff9800;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #2196f3;
+        }
+        
+        .toast-icon {
+            font-size: 1.2em;
+        }
+        
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toast-close:hover {
+            color: #333;
+        }
     </style>
 </head>
 <body>
+    <!-- トースト通知コンテナ -->
+    <div class="toast-container" id="toastContainer"></div>
     <div class="header">
         <div class="header-content">
             <h1>📰 RSS一覧 - 配信元管理 <span id="feedCountBadge" style="font-size: 0.5em; background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 15px; margin-left: 10px;">(0件)</span></h1>
@@ -688,6 +770,37 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
         let db;
         const DB_NAME = 'SCFV5_RSS';
         const DB_VERSION = 2; // バージョンを2に統一
+        
+        // トースト通知システム
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // 自動で消える
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+            
+            return toast;
+        }
 
         // IndexedDB初期化（改善版）
         async function initDB() {
@@ -753,7 +866,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 
                 request.onblocked = () => {
                     console.warn('DB接続がブロックされています - 他のタブを閉じてください');
-                    alert('データベース接続がブロックされています。\n他のタブを閉じてからページをリロードしてください。');
+                    showToast('データベース接続がブロックされています。他のタブを閉じてからページをリロードしてください。', 'warning', 5000);
                 };
             });
         }
@@ -1188,9 +1301,9 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 await addFeed(feed);
                 e.target.reset();
                 displayFeeds();
-                alert('フィードを追加しました');
+                showToast('フィードを追加しました', 'success');
             } catch (error) {
-                alert('エラー: ' + error.message);
+                showToast('エラー: ' + error.message, 'error');
             }
         });
 
@@ -1314,7 +1427,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                                     }
                                 }
                                 
-                                if (!feedId) alert(result.message);
+                                if (!feedId) showToast(result.message, result.success ? 'success' : 'error');
                                 return result;
                             }
                         }
@@ -1352,7 +1465,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                     }
                 }
                 
-                if (!feedId) alert(errorInfo.message);
+                if (!feedId) showToast(errorInfo.message, errorInfo.success ? 'success' : 'error');
                 return errorInfo;
             }
             
@@ -1551,9 +1664,9 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                         }
                 }
                 
-                alert(detailMessage);
+                showToast(detailMessage, 'info', 5000);
             } else {
-                alert(errorInfo.message);
+                showToast(errorInfo.message, errorInfo.success ? 'success' : 'error');
             }
             
             return errorInfo;
@@ -1617,7 +1730,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                     console.log('DB初期化完了, db=', db);
                 } catch (dbError) {
                     console.error('DB初期化エラー:', dbError);
-                    alert('データベースの初期化に失敗しました。ページをリロードしてください。');
+                    showToast('データベースの初期化に失敗しました。ページをリロードしてください。', 'error', 5000);
                     return;
                 }
                 
@@ -1629,7 +1742,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 }
                 
                 if (!data || !data.trim()) {
-                    alert('インポートするデータがありません');
+                    showToast('インポートするデータがありません', 'warning');
                     return;
                 }
                 
@@ -1637,7 +1750,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 
             } catch (error) {
                 console.error('performImport エラー:', error);
-                alert('インポート処理中にエラーが発生しました: ' + error.message);
+                showToast('インポート処理中にエラーが発生しました: ' + error.message, 'error', 5000);
             }
         }
         
@@ -1749,7 +1862,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             }
             
             console.log('インポート完了:', message);
-            alert(message);
+            showToast(message, 'success', 5000);
             
             // ページをリロードして最新状態を表示
             if (imported > 0) {
@@ -1935,7 +2048,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 showFilePreview(fileContent);
             } catch (error) {
                 console.error('ファイル読み込みエラー:', error);
-                alert('ファイルの読み込みに失敗しました: ' + error.message);
+                showToast('ファイルの読み込みに失敗しました: ' + error.message, 'error');
                 fileContent = '';
             }
         }
@@ -2237,7 +2350,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             // モーダルを閉じる
             document.querySelector('.modal.active')?.remove();
             
-            alert(`✅ ${filteredFeeds.length}件のフィードをエクスポートしました`);
+            showToast(`${filteredFeeds.length}件のフィードをエクスポートしました`, 'success');
         }
 
         // AI RSS探索機能
@@ -2280,7 +2393,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
         async function searchRSSWithAI() {
             const query = document.getElementById('aiSearchQuery').value.trim();
             if (!query) {
-                alert('検索キーワードを入力してください');
+                showToast('検索キーワードを入力してください', 'warning');
                 return;
             }
             
@@ -2726,14 +2839,14 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                     
                     await updateFeed(feed);
                     
-                    alert('✅ RSS URLを更新しました');
+                    showToast('RSS URLを更新しました', 'success');
                     
                     // モーダルを閉じて一覧を更新
                     document.querySelector('.modal.active')?.remove();
                     await displayFeeds();
                 }
             } catch (error) {
-                alert('❌ 更新に失敗しました: ' + error.message);
+                showToast('更新に失敗しました: ' + error.message, 'error');
             }
         }
         
@@ -2742,7 +2855,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             // 既存のフィードと重複チェック
             const existingFeeds = await getAllFeeds();
             if (existingFeeds.some(f => f.url === url)) {
-                alert('⚠️ このフィードは既に登録されています');
+                showToast('このフィードは既に登録されています', 'warning');
                 return;
             }
             
@@ -2754,13 +2867,13 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             
             try {
                 await addFeed(feed);
-                alert('✅ フィードを追加しました');
+                showToast('フィードを追加しました', 'success');
                 
                 // モーダルを閉じて一覧を更新
                 document.querySelector('.modal.active')?.remove();
                 await displayFeeds();
             } catch (error) {
-                alert('❌ 追加に失敗しました: ' + error.message);
+                showToast('追加に失敗しました: ' + error.message, 'error');
             }
         }
         
@@ -2895,7 +3008,7 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
             }
             
             if (testFeeds.length === 0) {
-                alert('テスト対象のフィードがありません');
+                showToast('テスト対象のフィードがありません', 'warning');
                 autoTestRunning = false;
                 document.getElementById('startTestBtn').style.display = 'inline-block';
                 document.getElementById('stopTestBtn').style.display = 'none';
