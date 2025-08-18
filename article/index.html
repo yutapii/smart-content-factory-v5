@@ -524,14 +524,7 @@
                 </button>
             </div>
 
-            <div class="saved-articles">
-                <h3>📋 保存記事から選択</h3>
-                <div id="savedArticlesList">
-                    <div style="color: #999; font-size: 0.9em;">保存された記事がありません</div>
-                </div>
-            </div>
-            
-            <!-- 出典情報入力エリア -->
+            <!-- 出典情報入力エリア（上に移動） -->
             <div class="source-input-section" style="margin-top: 20px; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <h3>📚 出典情報</h3>
                 <button class="btn btn-primary" onclick="addSourceField()" style="margin: 10px 0;">
@@ -539,6 +532,13 @@
                 </button>
                 <div id="sourceInputs">
                     <!-- 動的に追加される -->
+                </div>
+            </div>
+            
+            <div class="saved-articles">
+                <h3>📋 保存記事から選択</h3>
+                <div id="savedArticlesList">
+                    <div style="color: #999; font-size: 0.9em;">保存された記事がありません</div>
                 </div>
             </div>
         </div>
@@ -802,15 +802,40 @@ Markdownの記法に対応しています。</div>
                     </div>
                 `;
             }
+            
+            // 日刊AIゆたさん新聞のクレジット
+            const creditHtml = `
+                <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                        ━━━━━━━━━━━━━━━━━━━━━━━
+                    </div>
+                    <div style="font-size: 1.1em; font-weight: bold; color: #333; margin-bottom: 5px;">
+                        📰 日刊AIゆたさん新聞
+                    </div>
+                    <div style="font-size: 0.85em; color: #666;">
+                        AI・ロボット・自動運転・テレコムの最新情報をお届け
+                    </div>
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">
+                        発行日: ${new Date().toLocaleDateString('ja-JP')}
+                    </div>
+                </div>
+            `;
 
             document.getElementById('previewArea').innerHTML = `
                 <div class="preview-title">${title}</div>
                 <div class="preview-lead">${lead}</div>
                 <div class="preview-body">${parsedBody}</div>
                 <div class="preview-tags">
-                    ${tags ? tags.split(',').map(tag => `<span class="tag">#${tag.trim()}</span>`).join('') : ''}
+                    ${tags ? tags.split(',').map(tag => {
+                        const trimmedTag = tag.trim();
+                        // ハッシュタグが既についていない場合のみ追加
+                        const hashTag = trimmedTag.startsWith('#') ? trimmedTag : `#${trimmedTag}`;
+                        return `<span class="tag">${hashTag}</span>`;
+                    }).join('') : ''}
+                    <span class="tag">#日刊AIゆたさん新聞</span>
                 </div>
                 ${sourcesHtml}
+                ${creditHtml}
             `;
         }
 
@@ -1179,12 +1204,48 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
 
         // エクスポート（親ウィンドウへ）
         window.exportArticle = function() {
+            const title = document.getElementById('titleInput').value;
+            const lead = document.getElementById('leadInput').value;
+            let body = document.getElementById('bodyInput').value;
+            const tags = document.getElementById('tagsInput').value;
+            const sources = collectSources();
+            
+            // 出典情報を本文に追加
+            if (sources.length > 0) {
+                body += '\n\n## 📚 出典・参考資料\n';
+                sources.forEach((source, index) => {
+                    if (source.fact) {
+                        body += `${index + 1}. ${source.fact}\n`;
+                    }
+                    if (source.url) {
+                        body += `   ${source.url}`;
+                        if (source.date) {
+                            body += ` (${new Date(source.date).toLocaleDateString('ja-JP')})`;
+                        }
+                        body += '\n';
+                    }
+                });
+            }
+            
+            // 日刊AIゆたさん新聞のクレジットを追加
+            body += '\n---\n';
+            body += '📰 **日刊AIゆたさん新聞**\n';
+            body += 'AI・ロボット・自動運転・テレコムの最新情報をお届け\n';
+            body += `発行日: ${new Date().toLocaleDateString('ja-JP')}\n`;
+            
+            // タグにハッシュタグを確実に付ける
+            const formattedTags = tags.split(',').map(tag => {
+                const trimmedTag = tag.trim();
+                return trimmedTag.startsWith('#') ? trimmedTag : `#${trimmedTag}`;
+            }).join(', ');
+            const finalTags = formattedTags ? `${formattedTags}, #日刊AIゆたさん新聞` : '#日刊AIゆたさん新聞';
+            
             const article = {
-                title: document.getElementById('titleInput').value,
-                lead: document.getElementById('leadInput').value,
-                body: document.getElementById('bodyInput').value,
-                tags: document.getElementById('tagsInput').value,
-                sources: collectSources(), // 出典情報を追加
+                title: title,
+                lead: lead,
+                body: body,
+                tags: finalTags,
+                sources: sources,
                 createdAt: new Date().toISOString()
             };
 
