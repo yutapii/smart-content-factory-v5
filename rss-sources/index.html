@@ -361,7 +361,12 @@
     <div class="header">
         <div class="header-content">
             <h1>📡 配信RSS - 日刊AIゆたさん新聞</h1>
-            <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span id="corsStatus" style="font-size: 0.85em; background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 12px; border-radius: 15px; display: flex; align-items: center; gap: 5px;">
+                    🌐 CORS回避: <span id="corsStatusText">確認中...</span>
+                </span>
+                <a href="../index.html" class="back-btn">← ダッシュボードへ</a>
+            </div>
         </div>
     </div>
 
@@ -904,7 +909,46 @@
             }
         }
         
+        // CORS回避ステータスチェック
+        async function checkCORSStatus() {
+            const corsStatusElement = document.getElementById('corsStatusText');
+            const corsStatusContainer = document.getElementById('corsStatus');
+            
+            try {
+                // Cloudflare Workerの動作確認
+                const testUrl = 'https://polished-snow-477a.yutapii.workers.dev?url=https://example.com/';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(testUrl, {
+                    signal: controller.signal,
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    corsStatusElement.textContent = 'ON';
+                    corsStatusContainer.style.background = 'rgba(76, 175, 80, 0.9)';
+                    corsStatusContainer.title = 'Cloudflare Worker経由でCORS回避が有効です';
+                } else {
+                    corsStatusElement.textContent = 'エラー';
+                    corsStatusContainer.style.background = 'rgba(244, 67, 54, 0.9)';
+                    corsStatusContainer.title = 'CORS回避サービスに接続できません';
+                }
+            } catch (error) {
+                corsStatusElement.textContent = 'OFF';
+                corsStatusContainer.style.background = 'rgba(255, 152, 0, 0.9)';
+                corsStatusContainer.title = 'CORS回避サービスがオフラインです';
+            }
+        }
+        
         init();
+        checkCORSStatus();
+        
+        // 定期的にCORS状態を確認（30秒ごと）
+        setInterval(checkCORSStatus, 30000);
     </script>
 </body>
 </html>
