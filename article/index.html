@@ -823,15 +823,11 @@ Markdownの記法に対応しています。</div>
         // AI生成
         async function generateArticle() {
             const apiKey = localStorage.getItem('anthropic-api-key');
-            let workerUrl = localStorage.getItem('cloudflare-worker-url');
-            
-            // デフォルトのWorker URLを設定（既存のpolished-snow-477a）
-            if (!workerUrl) {
-                workerUrl = 'https://polished-snow-477a.yutapii.workers.dev';
-            }
+            // Cloudflare WorkerのURLは使用しない（直接APIを使用）
+            // polished-snow-477aはRSS用でClaude APIには非対応
             
             if (!apiKey) {
-                alert('設定画面でClaude APIキーを登録してください');
+                alert('設定画面でClaude APIキーを登録してください\n\n※Anthropic APIキーが必要です\n設定 > API設定から登録してください');
                 return;
             }
 
@@ -885,36 +881,21 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
 読者層: AI・テクノロジーに興味がある一般読者
 文体: 親しみやすく、わかりやすい日本語`;
 
-                // Cloudflare Workerを使うか、直接APIを使うか判定
-                let apiUrl;
+                // 直接Anthropic APIを使用（Cloudflare Workerは使用しない）
+                const apiUrl = 'https://api.anthropic.com/v1/messages';
                 const requestBody = {
                     model: 'claude-3-5-sonnet-20241022',
                     max_tokens: 4000,
                     temperature: 0.7,
                     system: systemPrompt,
                     messages: [
-                        { role: 'user', content: prompt }  // prompt変数を直接使用
+                        { role: 'user', content: prompt }
                     ]
                 };
 
-                // WorkerのURLを調整（/claudeエンドポイントを使用）
-                if (workerUrl) {
-                    // polished-snow-477aなどの既存Workerに対応
-                    if (workerUrl.includes('workers.dev')) {
-                        apiUrl = workerUrl.replace(/\/$/, '') + '/claude';
-                    } else {
-                        apiUrl = workerUrl;
-                    }
-                    requestBody.apiKey = apiKey;
-                } else {
-                    apiUrl = 'https://api.anthropic.com/v1/messages';
-                }
-
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: workerUrl ? {
-                        'Content-Type': 'application/json'
-                    } : {
+                    headers: {
                         'Content-Type': 'application/json',
                         'x-api-key': apiKey,
                         'anthropic-version': '2023-06-01'
@@ -923,8 +904,24 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'API呼び出しに失敗しました');
+                    let errorMessage = 'API呼び出しに失敗しました';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error?.message || errorMessage;
+                        
+                        // よくあるエラーの日本語化
+                        if (response.status === 401) {
+                            errorMessage = 'APIキーが無効です。設定を確認してください';
+                        } else if (response.status === 429) {
+                            errorMessage = 'APIのレート制限に達しました。しばらく待ってから再試行してください';
+                        } else if (response.status === 403) {
+                            errorMessage = 'APIキーの権限が不足しています。Anthropic APIキーを確認してください';
+                        }
+                    } catch (e) {
+                        // JSONパースエラーの場合はステータスコードを表示
+                        errorMessage = `APIエラー (${response.status})`;
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const data = await response.json();
