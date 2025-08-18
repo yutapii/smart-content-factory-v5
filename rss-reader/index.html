@@ -295,6 +295,17 @@
             margin-bottom: 5px;
             word-break: break-all;
         }
+        
+        .feed-url a {
+            color: #1976d2;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .feed-url a:hover {
+            color: #1565c0;
+            text-decoration: underline;
+        }
 
         .feed-meta {
             display: flex;
@@ -940,7 +951,12 @@ MIT Tech Review|https://www.technologyreview.com/feed/|AI・機械学習"></text
                 <div class="feed-item">
                     <div class="feed-info">
                         <div class="feed-name">${feed.name}</div>
-                        <div class="feed-url">${feed.url}</div>
+                        <div class="feed-url">
+                            <a href="${feed.url}" target="_blank" rel="noopener noreferrer" style="color: #1976d2; text-decoration: none;">
+                                ${feed.url} 
+                                <span style="font-size: 0.8em; margin-left: 5px;">🔗</span>
+                            </a>
+                        </div>
                         <div class="feed-meta">
                             ${feed.category ? `<span class="feed-category">${feed.category}</span>` : ''}
                             <span>最終更新: ${new Date(feed.lastUpdate).toLocaleString('ja-JP')}</span>
