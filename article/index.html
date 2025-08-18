@@ -1041,6 +1041,7 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
             const lead = document.getElementById('leadInput').value;
             const body = document.getElementById('bodyInput').value;
             const tags = document.getElementById('tagsInput').value;
+            const sources = collectSources(); // 出典情報も収集
 
             if (!title) {
                 alert('タイトルを入力してください');
@@ -1052,6 +1053,7 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
                 lead,
                 body,
                 tags,
+                sources, // 出典情報を追加
                 savedAt: new Date().toISOString()
             };
 
@@ -1060,7 +1062,8 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
             savedArticles = savedArticles.slice(0, 10); // 最新10件のみ保持
             localStorage.setItem('article-templates', JSON.stringify(savedArticles));
 
-            alert('テンプレートとして保存しました');
+            const sourceInfo = sources.length > 0 ? `（出典${sources.length}件含む）` : '';
+            alert(`テンプレートとして保存しました${sourceInfo}`);
             loadSavedArticles();
         }
 
@@ -1077,11 +1080,32 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
                 return;
             }
 
-            listEl.innerHTML = allItems.map((article, index) => `
-                <div class="saved-article-item" onclick="loadArticle(${index})">
-                    ${article.title || '無題'}
-                </div>
-            `).join('');
+            listEl.innerHTML = allItems.map((article, index) => {
+                // 出典情報の要約を作成
+                let sourceSummary = '';
+                if (article.sources && article.sources.length > 0) {
+                    const sourceCount = article.sources.length;
+                    const firstSource = article.sources[0];
+                    sourceSummary = `
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            📚 ${sourceCount}件の出典
+                            ${firstSource.fact ? `<br>→ ${firstSource.fact.substring(0, 30)}...` : ''}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="saved-article-item" onclick="loadArticle(${index})" style="cursor: pointer; padding: 12px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #667eea;">
+                        <div style="font-weight: 500; color: #333;">
+                            ${article.title || '無題'}
+                        </div>
+                        ${sourceSummary}
+                        <div style="font-size: 0.75em; color: #999; margin-top: 5px;">
+                            ${article.savedAt ? new Date(article.savedAt).toLocaleDateString('ja-JP') : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // 記事読み込み
@@ -1096,6 +1120,37 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
                 document.getElementById('leadInput').value = article.lead || article.description || '';
                 document.getElementById('bodyInput').value = article.body || '';
                 document.getElementById('tagsInput').value = article.tags || '';
+                
+                // 既存の出典フィールドをクリア
+                document.getElementById('sourceInputs').innerHTML = '';
+                sourceIdCounter = 0;
+                
+                // 出典情報を復元
+                if (article.sources && article.sources.length > 0) {
+                    article.sources.forEach(source => {
+                        addSourceField();
+                        const lastId = sourceIdCounter - 1;
+                        
+                        if (source.fact) {
+                            const factInput = document.getElementById(`sourceFact-${lastId}`);
+                            if (factInput) factInput.value = source.fact;
+                        }
+                        
+                        if (source.url) {
+                            const urlInput = document.getElementById(`sourceUrl-${lastId}`);
+                            if (urlInput) urlInput.value = source.url;
+                        }
+                        
+                        if (source.date) {
+                            const dateInput = document.getElementById(`sourceDate-${lastId}`);
+                            if (dateInput) dateInput.value = source.date;
+                        }
+                    });
+                } else {
+                    // 出典がない場合は空のフィールドを1つ追加
+                    addSourceField();
+                }
+                
                 updatePreview();
                 updateCounters();
             }
