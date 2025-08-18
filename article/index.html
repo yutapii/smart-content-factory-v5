@@ -496,18 +496,10 @@
     <div class="container">
         <div class="sidebar">
             <div class="template-selector">
-                <h3>📝 テンプレート選択</h3>
-                <div class="template-card active" onclick="selectTemplate('daily')" data-template="daily">
+                <h3>📰 日刊AIゆたさん新聞</h3>
+                <div class="template-card active" data-template="daily" style="border: 2px solid #667eea; background: #f8f9ff;">
                     <div class="template-title">📰 日刊ニュース形式</div>
-                    <div class="template-desc">今日のトピックをまとめて配信</div>
-                </div>
-                <div class="template-card" onclick="selectTemplate('analysis')" data-template="analysis">
-                    <div class="template-title">🔍 分析記事形式</div>
-                    <div class="template-desc">問題提起から解決策まで深掘り</div>
-                </div>
-                <div class="template-card" onclick="selectTemplate('special')" data-template="special">
-                    <div class="template-title">🌟 特集記事形式</div>
-                    <div class="template-desc">テーマを多角的に探求</div>
+                    <div class="template-desc">本日のAI・ロボット・自動運転・テレコムニュースをまとめて配信</div>
                 </div>
             </div>
 
@@ -600,111 +592,50 @@ Markdownの記法に対応しています。</div>
     </div>
 
     <script>
-        // テンプレート定義
+        // テンプレート定義（日刊ニュース形式のみ）
         const templates = {
             daily: {
-                title: '日刊AIゆたさん新聞 2025年1月10日号',
-                body: `## 本日のAIニュース
+                title: `日刊AIゆたさん新聞 ${new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}号`,
+                body: `## 📰 本日のトップニュース
 
-### 📰 トップニュース
-[ここに今日の最重要ニュースの概要を2-3行で]
+### 1. AI分野
+[AIに関する最新ニュース・トレンド]
 
-### 1. [見出し1]
-[本文]
+### 2. ロボット分野
+[ロボティクスの最新動向]
 
-### 2. [見出し2]
-[本文]
+### 3. 自動運転分野
+[自動運転技術の進展]
 
-### 3. [見出し3]
-[本文]
+### 4. テレコム分野
+[通信・5G・6Gの最新情報]
 
-### まとめ
-[今日のニュースから見える大きなトレンドや示唆]
+## 📊 今日のポイント
+[今日のニュースから見える大きなトレンドや示唆を3つのポイントでまとめる]
 
----
-※本記事は日刊AIゆたさん新聞の編集部が厳選した情報をお届けしています。`
-            },
-            analysis: {
-                title: '[分析] タイトル',
-                body: `## 問題提起
-[現在直面している課題や疑問を明確に提示]
+1. 
+2. 
+3. 
 
-## 現状分析
-[データや事実に基づく現状の詳細な分析]
-
-## 原因考察
-[問題の根本原因を複数の視点から考察]
-
-### 技術的要因
-[技術面での原因]
-
-### 経済的要因
-[経済面での原因]
-
-### 社会的要因
-[社会面での原因]
-
-## 解決策の提案
-[実現可能な解決策を具体的に提示]
-
-### 短期的施策
-[すぐに実行可能な対策]
-
-### 長期的施策
-[時間をかけて実現すべき対策]
-
-## 結論
-[分析から導かれる結論と今後の展望]`
-            },
-            special: {
-                title: '[特集] タイトル',
-                body: `## 🎯 この特集で伝えたいこと
-[メインメッセージを明確に]
-
-## 📊 背景・経緯
-[なぜこのテーマを取り上げるのか]
-
-## 🔍 深掘り1：[サブテーマ]
-[詳細な解説]
-
-### 具体例
-[実例やケーススタディ]
-
-## 🔍 深掘り2：[サブテーマ]
-[別角度からの解説]
-
-### データで見る
-[統計やグラフを用いた説明]
-
-## 🔍 深掘り3：[サブテーマ]
-[さらに別の視点]
-
-## 💡 実践例・事例紹介
-[実際の適用例や成功事例]
-
-## 🚀 今後の展望
-[将来予測や期待される発展]
-
-## 📝 編集後記
-[個人的な感想や読者へのメッセージ]`
+## 🔮 明日への展望
+[今後の業界動向予測]`
             }
         };
 
         // しつこさレベル
         let shitsukoLevel = 3;
 
-        // テンプレート選択
-        function selectTemplate(type) {
-            // アクティブクラス更新
-            document.querySelectorAll('.template-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            document.querySelector(`[data-template="${type}"]`).classList.add('active');
-
-            // テンプレート適用
-            const template = templates[type];
+        // 初期テンプレート適用（日刊ニュース形式のみ）
+        function initializeTemplate() {
+            const template = templates.daily;
             document.getElementById('titleInput').value = template.title;
             document.getElementById('bodyInput').value = template.body;
+            
+            // デフォルトのリード文も設定
+            document.getElementById('leadInput').value = `本日の${new Date().toLocaleDateString('ja-JP')}のAI・ロボット・自動運転・テレコム分野の重要ニュースをお届けします。`;
+            
+            // デフォルトタグも設定
+            document.getElementById('tagsInput').value = 'AI, ロボット, 自動運転, テレコム, テクノロジー';
             
             updatePreview();
             updateCounters();
@@ -922,51 +853,37 @@ Markdownの記法に対応しています。</div>
 
             try {
                 // テンプレートごとのプロンプト
-                const prompts = {
-                    daily: `日刊AIゆたさん新聞の記事を作成してください。
-タイトル: ${title || '本日のAIニュース'}
+                // 日刊ニュース形式専用のプロンプト
+                const prompt = `日刊AIゆたさん新聞の記事を作成してください。
+タイトル: ${title || `日刊AIゆたさん新聞 ${new Date().toLocaleDateString('ja-JP')}号`}
 ${lead ? 'リード文: ' + lead : ''}
 ${currentBody ? '骨子:\n' + currentBody : ''}
 
 以下の形式で記事を生成してください：
-1. 今日の最重要ニュースを2-3行で要約
-2. 3つの主要トピックをそれぞれ詳しく解説
-3. まとめと今後の展望
-文章は親しみやすく、専門用語には簡単な説明を付けてください。`,
 
-                    analysis: `分析記事を作成してください。
-タイトル: ${title || '分析記事'}
-${lead ? 'リード文: ' + lead : ''}
-${currentBody ? '現在の内容:\n' + currentBody : ''}
+## 📰 本日のトップニュース
+1. AI分野の最新動向
+2. ロボット分野の最新動向
+3. 自動運転分野の最新動向
+4. テレコム分野の最新動向
 
-以下の構成で深掘り分析してください：
-1. 問題提起（なぜこれが重要か）
-2. 現状分析（データと事実に基づく）
-3. 原因考察（技術・経済・社会の3視点から）
-4. 解決策の提案（短期・長期）
-5. 結論
-論理的で説得力のある文章にしてください。`,
+## 📊 今日のポイント（3つ）
+- ポイント1
+- ポイント2
+- ポイント3
 
-                    special: `特集記事を作成してください。
-タイトル: ${title || '特集記事'}
-${lead ? 'リード文: ' + lead : ''}
-${currentBody ? '現在の内容:\n' + currentBody : ''}
+## 🔮 明日への展望
+今後の業界動向予測
 
-以下の構成で多角的に探求してください：
-1. この特集の核心メッセージ
-2. 背景・経緯の詳細説明
-3. 3つの異なる視点からの深掘り
-4. 具体例や事例紹介
-5. 今後の展望
-6. 編集後記
-読者を引き込む魅力的な文章にしてください。`
-                };
-
-                const systemPrompt = `あなたは日刊AIゆたさん新聞の編集者です。
+文章は親しみやすく、専門用語には簡単な説明を付けてください。
 しつこさレベル: ${shitsukoLevel}/10
 ${shitsukoLevel > 5 ? '重要な点は繰り返し強調し、多角的に説明してください。' : ''}
-${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説してください。' : ''}
-文字数目安: 2000-5000文字`;
+${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説してください。' : ''}`;
+
+                const systemPrompt = `あなたは日刊AIゆたさん新聞の編集者です。
+文字数目安: 2000-3000文字
+読者層: AI・テクノロジーに興味がある一般読者
+文体: 親しみやすく、わかりやすい日本語`;
 
                 // Cloudflare Workerを使うか、直接APIを使うか判定
                 let apiUrl;
@@ -1258,6 +1175,7 @@ ${shitsukoLevel > 7 ? 'さらに詳細に、執拗に、徹底的に解説して
         };
 
         // 初期化
+        initializeTemplate(); // 日刊ニュース形式を自動適用
         loadSavedArticles();
         updateCounters();
         // 初期の出典フィールドを1つ追加
