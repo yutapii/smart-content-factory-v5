@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Googleアラート RSS インポーター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #4285f4 0%, #ea4335 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4285f4, #ea4335);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .google-logo {
+            font-size: 30px;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .step-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .preset-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .preset-card:hover {
+            border-color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .preset-card.selected {
+            border-color: #4285f4;
+            background: #e8f0fe;
+        }
+        
+        .preset-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .preset-keyword {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 3px;
+            word-break: break-all;
+        }
+        
+        .preset-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .category-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .category-tab.active {
+            color: #4285f4;
+            border-bottom-color: #4285f4;
+        }
+        
+        .input-section {
+            margin: 20px 0;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        
+        textarea.input-field {
+            min-height: 150px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3367d6;
+        }
+        
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #2d8e47;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .help-text {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .rss-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .rss-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 3px;
+        }
+        
+        .rss-item-name {
+            font-weight: 500;
+        }
+        
+        .rss-item-url {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+        
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-ready { background: #d4edda; color: #155724; }
+        .status-pending { background: #cce5ff; color: #004085; }
+        .status-added { background: #d1ecf1; color: #0c5460; }
+        
+        .copy-btn {
+            padding: 5px 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="google-logo">🔍</span>
+                Googleアラート RSS インポーター
+            </h1>
+            <p>Googleアラートの設定とRSSフィードの一括管理</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Step 1: プリセット選択 -->
+            <div class="step-section">
+                <div class="step-title">📋 Step 1: プリセットから選択</div>
+                
+                <div class="category-tabs">
+                    <button class="category-tab active" onclick="showCategory('AI・機械学習')">AI・機械学習</button>
+                    <button class="category-tab" onclick="showCategory('ロボティクス')">ロボティクス</button>
+                    <button class="category-tab" onclick="showCategory('自動運転')">自動運転</button>
+                    <button class="category-tab" onclick="showCategory('テレコム・通信')">テレコム・通信</button>
+                </div>
+                
+                <div id="presetGrid" class="preset-grid">
+                    <!-- プリセットがここに表示される -->
+                </div>
+            </div>
+            
+            <!-- Step 2: Googleアラート作成 -->
+            <div class="step-section">
+                <div class="step-title">🔔 Step 2: Googleアラートを作成</div>
+                
+                <div class="help-text">
+                    ⚠️ 選択したキーワードで <a href="https://www.google.co.jp/alerts" target="_blank">Googleアラート</a> を作成し、
+                    配信先を必ず「<strong>RSSフィード</strong>」に設定してください。
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">選択したキーワード</label>
+                    <textarea id="selectedKeywords" class="input-field" readonly placeholder="上のプリセットから選択してください"></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="openGoogleAlerts()">🔗 Googleアラートを開く</button>
+                    <button class="btn btn-secondary copy-btn" onclick="copyKeywords()">📋 キーワードをコピー</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: RSS URL入力 -->
+            <div class="step-section">
+                <div class="step-title">📡 Step 3: RSS URLを追加</div>
+                
+                <div class="input-group">
+                    <label class="input-label">RSS URL（1行に1つ）</label>
+                    <textarea id="rssUrls" class="input-field" placeholder="https://www.google.com/alerts/feeds/12345678901234567890/1234567890123456789
+https://www.google.com/alerts/feeds/09876543210987654321/0987654321098765432"></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="addToRSSReader()">➕ RSSリーダーに追加</button>
+                </div>
+                
+                <div class="help-text">
+                    💡 GoogleアラートのRSSアイコン 🔶 をクリックして表示されるURLをコピーしてください。
+                </div>
+            </div>
+            
+            <!-- 追加済みリスト -->
+            <div class="step-section">
+                <div class="step-title">✅ 追加済みGoogleアラート</div>
+                <div id="addedList" class="rss-list">
+                    <div style="text-align: center; color: #999; padding: 20px;">
+                        まだ追加されていません
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // プリセットデータ
+        const presets = {
+            "AI・機械学習": [
+                {
+                    name: "生成AI最新動向",
+                    keyword: '"生成AI" OR "Generative AI" -PR -広告',
+                    frequency: "毎日",
+                    category: "AI最新動向"
+                },
+                {
+                    name: "ChatGPT/Claude動向",
+                    keyword: 'ChatGPT OR Claude OR "Anthropic" -料金 -使い方',
+                    frequency: "その都度",
+                    category: "AI最新動向"
+                },
+                {
+                    name: "LLM研究論文",
+                    keyword: '"大規模言語モデル" OR LLM AND (研究 OR 論文)',
+                    frequency: "週1回",
+                    category: "AI研究"
+                },
+                {
+                    name: "OpenAI最新情報",
+                    keyword: 'OpenAI AND (発表 OR リリース) -求人',
+                    frequency: "その都度",
+                    category: "AI企業"
+                }
+            ],
+            "ロボティクス": [
+                {
+                    name: "ヒューマノイドロボット",
+                    keyword: '"ヒューマノイドロボット" AND (開発 OR 実証)',
+                    frequency: "毎日",
+                    category: "ロボット技術"
+                },
+                {
+                    name: "Tesla Optimus",
+                    keyword: '"Tesla Optimus" OR "テスラ オプティマス"',
+                    frequency: "その都度",
+                    category: "ロボット企業"
+                },
+                {
+                    name: "協働ロボット導入",
+                    keyword: '協働ロボット OR コボット AND 導入事例',
+                    frequency: "週1回",
+                    category: "産業ロボット"
+                }
+            ],
+            "自動運転": [
+                {
+                    name: "自動運転レベル4/5",
+                    keyword: '自動運転 AND ("レベル4" OR "レベル5")',
+                    frequency: "毎日",
+                    category: "自動運転技術"
+                },
+                {
+                    name: "ロボタクシー",
+                    keyword: 'ロボタクシー OR "robotaxi"',
+                    frequency: "その都度",
+                    category: "自動運転サービス"
+                },
+                {
+                    name: "Waymo/Cruise動向",
+                    keyword: 'Waymo OR Cruise AND (実証 OR サービス)',
+                    frequency: "毎日",
+                    category: "自動運転企業"
+                }
+            ],
+            "テレコム・通信": [
+                {
+                    name: "6G研究開発",
+                    keyword: '6G AND (研究 OR 開発 OR 標準化)',
+                    frequency: "週1回",
+                    category: "次世代通信"
+                },
+                {
+                    name: "Starlink日本展開",
+                    keyword: 'Starlink OR "衛星通信" AND 日本',
+                    frequency: "毎日",
+                    category: "衛星通信"
+                },
+                {
+                    name: "Open RAN導入",
+                    keyword: '"Open RAN" OR "O-RAN" AND 導入',
+                    frequency: "週1回",
+                    category: "通信インフラ"
+                }
+            ]
+        };
+        
+        let selectedPresets = [];
+        let addedFeeds = [];
+        
+        // カテゴリ表示
+        function showCategory(category) {
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent === category) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // プリセットを表示
+            const grid = document.getElementById('presetGrid');
+            grid.innerHTML = '';
+            
+            presets[category].forEach((preset, index) => {
+                const card = document.createElement('div');
+                card.className = 'preset-card';
+                card.innerHTML = `
+                    <div class="preset-title">${preset.name}</div>
+                    <div class="preset-keyword">${preset.keyword}</div>
+                    <div class="preset-meta">
+                        <span>📅 ${preset.frequency}</span>
+                        <span>📁 ${preset.category}</span>
+                    </div>
+                `;
+                card.onclick = () => togglePreset(preset, card);
+                grid.appendChild(card);
+            });
+        }
+        
+        // プリセット選択
+        function togglePreset(preset, element) {
+            element.classList.toggle('selected');
+            
+            if (element.classList.contains('selected')) {
+                selectedPresets.push(preset);
+            } else {
+                selectedPresets = selectedPresets.filter(p => p.name !== preset.name);
+            }
+            
+            updateSelectedKeywords();
+        }
+        
+        // 選択キーワード更新
+        function updateSelectedKeywords() {
+            const textarea = document.getElementById('selectedKeywords');
+            textarea.value = selectedPresets.map(p => 
+                `【${p.name}】\n${p.keyword}\n`
+            ).join('\n');
+        }
+        
+        // Googleアラートを開く
+        function openGoogleAlerts() {
+            window.open('https://www.google.co.jp/alerts', '_blank');
+        }
+        
+        // キーワードコピー
+        function copyKeywords() {
+            const textarea = document.getElementById('selectedKeywords');
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert('キーワードをコピーしました');
+            });
+        }
+        
+        // RSSリーダーに追加
+        function addToRSSReader() {
+            const urlsText = document.getElementById('rssUrls').value;
+            if (!urlsText) {
+                alert('RSS URLを入力してください');
+                return;
+            }
+            
+            const urls = urlsText.split('\n').filter(url => url.trim());
+            const feeds = urls.map((url, index) => ({
+                name: selectedPresets[index]?.name || `Googleアラート ${index + 1}`,
+                url: url.trim(),
+                category: selectedPresets[index]?.category || 'Googleアラート'
+            }));
+            
+            // LocalStorageに保存（実際のRSSリーダーと連携）
+            const existingFeeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            feeds.forEach(feed => {
+                existingFeeds.push({
+                    ...feed,
+                    id: Date.now() + Math.random(),
+                    addedAt: new Date().toISOString()
+                });
+            });
+            localStorage.setItem('rss-feeds', JSON.stringify(existingFeeds));
+            
+            // 追加済みリスト更新
+            addedFeeds.push(...feeds);
+            updateAddedList();
+            
+            // クリア
+            document.getElementById('rssUrls').value = '';
+            alert(`${feeds.length}件のGoogleアラートRSSを追加しました`);
+        }
+        
+        // 追加済みリスト更新
+        function updateAddedList() {
+            const list = document.getElementById('addedList');
+            if (addedFeeds.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">まだ追加されていません</div>';
+                return;
+            }
+            
+            list.innerHTML = addedFeeds.map(feed => `
+                <div class="rss-item">
+                    <div>
+                        <div class="rss-item-name">${feed.name}</div>
+                        <div class="rss-item-url">${feed.url}</div>
+                    </div>
+                    <span class="status-badge status-added">追加済み</span>
+                </div>
+            `).join('');
+        }
+        
+        // 初期化
+        showCategory('AI・機械学習');
+    </script>
+</body>
+</html>
