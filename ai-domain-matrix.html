@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI分野別トレンドマトリックス - Chat/CLI/画像/動画</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #00ff41;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #00ff41;
+        }
+        
+        .domain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .domain-card {
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        
+        .domain-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 255, 65, 0.3);
+            border-color: #00ffff;
+        }
+        
+        .domain-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.3);
+        }
+        
+        .domain-icon {
+            font-size: 32px;
+        }
+        
+        .domain-title {
+            flex: 1;
+        }
+        
+        .domain-title h3 {
+            font-size: 20px;
+            color: #00ffff;
+            margin-bottom: 5px;
+        }
+        
+        .domain-subtitle {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .domain-status {
+            padding: 5px 10px;
+            background: rgba(0, 255, 65, 0.2);
+            border-radius: 15px;
+            font-size: 11px;
+            color: #00ff41;
+        }
+        
+        .evolution-timeline {
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            font-size: 12px;
+            align-items: center;
+        }
+        
+        .timeline-gen {
+            min-width: 60px;
+            padding: 4px 8px;
+            background: rgba(0, 255, 65, 0.2);
+            border-radius: 3px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .timeline-tech {
+            flex: 1;
+            color: #ccc;
+        }
+        
+        .timeline-leader {
+            color: #00ffff;
+            font-size: 11px;
+        }
+        
+        .current-leaders {
+            margin-bottom: 15px;
+        }
+        
+        .leader-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .leader-item {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 5px;
+            text-align: center;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        
+        .leader-item:hover {
+            background: rgba(0, 255, 65, 0.1);
+            border-color: #00ff41;
+        }
+        
+        .leader-name {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 3px;
+        }
+        
+        .leader-product {
+            color: #888;
+        }
+        
+        .tech-specs {
+            margin-bottom: 15px;
+        }
+        
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+        }
+        
+        .spec-label {
+            color: #888;
+        }
+        
+        .spec-value {
+            color: #00ff41;
+            font-weight: bold;
+        }
+        
+        .future-prediction {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        .prediction-title {
+            font-size: 12px;
+            color: #00ffff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .prediction-content {
+            font-size: 11px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        
+        .comparison-matrix {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            font-size: 12px;
+        }
+        
+        .matrix-table th {
+            background: rgba(0, 255, 65, 0.1);
+            color: #00ffff;
+            font-weight: bold;
+        }
+        
+        .matrix-table td {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .matrix-table td:hover {
+            background: rgba(0, 255, 65, 0.1);
+        }
+        
+        .performance-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #00ffff);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 5px;
+            font-size: 10px;
+            color: #000;
+            font-weight: bold;
+            transition: width 0.5s;
+        }
+        
+        .control-panel {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        label {
+            color: #00ffff;
+            font-size: 12px;
+        }
+        
+        select, input {
+            background: #000;
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+        
+        button {
+            background: rgba(0, 255, 65, 0.1);
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+        }
+        
+        .trend-indicator {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 14px;
+        }
+        
+        .trend-up { color: #00ff41; }
+        .trend-down { color: #ff4141; }
+        .trend-stable { color: #ffff41; }
+        
+        .capability-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .capability-cell {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            text-align: center;
+            font-size: 10px;
+            transition: all 0.3s;
+        }
+        
+        .capability-high {
+            background: rgba(0, 255, 65, 0.3);
+            border-color: #00ff41;
+        }
+        
+        .capability-medium {
+            background: rgba(255, 255, 65, 0.2);
+            border-color: #ffff41;
+        }
+        
+        .capability-low {
+            background: rgba(255, 65, 65, 0.2);
+            border-color: #ff4141;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff41;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI分野別トレンドマトリックス</h1>
+            <p>Chat / CLI / 画像 / 動画 / 音声 / コード - 各分野の-N世代分析</p>
+            <span class="live-indicator"></span>
+        </div>
+        
+        <!-- コントロールパネル -->
+        <div class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label>時間軸表示:</label>
+                    <select id="timeRange">
+                        <option value="3">-3世代</option>
+                        <option value="5" selected>-5世代</option>
+                        <option value="10">-10世代</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>比較軸:</label>
+                    <select id="compareAxis">
+                        <option value="performance">性能</option>
+                        <option value="market">市場シェア</option>
+                        <option value="innovation">革新度</option>
+                    </select>
+                </div>
+                
+                <button onclick="updateAnalysis()">🔄 更新</button>
+                <button onclick="predictFuture()">🔮 未来予測</button>
+                <button onclick="exportData()">💾 データ出力</button>
+            </div>
+        </div>
+        
+        <!-- AI分野カードグリッド -->
+        <div class="domain-grid">
+            <!-- チャットAI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">💬</span>
+                    <div class="domain-title">
+                        <h3>Chat AI</h3>
+                        <div class="domain-subtitle">対話型AI・チャットボット</div>
+                    </div>
+                    <span class="domain-status">最激戦区</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">GPT-4, Claude 3, Gemini 1.5</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">GPT-3.5, Claude 2, Bard</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">GPT-3, LaMDA</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">GPT-2, BERT</span>
+                        <span class="timeline-leader">Google</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">OpenAI</div>
+                            <div class="leader-product">ChatGPT</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Anthropic</div>
+                            <div class="leader-product">Claude</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Google</div>
+                            <div class="leader-product">Gemini</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">最大コンテキスト:</span>
+                        <span class="spec-value">200K tokens</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">応答速度:</span>
+                        <span class="spec-value">50 tokens/秒</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">市場規模:</span>
+                        <span class="spec-value">$50B<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        無限コンテキスト、リアルタイム学習、完全なマルチモーダル統合
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CLI AI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">⌨️</span>
+                    <div class="domain-title">
+                        <h3>CLI AI</h3>
+                        <div class="domain-subtitle">コマンドライン・開発支援</div>
+                    </div>
+                    <span class="domain-status">急成長中</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">Cursor, Copilot X, Claude Code</span>
+                        <span class="timeline-leader">Anthropic</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">GitHub Copilot, Tabnine</span>
+                        <span class="timeline-leader">GitHub</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">IntelliCode, Kite</span>
+                        <span class="timeline-leader">Microsoft</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">Basic autocomplete</span>
+                        <span class="timeline-leader">JetBrains</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">Anthropic</div>
+                            <div class="leader-product">Claude Code</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Cursor</div>
+                            <div class="leader-product">Cursor IDE</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">GitHub</div>
+                            <div class="leader-product">Copilot</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">コード理解:</span>
+                        <span class="spec-value">全言語対応</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">自動化率:</span>
+                        <span class="spec-value">70%<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">デバッグ精度:</span>
+                        <span class="spec-value">85%</span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        完全自動プログラミング、要件からデプロイまで全自動化
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 画像AI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">🎨</span>
+                    <div class="domain-title">
+                        <h3>Image AI</h3>
+                        <div class="domain-subtitle">画像生成・認識・編集</div>
+                    </div>
+                    <span class="domain-status">成熟期</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">DALL-E 3, Midjourney 6, SD3</span>
+                        <span class="timeline-leader">Midjourney</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">DALL-E 2, MJ 5, SD2</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">DALL-E, SD1.5</span>
+                        <span class="timeline-leader">StabilityAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">GAN, StyleGAN</span>
+                        <span class="timeline-leader">NVIDIA</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">Midjourney</div>
+                            <div class="leader-product">MJ v6</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">OpenAI</div>
+                            <div class="leader-product">DALL-E 3</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Stability</div>
+                            <div class="leader-product">SD3</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">解像度:</span>
+                        <span class="spec-value">8K対応</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">生成速度:</span>
+                        <span class="spec-value">5秒/画像</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">フォトリアル度:</span>
+                        <span class="spec-value">95%<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        リアルタイム3D生成、完全な物理シミュレーション統合
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 動画AI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">🎬</span>
+                    <div class="domain-title">
+                        <h3>Video AI</h3>
+                        <div class="domain-subtitle">動画生成・編集・分析</div>
+                    </div>
+                    <span class="domain-status">黎明期</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">Sora, Runway Gen-3, Pika</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">Runway Gen-2, Stability Video</span>
+                        <span class="timeline-leader">Runway</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">Make-A-Video, Imagen Video</span>
+                        <span class="timeline-leader">Meta</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">DeepFake初期</span>
+                        <span class="timeline-leader">研究段階</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">OpenAI</div>
+                            <div class="leader-product">Sora</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Runway</div>
+                            <div class="leader-product">Gen-3</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Pika</div>
+                            <div class="leader-product">Pika 1.0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">最大長:</span>
+                        <span class="spec-value">60秒</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">FPS:</span>
+                        <span class="spec-value">60fps</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">一貫性:</span>
+                        <span class="spec-value">70%<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        長編映画生成、完全なキャラクター一貫性、リアルタイム編集
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 音声AI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">🎵</span>
+                    <div class="domain-title">
+                        <h3>Audio AI</h3>
+                        <div class="domain-subtitle">音声合成・音楽生成・認識</div>
+                    </div>
+                    <span class="domain-status">急成長</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">ElevenLabs, Suno, Whisper v3</span>
+                        <span class="timeline-leader">ElevenLabs</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">Whisper, VALL-E</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">WaveNet, Tacotron</span>
+                        <span class="timeline-leader">Google</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">TTS基礎技術</span>
+                        <span class="timeline-leader">Amazon</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">ElevenLabs</div>
+                            <div class="leader-product">Voice AI</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Suno</div>
+                            <div class="leader-product">Music AI</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">OpenAI</div>
+                            <div class="leader-product">Whisper</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">自然度:</span>
+                        <span class="spec-value">99%</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">言語数:</span>
+                        <span class="spec-value">100+言語</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">リアルタイム:</span>
+                        <span class="spec-value">対応<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        完全な感情表現、リアルタイム多言語翻訳、音楽の完全自動作曲
+                    </div>
+                </div>
+            </div>
+            
+            <!-- コード生成AI -->
+            <div class="domain-card">
+                <div class="domain-header">
+                    <span class="domain-icon">🧑‍💻</span>
+                    <div class="domain-title">
+                        <h3>Code AI</h3>
+                        <div class="domain-subtitle">コード生成・レビュー・最適化</div>
+                    </div>
+                    <span class="domain-status">革新期</span>
+                </div>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-gen">現在</span>
+                        <span class="timeline-tech">Claude Code, Devin, Copilot X</span>
+                        <span class="timeline-leader">Anthropic</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-1世代</span>
+                        <span class="timeline-tech">Copilot, CodeWhisperer</span>
+                        <span class="timeline-leader">GitHub</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-2世代</span>
+                        <span class="timeline-tech">Codex, AlphaCode</span>
+                        <span class="timeline-leader">OpenAI</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-gen">-3世代</span>
+                        <span class="timeline-tech">IntelliSense</span>
+                        <span class="timeline-leader">Microsoft</span>
+                    </div>
+                </div>
+                
+                <div class="current-leaders">
+                    <div class="leader-grid">
+                        <div class="leader-item">
+                            <div class="leader-name">Anthropic</div>
+                            <div class="leader-product">Claude Code</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">Cognition</div>
+                            <div class="leader-product">Devin</div>
+                        </div>
+                        <div class="leader-item">
+                            <div class="leader-name">GitHub</div>
+                            <div class="leader-product">Copilot X</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">完成度:</span>
+                        <span class="spec-value">85%</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">バグ検出率:</span>
+                        <span class="spec-value">90%<span class="trend-indicator trend-up">↗</span></span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">リファクタリング:</span>
+                        <span class="spec-value">自動対応</span>
+                    </div>
+                </div>
+                
+                <div class="future-prediction">
+                    <div class="prediction-title">
+                        🔮 +1世代予測
+                    </div>
+                    <div class="prediction-content">
+                        完全自律エンジニア、アーキテクチャ設計から運用まで全自動
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分野間比較マトリックス -->
+        <div class="comparison-matrix">
+            <h3 style="color: #00ffff; text-align: center; margin-bottom: 20px;">
+                📊 AI分野間性能比較マトリックス
+            </h3>
+            
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th>分野</th>
+                        <th>成熟度</th>
+                        <th>成長率</th>
+                        <th>市場規模</th>
+                        <th>競争激度</th>
+                        <th>参入障壁</th>
+                        <th>将来性</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color: #00ffff;">💬 Chat</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 90%;">90%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 85%;">85%</div>
+                            </div>
+                        </td>
+                        <td>$50B</td>
+                        <td>極高</td>
+                        <td>高</td>
+                        <td>★★★★★</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #00ffff;">⌨️ CLI</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 70%;">70%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 95%;">95%</div>
+                            </div>
+                        </td>
+                        <td>$10B</td>
+                        <td>高</td>
+                        <td>中</td>
+                        <td>★★★★★</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #00ffff;">🎨 Image</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 85%;">85%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 60%;">60%</div>
+                            </div>
+                        </td>
+                        <td>$20B</td>
+                        <td>高</td>
+                        <td>中</td>
+                        <td>★★★★☆</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #00ffff;">🎬 Video</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 40%;">40%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 100%;">100%</div>
+                            </div>
+                        </td>
+                        <td>$5B</td>
+                        <td>中</td>
+                        <td>極高</td>
+                        <td>★★★★★</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #00ffff;">🎵 Audio</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 75%;">75%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 80%;">80%</div>
+                            </div>
+                        </td>
+                        <td>$8B</td>
+                        <td>中</td>
+                        <td>中</td>
+                        <td>★★★★☆</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #00ffff;">🧑‍💻 Code</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 65%;">65%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 90%;">90%</div>
+                            </div>
+                        </td>
+                        <td>$15B</td>
+                        <td>高</td>
+                        <td>高</td>
+                        <td>★★★★★</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // 分析更新
+        function updateAnalysis() {
+            const timeRange = document.getElementById('timeRange').value;
+            const compareAxis = document.getElementById('compareAxis').value;
+            
+            console.log(`Analysis updated: ${timeRange} generations, ${compareAxis} axis`);
+            
+            // アニメーション効果
+            document.querySelectorAll('.domain-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        card.style.transform = 'scale(1)';
+                    }, 200);
+                }, index * 100);
+            });
+            
+            alert(`分析を更新しました\n時間軸: -${timeRange}世代\n比較軸: ${compareAxis}`);
+        }
+        
+        // 未来予測
+        function predictFuture() {
+            const predictions = {
+                'Chat': '2025年: 完全な文脈理解、無限メモリ、リアルタイム学習',
+                'CLI': '2025年: 完全自動プログラミング、要件定義から運用まで',
+                'Image': '2025年: リアルタイム3D生成、物理シミュレーション統合',
+                'Video': '2025年: 長編映画生成、完全な時間的一貫性',
+                'Audio': '2025年: 感情完全再現、リアルタイム多言語翻訳',
+                'Code': '2025年: 自律型AIエンジニア、システム全体の自動設計'
+            };
+            
+            let message = '🔮 AI分野別未来予測（+1世代）\n\n';
+            for (const [domain, prediction] of Object.entries(predictions)) {
+                message += `【${domain}】\n${prediction}\n\n`;
+            }
+            
+            alert(message);
+        }
+        
+        // データエクスポート
+        function exportData() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                domains: ['Chat', 'CLI', 'Image', 'Video', 'Audio', 'Code'],
+                generations: {
+                    current: {
+                        Chat: 'GPT-4, Claude 3',
+                        CLI: 'Claude Code, Cursor',
+                        Image: 'DALL-E 3, Midjourney 6',
+                        Video: 'Sora, Runway Gen-3',
+                        Audio: 'ElevenLabs, Suno',
+                        Code: 'Devin, Copilot X'
+                    },
+                    minus1: {
+                        Chat: 'GPT-3.5, Claude 2',
+                        CLI: 'GitHub Copilot',
+                        Image: 'DALL-E 2, MJ 5',
+                        Video: 'Runway Gen-2',
+                        Audio: 'Whisper',
+                        Code: 'Copilot'
+                    }
+                },
+                trends: {
+                    fastestGrowing: 'Video AI',
+                    mostMature: 'Chat AI',
+                    highestPotential: 'Code AI'
+                }
+            };
+            
+            localStorage.setItem('ai-domain-analysis', JSON.stringify(exportData));
+            console.log('Exported data:', exportData);
+            alert('データをエクスポートしました');
+        }
+        
+        // パフォーマンスバーのアニメーション
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.performance-fill').forEach((bar, index) => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100 + index * 100);
+            });
+        });
+        
+        // ドメインカードのホバー効果
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.background = 'rgba(0, 255, 65, 0.1)';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(0, 0, 0, 0.3)';
+            });
+        });
+    </script>
+</body>
+</html>

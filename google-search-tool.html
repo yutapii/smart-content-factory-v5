@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google検索ツール - SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #4285f4 0%, #ea4335 50%, #fbbc04 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .google-logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .google-colors {
+            display: inline-block;
+        }
+        
+        .g-blue { color: #4285f4; }
+        .g-red { color: #ea4335; }
+        .g-yellow { color: #fbbc04; }
+        .g-green { color: #34a853; }
+        
+        .search-container {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .search-box-wrapper {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            border-color: #4285f4;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4285f4;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .search-btn:hover {
+            background: #3367d6;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .search-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .option-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        select, input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        select:focus, input[type="date"]:focus {
+            border-color: #4285f4;
+        }
+        
+        .quick-searches {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .quick-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .quick-btn:hover {
+            background: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+        
+        .results-container {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .result-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .result-title {
+            font-size: 18px;
+            color: #1a0dab;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .result-title:hover {
+            text-decoration: underline;
+        }
+        
+        .result-url {
+            color: #006621;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .result-description {
+            color: #545454;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #f8f9fa;
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .export-section {
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .export-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+            border: 2px solid #4285f4;
+            color: #4285f4;
+        }
+        
+        .export-btn:hover {
+            background: #4285f4;
+            color: white;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4285f4;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .filter-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .filter-tag {
+            padding: 6px 12px;
+            background: #e8f0fe;
+            color: #1967d2;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .filter-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="google-logo">
+                <span class="google-colors">
+                    <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+                </span>
+                <span style="color: #666;">検索ツール</span>
+            </div>
+            <p style="color: #666;">ニュース・Web・学術論文を横断検索</p>
+        </div>
+        
+        <div class="search-container">
+            <div class="search-box-wrapper">
+                <input type="text" class="search-input" id="searchInput" placeholder="検索キーワードを入力...">
+                <button class="search-btn" onclick="performSearch()">🔍</button>
+            </div>
+            
+            <div class="search-options">
+                <div class="option-group">
+                    <label class="option-label">検索対象:</label>
+                    <select id="searchType">
+                        <option value="all">すべて</option>
+                        <option value="news">ニュース</option>
+                        <option value="web">ウェブ</option>
+                        <option value="scholar">学術論文</option>
+                        <option value="patents">特許</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label class="option-label">期間:</label>
+                    <select id="dateRange">
+                        <option value="all">すべて</option>
+                        <option value="day">24時間以内</option>
+                        <option value="week">1週間以内</option>
+                        <option value="month">1ヶ月以内</option>
+                        <option value="year">1年以内</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label class="option-label">言語:</label>
+                    <select id="language">
+                        <option value="ja">日本語</option>
+                        <option value="en">英語</option>
+                        <option value="all">すべて</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label class="option-label">並び順:</label>
+                    <select id="sortBy">
+                        <option value="relevance">関連性</option>
+                        <option value="date">日付（新しい順）</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="quick-searches">
+                <button class="quick-btn" onclick="quickSearch('生成AI 最新')">🤖 生成AI</button>
+                <button class="quick-btn" onclick="quickSearch('ChatGPT OR Claude')">💬 ChatGPT/Claude</button>
+                <button class="quick-btn" onclick="quickSearch('ヒューマノイドロボット')">🤖 ロボット</button>
+                <button class="quick-btn" onclick="quickSearch('自動運転 レベル4')">🚗 自動運転</button>
+                <button class="quick-btn" onclick="quickSearch('6G 研究')">📡 6G</button>
+                <button class="quick-btn" onclick="quickSearch('量子コンピュータ')">⚛️ 量子</button>
+                <button class="quick-btn" onclick="quickSearch('メタバース')">🥽 メタバース</button>
+                <button class="quick-btn" onclick="quickSearch('ブロックチェーン')">🔗 ブロックチェーン</button>
+            </div>
+        </div>
+        
+        <div class="results-container" id="results">
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-value" id="resultCount">0</div>
+                    <div class="stat-label">検索結果</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sourceCount">0</div>
+                    <div class="stat-label">ソース</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="timeElapsed">0.0</div>
+                    <div class="stat-label">検索時間（秒）</div>
+                </div>
+            </div>
+            
+            <div class="filter-tags" id="filterTags" style="display: none;"></div>
+            
+            <div id="resultsList">
+                <div style="text-align: center; padding: 60px; color: #999;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🔍</div>
+                    <div>検索キーワードを入力してください</div>
+                </div>
+            </div>
+            
+            <div class="export-section" id="exportSection" style="display: none;">
+                <div class="export-title">📤 エクスポート</div>
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportToRSS()">📡 RSS形式</button>
+                    <button class="export-btn" onclick="exportToJSON()">📄 JSON形式</button>
+                    <button class="export-btn" onclick="exportToArticle()">✍️ 記事生成へ</button>
+                    <button class="export-btn" onclick="addToRSSReader()">➕ RSSリーダーに追加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentResults = [];
+        let searchStartTime = 0;
+        
+        // クイック検索
+        function quickSearch(query) {
+            document.getElementById('searchInput').value = query;
+            performSearch();
+        }
+        
+        // 検索実行
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) {
+                alert('検索キーワードを入力してください');
+                return;
+            }
+            
+            const searchType = document.getElementById('searchType').value;
+            const dateRange = document.getElementById('dateRange').value;
+            const language = document.getElementById('language').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            // ローディング表示
+            showLoading();
+            searchStartTime = performance.now();
+            
+            // 検索URLを構築
+            const searchUrls = buildSearchUrls(query, searchType, dateRange, language);
+            
+            // シミュレート結果（実際はAPIやスクレイピングで取得）
+            setTimeout(() => {
+                const results = generateMockResults(query, searchType);
+                displayResults(results);
+            }, 1000);
+        }
+        
+        // 検索URL構築
+        function buildSearchUrls(query, type, dateRange, language) {
+            const urls = [];
+            const encodedQuery = encodeURIComponent(query);
+            
+            // Google News RSS
+            if (type === 'all' || type === 'news') {
+                urls.push({
+                    type: 'news',
+                    url: `https://news.google.com/rss/search?q=${encodedQuery}&hl=${language}&gl=JP&ceid=JP:${language}`
+                });
+            }
+            
+            // Google検索
+            if (type === 'all' || type === 'web') {
+                let dateParam = '';
+                if (dateRange === 'day') dateParam = '&tbs=qdr:d';
+                else if (dateRange === 'week') dateParam = '&tbs=qdr:w';
+                else if (dateRange === 'month') dateParam = '&tbs=qdr:m';
+                else if (dateRange === 'year') dateParam = '&tbs=qdr:y';
+                
+                urls.push({
+                    type: 'web',
+                    url: `https://www.google.com/search?q=${encodedQuery}${dateParam}&hl=${language}`
+                });
+            }
+            
+            // Google Scholar
+            if (type === 'all' || type === 'scholar') {
+                urls.push({
+                    type: 'scholar',
+                    url: `https://scholar.google.com/scholar?q=${encodedQuery}&hl=${language}`
+                });
+            }
+            
+            // Google Patents
+            if (type === 'all' || type === 'patents') {
+                urls.push({
+                    type: 'patents',
+                    url: `https://patents.google.com/?q=${encodedQuery}&language=${language}`
+                });
+            }
+            
+            return urls;
+        }
+        
+        // モック結果生成
+        function generateMockResults(query, type) {
+            const results = [
+                {
+                    title: `${query}に関する最新ニュース - 日本経済新聞`,
+                    url: 'https://www.nikkei.com/article/example1',
+                    description: `${query}の技術が急速に発展している。専門家によると、今後5年間で市場規模は10倍に拡大する見込み...`,
+                    source: '日本経済新聞',
+                    date: '2024年3月15日',
+                    type: 'news'
+                },
+                {
+                    title: `${query}の技術革新と将来展望 - MIT Technology Review`,
+                    url: 'https://www.technologyreview.jp/example2',
+                    description: `MITの研究チームが${query}の新しいアプローチを発表。従来の手法と比較して効率が50%向上...`,
+                    source: 'MIT Technology Review',
+                    date: '2024年3月14日',
+                    type: 'news'
+                },
+                {
+                    title: `${query}の実装ガイド - Qiita`,
+                    url: 'https://qiita.com/example3',
+                    description: `${query}を実際にプロジェクトで活用する方法を解説。サンプルコードと共に実装手順を詳しく説明...`,
+                    source: 'Qiita',
+                    date: '2024年3月13日',
+                    type: 'web'
+                },
+                {
+                    title: `${query}に関する論文 - arXiv`,
+                    url: 'https://arxiv.org/example4',
+                    description: `Abstract: We propose a novel approach to ${query} that significantly improves performance...`,
+                    source: 'arXiv',
+                    date: '2024年3月12日',
+                    type: 'scholar'
+                },
+                {
+                    title: `${query}関連特許 - 特許庁`,
+                    url: 'https://patents.google.com/patent/example5',
+                    description: `${query}を用いた新しいシステムおよび方法。本発明は、従来技術の課題を解決...`,
+                    source: 'Google Patents',
+                    date: '2024年3月10日',
+                    type: 'patents'
+                }
+            ];
+            
+            // タイプでフィルタ
+            if (type !== 'all') {
+                return results.filter(r => r.type === type);
+            }
+            
+            return results;
+        }
+        
+        // ローディング表示
+        function showLoading() {
+            document.getElementById('resultsList').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>検索中...</div>
+                </div>
+            `;
+        }
+        
+        // 結果表示
+        function displayResults(results) {
+            currentResults = results;
+            const elapsed = ((performance.now() - searchStartTime) / 1000).toFixed(2);
+            
+            // 統計更新
+            document.getElementById('stats').style.display = 'flex';
+            document.getElementById('resultCount').textContent = results.length;
+            document.getElementById('sourceCount').textContent = new Set(results.map(r => r.source)).size;
+            document.getElementById('timeElapsed').textContent = elapsed;
+            
+            // フィルタータグ表示
+            const filterTags = document.getElementById('filterTags');
+            filterTags.style.display = 'flex';
+            filterTags.innerHTML = `
+                <div class="filter-tag">
+                    🔍 ${document.getElementById('searchInput').value}
+                    <span class="remove" onclick="clearSearch()">×</span>
+                </div>
+                <div class="filter-tag">
+                    📅 ${document.getElementById('dateRange').options[document.getElementById('dateRange').selectedIndex].text}
+                </div>
+                <div class="filter-tag">
+                    🌐 ${document.getElementById('language').options[document.getElementById('language').selectedIndex].text}
+                </div>
+            `;
+            
+            // 結果リスト表示
+            const resultsList = document.getElementById('resultsList');
+            if (results.length === 0) {
+                resultsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        検索結果が見つかりませんでした
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsList.innerHTML = results.map(result => `
+                <div class="result-item">
+                    <a href="${result.url}" target="_blank" class="result-title">${result.title}</a>
+                    <div class="result-url">${result.url}</div>
+                    <div class="result-description">${result.description}</div>
+                    <div style="display: flex; gap: 10px; align-items: center; color: #999; font-size: 12px;">
+                        <span>📰 ${result.source}</span>
+                        <span>📅 ${result.date}</span>
+                        <span style="background: #e8f0fe; color: #1967d2; padding: 2px 8px; border-radius: 10px;">
+                            ${result.type}
+                        </span>
+                    </div>
+                    <div class="result-actions">
+                        <button class="action-btn" onclick="copyUrl('${result.url}')">📋 URLコピー</button>
+                        <button class="action-btn" onclick="saveToLocal('${result.title}', '${result.url}')">💾 保存</button>
+                        <button class="action-btn" onclick="sendToArticle('${result.title}', '${result.description}', '${result.url}')">✍️ 記事作成</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // エクスポートセクション表示
+            document.getElementById('exportSection').style.display = 'block';
+        }
+        
+        // 検索クリア
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('resultsList').innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #999;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🔍</div>
+                    <div>検索キーワードを入力してください</div>
+                </div>
+            `;
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('filterTags').style.display = 'none';
+            document.getElementById('exportSection').style.display = 'none';
+        }
+        
+        // URL コピー
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URLをコピーしました');
+            });
+        }
+        
+        // ローカル保存
+        function saveToLocal(title, url) {
+            const savedSearches = JSON.parse(localStorage.getItem('google-searches') || '[]');
+            savedSearches.push({
+                title,
+                url,
+                savedAt: new Date().toISOString()
+            });
+            localStorage.setItem('google-searches', JSON.stringify(savedSearches));
+            alert('保存しました');
+        }
+        
+        // 記事作成に送信
+        function sendToArticle(title, description, url) {
+            localStorage.setItem('google-to-article', JSON.stringify({
+                title,
+                body: `【Google検索結果】\n${description}\n\n出典URL: ${url}`,
+                url
+            }));
+            window.open('../article/index.html', '_blank');
+        }
+        
+        // RSS形式でエクスポート
+        function exportToRSS() {
+            const query = document.getElementById('searchInput').value;
+            const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ja&gl=JP&ceid=JP:ja`;
+            
+            const rssData = {
+                name: `Google検索 - ${query}`,
+                url: rssUrl,
+                category: 'Google検索'
+            };
+            
+            // RSSリーダーに追加用データを保存
+            localStorage.setItem('google-search-rss', JSON.stringify(rssData));
+            alert('RSS URLを生成しました:\n' + rssUrl);
+        }
+        
+        // JSON形式でエクスポート
+        function exportToJSON() {
+            const dataStr = JSON.stringify(currentResults, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `google-search-${Date.now()}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // 記事生成へエクスポート
+        function exportToArticle() {
+            if (currentResults.length === 0) {
+                alert('検索結果がありません');
+                return;
+            }
+            
+            const content = currentResults.map(r => 
+                `【${r.title}】\n${r.description}\n出典: ${r.url}\n`
+            ).join('\n---\n\n');
+            
+            localStorage.setItem('google-search-to-article', JSON.stringify({
+                title: `Google検索: ${document.getElementById('searchInput').value}`,
+                body: content,
+                urls: currentResults.map(r => r.url)
+            }));
+            
+            window.open('../article/index.html', '_blank');
+        }
+        
+        // RSSリーダーに追加
+        function addToRSSReader() {
+            const query = document.getElementById('searchInput').value;
+            const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ja&gl=JP&ceid=JP:ja`;
+            
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            feeds.push({
+                id: Date.now(),
+                name: `Google News - ${query}`,
+                url: rssUrl,
+                category: 'Google検索',
+                addedAt: new Date().toISOString()
+            });
+            localStorage.setItem('rss-feeds', JSON.stringify(feeds));
+            
+            alert('RSSリーダーに追加しました');
+        }
+        
+        // Enterキーで検索
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+{
+  "官公庁": {
+    "経済産業省": {
+      "url": "https://www.meti.go.jp/",
+      "rss": "https://www.meti.go.jp/feed/index.xml",
+      "プレスリリース": "/press/",
+      "統計": "/statistics/",
+      "白書": "/report/whitepaper/",
+      "キーワード": ["AI", "DX", "半導体", "エネルギー", "スタートアップ"]
+    },
+    "総務省": {
+      "url": "https://www.soumu.go.jp/",
+      "rss": "https://www.soumu.go.jp/news.rdf",
+      "プレスリリース": "/menu_news/",
+      "統計": "/toukei/",
+      "白書": "/johotsusintokei/whitepaper/",
+      "キーワード": ["5G", "6G", "Beyond 5G", "電波", "通信"]
+    },
+    "文部科学省": {
+      "url": "https://www.mext.go.jp/",
+      "プレスリリース": "/b_menu/houdou/",
+      "統計": "/b_menu/toukei/",
+      "白書": "/b_menu/hakusho/",
+      "キーワード": ["量子", "AI教育", "研究開発", "科学技術"]
+    },
+    "国土交通省": {
+      "url": "https://www.mlit.go.jp/",
+      "プレスリリース": "/report/press/",
+      "統計": "/statistics/",
+      "白書": "/hakusyo/",
+      "キーワード": ["自動運転", "MaaS", "ドローン", "スマートシティ"]
+    },
+    "デジタル庁": {
+      "url": "https://www.digital.go.jp/",
+      "プレスリリース": "/news/",
+      "政策": "/policies/",
+      "キーワード": ["マイナンバー", "DX", "デジタル田園都市", "GビズID"]
+    },
+    "内閣府": {
+      "url": "https://www.cao.go.jp/",
+      "プレスリリース": "/press/",
+      "統計": "/statistics/",
+      "白書": "/whitepaper/",
+      "キーワード": ["Society5.0", "ムーンショット", "SIP", "ImPACT"]
+    }
+  },
+  "AI企業": {
+    "OpenAI": {
+      "url": "https://openai.com/",
+      "blog": "https://openai.com/blog/",
+      "rss": "https://openai.com/blog/rss/",
+      "research": "https://openai.com/research/",
+      "api_status": "https://status.openai.com/",
+      "キーワード": ["GPT", "ChatGPT", "DALL-E", "Whisper", "API"]
+    },
+    "Anthropic": {
+      "url": "https://www.anthropic.com/",
+      "blog": "https://www.anthropic.com/news",
+      "research": "https://www.anthropic.com/research",
+      "キーワード": ["Claude", "Constitutional AI", "安全性", "アライメント"]
+    },
+    "Google AI": {
+      "url": "https://ai.google/",
+      "blog": "https://blog.google/technology/ai/",
+      "research": "https://ai.google/research/",
+      "deepmind": "https://deepmind.google/",
+      "キーワード": ["Gemini", "Bard", "PaLM", "LaMDA", "Vertex AI"]
+    },
+    "Microsoft AI": {
+      "url": "https://www.microsoft.com/ai/",
+      "blog": "https://blogs.microsoft.com/ai/",
+      "azure": "https://azure.microsoft.com/ai/",
+      "research": "https://www.microsoft.com/research/",
+      "キーワード": ["Copilot", "Azure AI", "Bing AI", "Teams AI"]
+    },
+    "Meta AI": {
+      "url": "https://ai.meta.com/",
+      "blog": "https://ai.meta.com/blog/",
+      "research": "https://ai.meta.com/research/",
+      "キーワード": ["Llama", "SAM", "Make-A-Video", "ESMFold"]
+    }
+  },
+  "自動車メーカー": {
+    "トヨタ": {
+      "url": "https://global.toyota/",
+      "newsroom": "https://global.toyota/jp/newsroom/",
+      "rss": "https://global.toyota/jp/newsroom/rss",
+      "技術": "https://www.toyota-ti.ac.jp/",
+      "キーワード": ["e-Palette", "Woven City", "MIRAI", "自動運転", "水素"]
+    },
+    "Tesla": {
+      "url": "https://www.tesla.com/",
+      "blog": "https://www.tesla.com/blog",
+      "ir": "https://ir.tesla.com/",
+      "キーワード": ["FSD", "Autopilot", "Cybertruck", "Optimus", "Dojo"]
+    },
+    "日産": {
+      "url": "https://www.nissan-global.com/",
+      "news": "https://global.nissannews.com/",
+      "技術": "https://www.nissan-global.com/JP/INNOVATION/",
+      "キーワード": ["ProPILOT", "e-POWER", "ARIYA", "自動運転"]
+    },
+    "ホンダ": {
+      "url": "https://www.honda.co.jp/",
+      "news": "https://www.honda.co.jp/news/",
+      "rss": "https://www.honda.co.jp/news/rss.xml",
+      "技術": "https://www.honda.co.jp/tech/",
+      "キーワード": ["Honda SENSING", "レベル3", "GM Cruise", "eVTOL"]
+    }
+  },
+  "ロボット企業": {
+    "Boston Dynamics": {
+      "url": "https://www.bostondynamics.com/",
+      "blog": "https://www.bostondynamics.com/blog",
+      "キーワード": ["Atlas", "Spot", "Stretch", "Handle"]
+    },
+    "ファナック": {
+      "url": "https://www.fanuc.co.jp/",
+      "news": "https://www.fanuc.co.jp/ja/whatsnew/",
+      "キーワード": ["協働ロボット", "CRX", "AI", "IoT", "FIELD system"]
+    },
+    "安川電機": {
+      "url": "https://www.yaskawa.co.jp/",
+      "news": "https://www.yaskawa.co.jp/newsrelease/",
+      "キーワード": ["MOTOMAN", "協働ロボット", "i³-Mechatronics"]
+    },
+    "川崎重工": {
+      "url": "https://www.khi.co.jp/",
+      "news": "https://www.khi.co.jp/news/",
+      "robotics": "https://robotics.kawasaki.com/",
+      "キーワード": ["duAro", "協働ロボット", "医療ロボット"]
+    }
+  },
+  "通信キャリア": {
+    "NTT": {
+      "url": "https://group.ntt/",
+      "news": "https://group.ntt/jp/newsrelease/",
+      "rss": "https://group.ntt/jp/newsrelease/rss/",
+      "research": "https://www.rd.ntt/",
+      "キーワード": ["IOWN", "6G", "量子", "光電融合"]
+    },
+    "KDDI": {
+      "url": "https://www.kddi.com/",
+      "news": "https://news.kddi.com/",
+      "research": "https://www.kddi-research.jp/",
+      "キーワード": ["5G", "Starlink", "メタバース", "Beyond 5G"]
+    },
+    "ソフトバンク": {
+      "url": "https://www.softbank.jp/",
+      "news": "https://www.softbank.jp/corp/news/",
+      "rss": "https://www.softbank.jp/corp/rss/",
+      "キーワード": ["PayPay", "AI", "ロボット", "成層圏通信"]
+    },
+    "楽天モバイル": {
+      "url": "https://network.mobile.rakuten.co.jp/",
+      "news": "https://corp.rakuten.co.jp/news/",
+      "キーワード": ["Open RAN", "仮想化", "衛星通信", "Symphony"]
+    }
+  }
+}

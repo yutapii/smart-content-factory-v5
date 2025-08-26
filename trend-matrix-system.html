@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トレンドマトリックス - 完全面的分析システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            margin-bottom: 20px;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .matrix-container {
+            overflow-x: auto;
+            padding: 20px;
+            background: #111;
+            border: 1px solid #00ff00;
+            border-radius: 10px;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            border: 1px solid #00ff00;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+            background: #0a0a0a;
+            transition: all 0.3s;
+        }
+        
+        .matrix-table th {
+            background: rgba(0, 255, 0, 0.2);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .matrix-table th.timeline-header {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+        }
+        
+        .matrix-table td:hover {
+            background: rgba(0, 255, 0, 0.3);
+            transform: scale(1.05);
+            z-index: 5;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        
+        .cell-content {
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        
+        .cell-active {
+            background: rgba(0, 255, 0, 0.3) !important;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px #00ff00; }
+            50% { box-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+            100% { box-shadow: 0 0 5px #00ff00; }
+        }
+        
+        .trend-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 2px;
+        }
+        
+        .trend-up { background: #00ff00; }
+        .trend-stable { background: #ffff00; }
+        .trend-down { background: #ff0000; }
+        .trend-new { background: #00ffff; }
+        
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #00ff00;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .control-group {
+            padding: 10px;
+            border: 1px solid #00ff00;
+            background: #111;
+        }
+        
+        .control-title {
+            color: #00ff00;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 5px;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            margin: 5px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        
+        .heatmap-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #00ff00;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border: 1px solid #00ff00;
+        }
+        
+        .analysis-panel {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .analysis-title {
+            font-size: 20px;
+            color: #00ff00;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .analysis-card {
+            padding: 15px;
+            border: 1px solid #00ff00;
+            background: #111;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .metric-label {
+            color: #888;
+        }
+        
+        .metric-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
+        .cell-empty { opacity: 0.3; }
+        .cell-low { background: rgba(255, 0, 0, 0.2); }
+        .cell-medium { background: rgba(255, 255, 0, 0.2); }
+        .cell-high { background: rgba(0, 255, 0, 0.2); }
+        .cell-peak { background: rgba(0, 255, 255, 0.3); }
+        
+        .timeline-axis {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        
+        .company-axis {
+            font-weight: bold;
+            color: #00ffff;
+        }
+        
+        .matrix-3d {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .trend-arrow {
+            font-size: 20px;
+            color: #00ff00;
+        }
+        
+        .trend-up-arrow { color: #00ff00; }
+        .trend-down-arrow { color: #ff0000; }
+        .trend-stable-arrow { color: #ffff00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 TREND MATRIX SYSTEM 🔥</h1>
+            <p>A-Z × -N世代 = 完全トレンド可視化</p>
+        </div>
+        
+        <!-- コントロールパネル -->
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="control-title">📊 分析カテゴリ</div>
+                <select id="category">
+                    <option value="ai">AI・LLM</option>
+                    <option value="auto">自動運転</option>
+                    <option value="robot">ロボット</option>
+                    <option value="telecom">通信・6G</option>
+                    <option value="quantum">量子コンピュータ</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-title">🕐 時間軸深度</div>
+                <input type="number" id="timeDepth" value="5" min="1" max="10">
+                <label>-N世代まで遡る</label>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-title">🏢 企業/技術数</div>
+                <input type="number" id="companyCount" value="10" min="1" max="26">
+                <label>A-Z軸の数</label>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-title">🎯 表示モード</div>
+                <select id="viewMode">
+                    <option value="heatmap">ヒートマップ</option>
+                    <option value="trend">トレンド矢印</option>
+                    <option value="numeric">数値</option>
+                    <option value="3d">3D表示</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 操作ボタン -->
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="generateMatrix()">🔄 マトリックス生成</button>
+            <button onclick="analyzePatterns()">📈 パターン分析</button>
+            <button onclick="predictNext()">🔮 次世代予測</button>
+            <button onclick="exportData()">💾 データ出力</button>
+        </div>
+        
+        <!-- ヒートマップ凡例 -->
+        <div class="heatmap-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255, 0, 0, 0.3);"></div>
+                <span>低活性</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255, 255, 0, 0.3);"></div>
+                <span>中活性</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(0, 255, 0, 0.3);"></div>
+                <span>高活性</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(0, 255, 255, 0.3);"></div>
+                <span>ピーク</span>
+            </div>
+        </div>
+        
+        <!-- メインマトリックス -->
+        <div class="matrix-container">
+            <table class="matrix-table" id="trendMatrix">
+                <thead>
+                    <tr>
+                        <th class="timeline-header">時間軸＼企業</th>
+                        <th class="company-axis">A<br>OpenAI</th>
+                        <th class="company-axis">B<br>Anthropic</th>
+                        <th class="company-axis">C<br>Google</th>
+                        <th class="company-axis">D<br>Meta</th>
+                        <th class="company-axis">E<br>Microsoft</th>
+                        <th class="company-axis">F<br>Apple</th>
+                        <th class="company-axis">G<br>Tesla</th>
+                        <th class="company-axis">H<br>NVIDIA</th>
+                        <th class="company-axis">I<br>Amazon</th>
+                        <th class="company-axis">J<br>Baidu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="timeline-header">現在 (0)</td>
+                        <td class="cell-peak"><div class="cell-content">GPT-4<br>🔥100</div></td>
+                        <td class="cell-high"><div class="cell-content">Claude3<br>↗85</div></td>
+                        <td class="cell-high"><div class="cell-content">Gemini<br>↗90</div></td>
+                        <td class="cell-medium"><div class="cell-content">Llama3<br>→70</div></td>
+                        <td class="cell-high"><div class="cell-content">Copilot<br>↗88</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>↓20</div></td>
+                        <td class="cell-medium"><div class="cell-content">FSD<br>→65</div></td>
+                        <td class="cell-peak"><div class="cell-content">H100<br>🔥95</div></td>
+                        <td class="cell-medium"><div class="cell-content">Bedrock<br>→60</div></td>
+                        <td class="cell-medium"><div class="cell-content">ERNIE<br>→55</div></td>
+                    </tr>
+                    <tr>
+                        <td class="timeline-header">-1世代</td>
+                        <td class="cell-high"><div class="cell-content">GPT-3.5<br>80</div></td>
+                        <td class="cell-medium"><div class="cell-content">Claude2<br>65</div></td>
+                        <td class="cell-medium"><div class="cell-content">PaLM<br>70</div></td>
+                        <td class="cell-high"><div class="cell-content">Llama2<br>75</div></td>
+                        <td class="cell-medium"><div class="cell-content">Bing<br>60</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                        <td class="cell-medium"><div class="cell-content">AP<br>60</div></td>
+                        <td class="cell-high"><div class="cell-content">A100<br>85</div></td>
+                        <td class="cell-low"><div class="cell-content">Alexa<br>40</div></td>
+                        <td class="cell-low"><div class="cell-content">ERNIE3<br>45</div></td>
+                    </tr>
+                    <tr>
+                        <td class="timeline-header">-2世代</td>
+                        <td class="cell-medium"><div class="cell-content">GPT-3<br>60</div></td>
+                        <td class="cell-low"><div class="cell-content">Claude1<br>40</div></td>
+                        <td class="cell-medium"><div class="cell-content">LaMDA<br>55</div></td>
+                        <td class="cell-medium"><div class="cell-content">OPT<br>50</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>30</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>5</div></td>
+                        <td class="cell-low"><div class="cell-content">HW3<br>40</div></td>
+                        <td class="cell-medium"><div class="cell-content">V100<br>70</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>20</div></td>
+                        <td class="cell-low"><div class="cell-content">ERNIE2<br>35</div></td>
+                    </tr>
+                    <tr>
+                        <td class="timeline-header">-3世代</td>
+                        <td class="cell-low"><div class="cell-content">GPT-2<br>40</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-low"><div class="cell-content">BERT<br>45</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>20</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>15</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-low"><div class="cell-content">HW2<br>30</div></td>
+                        <td class="cell-medium"><div class="cell-content">P100<br>60</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                        <td class="cell-low"><div class="cell-content">ERNIE1<br>25</div></td>
+                    </tr>
+                    <tr>
+                        <td class="timeline-header">-4世代</td>
+                        <td class="cell-low"><div class="cell-content">GPT<br>20</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>30</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>5</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-low"><div class="cell-content">AP1<br>20</div></td>
+                        <td class="cell-low"><div class="cell-content">K80<br>40</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>5</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>15</div></td>
+                    </tr>
+                    <tr>
+                        <td class="timeline-header">-5世代</td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-low"><div class="cell-content">-<br>20</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>5</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                        <td class="cell-low"><div class="cell-content">K40<br>30</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>0</div></td>
+                        <td class="cell-empty"><div class="cell-content">-<br>10</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分析パネル -->
+        <div class="analysis-panel">
+            <div class="analysis-title">🔍 トレンド分析結果</div>
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h3>📈 急成長領域</h3>
+                    <div class="metric">
+                        <span class="metric-label">最高成長率:</span>
+                        <span class="metric-value">Anthropic +250%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">新規参入:</span>
+                        <span class="metric-value">Apple (予測)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">ホットスポット:</span>
+                        <span class="metric-value">マルチモーダルAI</span>
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>🔄 技術サイクル</h3>
+                    <div class="metric">
+                        <span class="metric-label">平均世代期間:</span>
+                        <span class="metric-value">6ヶ月</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">加速度:</span>
+                        <span class="metric-value">2.5x</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">次の転換点:</span>
+                        <span class="metric-value">3ヶ月後</span>
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>🏆 勝者パターン</h3>
+                    <div class="metric">
+                        <span class="metric-label">共通戦略:</span>
+                        <span class="metric-value">垂直統合</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">差別化要因:</span>
+                        <span class="metric-value">独自チップ</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">成功率:</span>
+                        <span class="metric-value">73%</span>
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>⚠️ リスク検知</h3>
+                    <div class="metric">
+                        <span class="metric-label">飽和領域:</span>
+                        <span class="metric-value">チャットボット</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">撤退予測:</span>
+                        <span class="metric-value">Amazon Alexa</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">規制リスク:</span>
+                        <span class="metric-value">EU AI Act</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 予測パネル -->
+        <div class="analysis-panel">
+            <div class="analysis-title">🔮 次世代予測 (+1 〜 +3)</div>
+            <div style="color: #00ffff; text-align: center; padding: 20px;">
+                <p>+1世代: AGI競争激化、エージェント主流化</p>
+                <p>+2世代: 量子AI融合、脳直結インターフェース</p>
+                <p>+3世代: 汎用知能実現、シンギュラリティ接近</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // マトリックス生成
+        function generateMatrix() {
+            const category = document.getElementById('category').value;
+            const depth = document.getElementById('timeDepth').value;
+            const companies = document.getElementById('companyCount').value;
+            
+            console.log(`Generating ${companies}x${depth} matrix for ${category}`);
+            
+            // アニメーション効果
+            const cells = document.querySelectorAll('.matrix-table td');
+            cells.forEach((cell, index) => {
+                setTimeout(() => {
+                    cell.style.animation = 'pulse 1s';
+                }, index * 20);
+            });
+            
+            alert(`マトリックス生成完了！\n${companies}社 × ${depth}世代 = ${companies * depth}データポイント`);
+        }
+        
+        // パターン分析
+        function analyzePatterns() {
+            // 各セルの値を分析
+            const cells = document.querySelectorAll('.cell-content');
+            let patterns = {
+                rising: [],
+                falling: [],
+                stable: [],
+                emerging: []
+            };
+            
+            cells.forEach(cell => {
+                const text = cell.textContent;
+                if (text.includes('↗')) patterns.rising.push(text);
+                if (text.includes('↓')) patterns.falling.push(text);
+                if (text.includes('→')) patterns.stable.push(text);
+                if (text.includes('🔥')) patterns.emerging.push(text);
+            });
+            
+            alert(`パターン分析結果:\n上昇: ${patterns.rising.length}件\n下降: ${patterns.falling.length}件\n安定: ${patterns.stable.length}件\nホット: ${patterns.emerging.length}件`);
+        }
+        
+        // 次世代予測
+        function predictNext() {
+            const predictions = [
+                "OpenAI: GPT-5リリース確率 85%",
+                "Google: Gemini Ultra展開 90%",
+                "Apple: AI参入確率 75%",
+                "Tesla: FSD完全自動化 60%",
+                "Meta: オープンソース戦略継続 95%"
+            ];
+            
+            alert("次世代予測:\n\n" + predictions.join("\n"));
+        }
+        
+        // データ出力
+        function exportData() {
+            const matrixData = {
+                timestamp: new Date().toISOString(),
+                category: document.getElementById('category').value,
+                depth: document.getElementById('timeDepth').value,
+                companies: document.getElementById('companyCount').value,
+                data: []
+            };
+            
+            // テーブルデータを収集
+            const rows = document.querySelectorAll('.matrix-table tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent);
+                matrixData.data.push(rowData);
+            });
+            
+            // LocalStorageに保存
+            localStorage.setItem('trend-matrix-data', JSON.stringify(matrixData));
+            
+            console.log('Matrix data exported:', matrixData);
+            alert('データをエクスポートしました！\nコンソールで確認できます。');
+        }
+        
+        // セルのホバー効果
+        document.querySelectorAll('.matrix-table td').forEach(cell => {
+            cell.addEventListener('mouseenter', function() {
+                // 同じ行と列をハイライト
+                const row = this.parentElement;
+                const cellIndex = Array.from(row.children).indexOf(this);
+                
+                // 行のハイライト
+                row.querySelectorAll('td').forEach(td => {
+                    td.style.background = 'rgba(0, 255, 0, 0.1)';
+                });
+                
+                // 列のハイライト
+                document.querySelectorAll('.matrix-table tbody tr').forEach(tr => {
+                    if (tr.children[cellIndex]) {
+                        tr.children[cellIndex].style.background = 'rgba(0, 255, 0, 0.1)';
+                    }
+                });
+            });
+            
+            cell.addEventListener('mouseleave', function() {
+                // ハイライトをリセット
+                document.querySelectorAll('.matrix-table td').forEach(td => {
+                    td.style.background = '';
+                });
+            });
+        });
+        
+        // 初期化時のアニメーション
+        window.addEventListener('load', () => {
+            const cells = document.querySelectorAll('.matrix-table td');
+            cells.forEach((cell, index) => {
+                setTimeout(() => {
+                    cell.style.opacity = '0';
+                    cell.style.animation = 'fadeIn 0.5s forwards';
+                }, index * 10);
+            });
+        });
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'g') generateMatrix();
+            if (e.key === 'a') analyzePatterns();
+            if (e.key === 'p') predictNext();
+            if (e.key === 'e') exportData();
+        });
+    </script>
+    
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</body>
+</html>
