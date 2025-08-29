@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>06 データベース - ローテーション管理（10,000件上限）</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #6c757d;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        .batch-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .batch-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .batch-old {
+            background: #ffe5e5;
+            border-color: #ffb3b3;
+        }
+        .log {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 データベース ローテーション管理</h1>
+        <p>上限10,000件を維持する自動ローテーション型データベース</p>
+        
+        <div class="alert alert-warning">
+            ⚠️ 上限10,000件 - 超過時は古いデータから自動削除されます
+        </div>
+        
+        <div class="alert alert-danger">
+            🚨 重要: 10,000件を超えると古い記事から順番に削除されます！
+            <br>削除されたデータは復元できません。必要なデータは事前にバックアップしてください。
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="currentCount">0</div>
+                <div class="stat-label">現在の記事数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="maxCount">10,000</div>
+                <div class="stat-label">上限</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableSpace">10,000</div>
+                <div class="stat-label">空き容量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="dbSizeDisplay">0 MB</div>
+                <div class="stat-label">DBサイズ</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%">
+                0%
+            </div>
+        </div>
+        
+        <div>
+            <button onclick="loadDatabase()">📊 DB状態確認</button>
+            <button onclick="addNewBatch(1500)">➕ 1500件追加（シミュレート）</button>
+            <button onclick="addNewBatch(3000)">➕ 3000件追加（シミュレート）</button>
+            <button onclick="performRotation()" class="danger">🔄 ローテーション実行</button>
+            <button onclick="showRotationPlan()">📋 ローテーション計画</button>
+        </div>
+        
+        <div class="batch-list" id="batchList">
+            <h3>バッチファイル一覧</h3>
+            <div id="batchItems"></div>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        const MAX_ARTICLES = 10000;
+        const ARTICLE_SIZE = 750; // bytes per article
+        
+        let database = {
+            total_articles: 70,
+            batches: [
+                { id: 1, file: "batch_001.json", count: 70, start_id: 1, end_id: 70, date: "2024-01-29" }
+            ],
+            oldest_id: 1,
+            newest_id: 70
+        };
+        
+        function log(message, color = '#0f0') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString('ja-JP');
+            logEl.innerHTML += `<div style="color:${color}">[${time}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function updateDisplay() {
+            const current = database.total_articles;
+            const available = MAX_ARTICLES - current;
+            const percentage = (current / MAX_ARTICLES * 100).toFixed(1);
+            const sizeKB = (current * ARTICLE_SIZE) / 1024;
+            const sizeMB = (sizeKB / 1024).toFixed(2);
+            
+            document.getElementById('currentCount').textContent = current.toLocaleString();
+            document.getElementById('availableSpace').textContent = available.toLocaleString();
+            document.getElementById('dbSizeDisplay').textContent = `${sizeMB} MB`;
+            
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = `${percentage}%`;
+            progressFill.textContent = `${percentage}%`;
+            
+            // 警告色
+            if (percentage > 90) {
+                progressFill.style.background = 'linear-gradient(90deg, #dc3545, #c82333)';
+            } else if (percentage > 75) {
+                progressFill.style.background = 'linear-gradient(90deg, #ffc107, #e0a800)';
+            }
+            
+            // バッチリスト更新
+            updateBatchList();
+        }
+        
+        function updateBatchList() {
+            const container = document.getElementById('batchItems');
+            container.innerHTML = '';
+            
+            database.batches.forEach((batch, index) => {
+                const totalBeforeBatch = database.batches.slice(0, index).reduce((sum, b) => sum + b.count, 0);
+                const willBeDeleted = database.total_articles > MAX_ARTICLES && totalBeforeBatch + batch.count <= (database.total_articles - MAX_ARTICLES);
+                const isOld = index < Math.floor(database.batches.length / 3);
+                
+                container.innerHTML += `
+                    <div class="batch-item ${willBeDeleted ? 'batch-old' : ''}">
+                        <span>
+                            📦 ${batch.file} 
+                            (ID: ${batch.start_id}-${batch.end_id})
+                        </span>
+                        <span>
+                            ${batch.count}件 | ${batch.date}
+                            ${willBeDeleted ? '<span style="color:red; font-weight:bold"> 🗑️ 10,000件超過で削除</span>' : ''}
+                            ${!willBeDeleted && isOld ? '<span style="color:orange"> ⚠️ 古いデータ</span>' : ''}
+                        </span>
+                    </div>
+                `;
+            });
+        }
+        
+        function loadDatabase() {
+            log('データベース状態を確認中...', '#0ff');
+            updateDisplay();
+            log(`✅ 現在の記事数: ${database.total_articles}件`);
+            log(`📊 使用率: ${(database.total_articles / MAX_ARTICLES * 100).toFixed(1)}%`);
+            
+            if (database.total_articles > MAX_ARTICLES * 0.9) {
+                log('⚠️ 警告: 容量が90%を超えています。ローテーションを検討してください', '#ff0');
+            }
+        }
+        
+        function addNewBatch(count) {
+            const newBatchId = database.batches.length + 1;
+            const startId = database.newest_id + 1;
+            const endId = startId + count - 1;
+            
+            log(`📝 ${count}件の新規データ追加をシミュレート`, '#0ff');
+            
+            const newBatch = {
+                id: newBatchId,
+                file: `batch_${String(newBatchId).padStart(3, '0')}.json`,
+                count: count,
+                start_id: startId,
+                end_id: endId,
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            database.batches.push(newBatch);
+            database.total_articles += count;
+            database.newest_id = endId;
+            
+            log(`✅ バッチ${newBatchId}を追加: ${count}件 (ID: ${startId}-${endId})`);
+            
+            // 上限チェック
+            if (database.total_articles > MAX_ARTICLES) {
+                const excess = database.total_articles - MAX_ARTICLES;
+                log(`❌ 上限超過: ${excess}件オーバー`, '#f00');
+                log('🔄 自動ローテーションが必要です', '#ff0');
+                
+                // 警告表示
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.textContent = `⚠️ 上限超過！${excess}件の削除が必要です`;
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.stats-grid'));
+            }
+            
+            updateDisplay();
+        }
+        
+        function performRotation() {
+            if (database.total_articles <= MAX_ARTICLES) {
+                log('ローテーション不要です（上限以下）', '#0f0');
+                return;
+            }
+            
+            const excess = database.total_articles - MAX_ARTICLES;
+            log(`🔄 ローテーション開始: ${excess}件を削除`, '#ff0');
+            
+            let deleted = 0;
+            const newBatches = [];
+            
+            for (const batch of database.batches) {
+                if (deleted >= excess) {
+                    // 残すバッチ
+                    newBatches.push(batch);
+                } else if (deleted + batch.count <= excess) {
+                    // バッチ全体を削除
+                    log(`  ❌ ${batch.file}を削除 (${batch.count}件)`, '#f00');
+                    deleted += batch.count;
+                } else {
+                    // バッチを部分削除
+                    const keep = batch.count - (excess - deleted);
+                    const newStartId = batch.end_id - keep + 1;
+                    log(`  ⚠️ ${batch.file}を部分削除: ${batch.count}件 → ${keep}件`, '#ff0');
+                    
+                    newBatches.push({
+                        ...batch,
+                        count: keep,
+                        start_id: newStartId
+                    });
+                    deleted = excess;
+                }
+            }
+            
+            database.batches = newBatches;
+            database.total_articles = MAX_ARTICLES;
+            database.oldest_id = newBatches[0].start_id;
+            
+            log(`✅ ローテーション完了: ${deleted}件削除`, '#0f0');
+            log(`📊 現在の記事数: ${database.total_articles}件`, '#0f0');
+            
+            // 警告削除
+            const alerts = document.querySelectorAll('.alert-danger');
+            alerts.forEach(alert => alert.remove());
+            
+            updateDisplay();
+        }
+        
+        function showRotationPlan() {
+            log('📋 ローテーション計画:', '#0ff');
+            
+            const scenarios = [
+                { add: 1500, total: database.total_articles + 1500 },
+                { add: 3000, total: database.total_articles + 3000 },
+                { add: 5000, total: database.total_articles + 5000 }
+            ];
+            
+            scenarios.forEach(scenario => {
+                if (scenario.total > MAX_ARTICLES) {
+                    const deleteCount = scenario.total - MAX_ARTICLES;
+                    log(`  +${scenario.add}件追加時: ${deleteCount}件削除必要`, '#ff0');
+                } else {
+                    log(`  +${scenario.add}件追加時: 削除不要（容量内）`, '#0f0');
+                }
+            });
+            
+            log('');
+            log('💡 推奨事項:', '#ff0');
+            log('  - 7,500件を超えたら古いデータの整理を検討');
+            log('  - 9,000件を超えたら自動ローテーションを有効化');
+            log('  - バッチ単位での削除が効率的');
+        }
+        
+        // 初期化
+        window.onload = () => {
+            log('ローテーション管理システム起動', '#0ff');
+            log(`上限: ${MAX_ARTICLES.toLocaleString()}件`, '#ff0');
+            loadDatabase();
+        };
+    </script>
+</div>
+</body>
+</html>

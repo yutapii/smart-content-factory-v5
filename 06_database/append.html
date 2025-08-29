@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>06 データベース - 追記型管理</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .article {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .article-id {
+            color: #2196F3;
+            font-weight: bold;
+        }
+        #log {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 06 データベース - 追記型管理システム</h1>
+        <p>GitHubに永続保存される追記型データベース（初期化なし）</p>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalArticles">0</div>
+            <div class="stat-label">総記事数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalBatches">0</div>
+            <div class="stat-label">バッチ数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="lastId">0</div>
+            <div class="stat-label">最終ID</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="dbSize">0 KB</div>
+            <div class="stat-label">DB サイズ</div>
+        </div>
+    </div>
+
+    <div>
+        <button onclick="loadManifest()">📋 マニフェスト読込</button>
+        <button onclick="loadBatch(1)">📦 バッチ1読込</button>
+        <button onclick="simulateNewBatch()">➕ 新規バッチ追加（シミュレート）</button>
+        <button onclick="calculateCapacity()">📊 容量計算</button>
+        <button onclick="showAllBatches()">📚 全バッチ表示</button>
+    </div>
+
+    <div id="log"></div>
+    <div id="articles"></div>
+
+    <script>
+        let manifest = null;
+        let currentBatch = null;
+
+        function log(message, color = '#0f0') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString('ja-JP');
+            logEl.innerHTML += `<div style="color:${color}">[${time}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        async function loadManifest() {
+            try {
+                const response = await fetch('./manifest.json');
+                manifest = await response.json();
+                
+                // 統計更新
+                document.getElementById('totalArticles').textContent = manifest.total_articles.toLocaleString();
+                document.getElementById('totalBatches').textContent = manifest.total_batches;
+                document.getElementById('lastId').textContent = manifest.last_article_id;
+                
+                // サイズ計算（概算）
+                const sizeKB = Math.round(manifest.total_articles * 0.75); // 750 bytes/記事
+                document.getElementById('dbSize').textContent = 
+                    sizeKB > 1024 ? `${(sizeKB/1024).toFixed(1)} MB` : `${sizeKB} KB`;
+                
+                log(`✅ マニフェスト読込完了: ${manifest.total_articles}記事、${manifest.total_batches}バッチ`);
+                
+                // バッチ情報表示
+                manifest.batches.forEach(batch => {
+                    log(`  バッチ${batch.id}: ID ${batch.start_id}-${batch.end_id} (${batch.count}件)`, '#ff0');
+                });
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, '#f00');
+            }
+        }
+
+        async function loadBatch(batchNum) {
+            try {
+                const batchFile = `data/batch_${String(batchNum).padStart(3, '0')}.json`;
+                const response = await fetch('./' + batchFile);
+                currentBatch = await response.json();
+                
+                log(`✅ バッチ${batchNum}読込: ${currentBatch.articles.length}件`);
+                
+                // 最初の5件を表示
+                const container = document.getElementById('articles');
+                container.innerHTML = '<h3>記事プレビュー（最初の5件）</h3>';
+                currentBatch.articles.slice(0, 5).forEach(article => {
+                    container.innerHTML += `
+                        <div class="article">
+                            <span class="article-id">#${article.id}</span>
+                            <strong>${article.title}</strong><br>
+                            ${article.description}<br>
+                            <small>📅 ${article.date} | 📰 ${article.source} | 🏷️ ${article.category}</small>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, '#f00');
+            }
+        }
+
+        function simulateNewBatch() {
+            if (!manifest) {
+                log('❌ 先にマニフェストを読み込んでください', '#f00');
+                return;
+            }
+            
+            const newBatchId = manifest.total_batches + 1;
+            const startId = manifest.last_article_id + 1;
+            const endId = startId + 1499; // 1500件追加
+            
+            log(`📝 新規バッチ${newBatchId}のシミュレーション:`, '#0ff');
+            log(`  ファイル名: data/batch_${String(newBatchId).padStart(3, '0')}.json`);
+            log(`  記事ID範囲: ${startId} - ${endId}`);
+            log(`  記事数: 1500件`);
+            log(`  予想サイズ: ${(1500 * 0.75 / 1024).toFixed(1)} MB`);
+            
+            // 更新後の統計
+            const newTotal = manifest.total_articles + 1500;
+            const newSizeMB = (newTotal * 0.75 / 1024).toFixed(1);
+            log(`📊 更新後の統計:`, '#ff0');
+            log(`  総記事数: ${newTotal.toLocaleString()}件`);
+            log(`  総バッチ数: ${newBatchId}`);
+            log(`  DB総サイズ: ${newSizeMB} MB`);
+        }
+
+        function calculateCapacity() {
+            log('📊 容量計算:', '#0ff');
+            log('  1記事 = 約750 bytes');
+            log('  1バッチ(1500記事) = 約1.1 MB');
+            log('');
+            log('📦 保存可能量:', '#ff0');
+            log('  単一ファイル(推奨50MB): 約66,000記事');
+            log('  単一ファイル(限界100MB): 約133,000記事');
+            log('  GitHubリポジトリ(1GB): 約1,300,000記事');
+            log('');
+            log('⚡ パフォーマンス:', '#0f0');
+            log('  バッチ分割により、必要な部分だけ読込可能');
+            log('  例: 最新1500件 = 1ファイル読込(1.1MB)');
+            log('  全10万件でも、バッチ単位で高速アクセス');
+        }
+
+        async function showAllBatches() {
+            if (!manifest) {
+                await loadManifest();
+            }
+            
+            log('📚 全バッチ一覧:', '#0ff');
+            for (const batch of manifest.batches) {
+                log(`バッチ${batch.id}: ${batch.file} (${batch.count}件)`);
+            }
+        }
+
+        // 初期読込
+        window.onload = () => {
+            log('システム起動', '#0ff');
+            loadManifest();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>RSS Feeds マウントツール</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .success-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #da190b;
+        }
+        .feed-list {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .feed-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .feed-name {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .feed-category {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 RSS Feeds マウントツール</h1>
+        <p>working-rss-feeds.json を 05_rss-reader にマウントします</p>
+        
+        <div class="info-box">
+            <strong>📋 working-rss-feeds.json の内容:</strong>
+            <div id="sourceInfo">読み込み中...</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="sourceCount">0</div>
+                <div class="stat-label">ソースのフィード数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="currentCount">0</div>
+                <div class="stat-label">現在のフィード数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="newCount">0</div>
+                <div class="stat-label">新規追加予定</div>
+            </div>
+        </div>
+        
+        <div>
+            <button onclick="loadSourceData()">📂 ソースデータ読込</button>
+            <button onclick="checkCurrentData()">🔍 現在のデータ確認</button>
+            <button onclick="mountFeeds()">🚀 マウント実行</button>
+            <button onclick="clearAndMount()" class="danger">🔄 クリア＆マウント</button>
+        </div>
+        
+        <div class="feed-list" id="feedList"></div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let sourceFeeds = [];
+        let currentFeeds = [];
+        
+        async function loadSourceData() {
+            try {
+                const response = await fetch('../working-rss-feeds.json');
+                const data = await response.json();
+                sourceFeeds = data.workingFeeds || [];
+                
+                document.getElementById('sourceCount').textContent = sourceFeeds.length;
+                document.getElementById('sourceInfo').innerHTML = `
+                    <p>✅ ${sourceFeeds.length}個のフィードを検出</p>
+                    <p>カテゴリ: ${[...new Set(sourceFeeds.map(f => f.category))].join(', ')}</p>
+                `;
+                
+                displayFeeds(sourceFeeds);
+                
+                showMessage('success', `✅ working-rss-feeds.json を読み込みました（${sourceFeeds.length}件）`);
+            } catch (error) {
+                showMessage('error', `❌ エラー: ${error.message}`);
+            }
+        }
+        
+        function checkCurrentData() {
+            const stored = localStorage.getItem('rss-feeds');
+            if (stored) {
+                currentFeeds = JSON.parse(stored);
+                document.getElementById('currentCount').textContent = currentFeeds.length;
+                showMessage('info', `📊 現在のフィード数: ${currentFeeds.length}件`);
+                
+                // 新規追加数を計算
+                const currentUrls = new Set(currentFeeds.map(f => f.url));
+                const newFeeds = sourceFeeds.filter(f => !currentUrls.has(f.url));
+                document.getElementById('newCount').textContent = newFeeds.length;
+            } else {
+                document.getElementById('currentCount').textContent = '0';
+                document.getElementById('newCount').textContent = sourceFeeds.length;
+                showMessage('warning', '⚠️ 現在のフィードデータがありません');
+            }
+        }
+        
+        function mountFeeds() {
+            if (sourceFeeds.length === 0) {
+                showMessage('error', '❌ ソースデータを先に読み込んでください');
+                return;
+            }
+            
+            // 既存データとマージ
+            const stored = localStorage.getItem('rss-feeds');
+            let existingFeeds = stored ? JSON.parse(stored) : [];
+            
+            // URLでユニーク化
+            const existingUrls = new Set(existingFeeds.map(f => f.url));
+            const newFeeds = sourceFeeds.filter(f => !existingUrls.has(f.url));
+            
+            // フォーマットを05_rss-readerに合わせる
+            const formattedFeeds = newFeeds.map((feed, index) => ({
+                ...feed,
+                id: existingFeeds.length + index + 1,
+                active: true,
+                lastUpdate: new Date().toISOString(),
+                articleCount: 0
+            }));
+            
+            // マージして保存
+            const mergedFeeds = [...existingFeeds, ...formattedFeeds];
+            localStorage.setItem('rss-feeds', JSON.stringify(mergedFeeds));
+            
+            showMessage('success', `
+                ✅ マウント完了！
+                <br>既存: ${existingFeeds.length}件
+                <br>新規追加: ${formattedFeeds.length}件
+                <br>合計: ${mergedFeeds.length}件
+            `);
+            
+            // 05_rss-readerでも使用するIndexedDB用にも保存
+            saveToIndexedDB(mergedFeeds);
+        }
+        
+        function clearAndMount() {
+            if (!confirm('既存のフィードデータをすべて削除して、working-rss-feeds.jsonで置き換えますか？')) {
+                return;
+            }
+            
+            if (sourceFeeds.length === 0) {
+                showMessage('error', '❌ ソースデータを先に読み込んでください');
+                return;
+            }
+            
+            // フォーマットを05_rss-readerに合わせる
+            const formattedFeeds = sourceFeeds.map((feed, index) => ({
+                ...feed,
+                id: index + 1,
+                active: true,
+                lastUpdate: new Date().toISOString(),
+                articleCount: 0
+            }));
+            
+            // 保存
+            localStorage.setItem('rss-feeds', JSON.stringify(formattedFeeds));
+            
+            showMessage('success', `
+                ✅ クリア＆マウント完了！
+                <br>合計: ${formattedFeeds.length}件のフィードを登録
+            `);
+            
+            // IndexedDBにも保存
+            saveToIndexedDB(formattedFeeds);
+        }
+        
+        async function saveToIndexedDB(feeds) {
+            try {
+                const request = indexedDB.open('SCF_V5_DB', 1);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('feeds')) {
+                        const store = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('name', 'name', { unique: false });
+                        store.createIndex('category', 'category', { unique: false });
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['feeds'], 'readwrite');
+                    const store = transaction.objectStore('feeds');
+                    
+                    // 既存データをクリア
+                    store.clear();
+                    
+                    // 新データを追加
+                    feeds.forEach(feed => {
+                        store.add(feed);
+                    });
+                    
+                    transaction.oncomplete = () => {
+                        console.log('IndexedDBにも保存完了');
+                    };
+                };
+            } catch (error) {
+                console.error('IndexedDB保存エラー:', error);
+            }
+        }
+        
+        function displayFeeds(feeds) {
+            const container = document.getElementById('feedList');
+            container.innerHTML = '<h3>フィード一覧</h3>';
+            
+            feeds.forEach(feed => {
+                container.innerHTML += `
+                    <div class="feed-item">
+                        <span class="feed-name">${feed.name}</span>
+                        <span class="feed-category">[${feed.category}]</span>
+                        <br>
+                        <small>${feed.url}</small>
+                    </div>
+                `;
+            });
+        }
+        
+        function showMessage(type, message) {
+            const result = document.getElementById('result');
+            const className = type === 'success' ? 'success-box' : 
+                            type === 'error' ? 'warning-box' : 'info-box';
+            
+            result.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        // 初期化
+        window.onload = () => {
+            loadSourceData();
+            checkCurrentData();
+        };
+    </script>
+</body>
+</html>

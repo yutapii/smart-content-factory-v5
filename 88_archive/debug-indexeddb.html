@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB デバッグツール</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #0f0;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border: 1px solid #0f0;
+            overflow: auto;
+            max-height: 500px;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .error {
+            color: #f00;
+        }
+        .info {
+            color: #ff0;
+        }
+    </style>
+</head>
+<body>
+    <h1>IndexedDB デバッグツール - SCF V5</h1>
+    <div>
+        <button onclick="checkDB()">DBをチェック</button>
+        <button onclick="countArticles()">記事数をカウント</button>
+        <button onclick="showArticles()">記事を表示（最初の10件）</button>
+        <button onclick="showFeeds()">フィード一覧を表示</button>
+        <button onclick="clearConsole()">クリア</button>
+    </div>
+    <pre id="output"></pre>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message, type = '') {
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            const className = type ? ` class="${type}"` : '';
+            output.innerHTML += `<span${className}>[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearConsole() {
+            output.innerHTML = '';
+        }
+        
+        async function checkDB() {
+            log('=== IndexedDB チェック開始 ===', 'info');
+            
+            try {
+                // DBを開く
+                const request = indexedDB.open('SCF_V5_DB', 1);
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    log(`✅ DB接続成功: ${db.name} (Version: ${db.version})`);
+                    
+                    // オブジェクトストア一覧
+                    const storeNames = Array.from(db.objectStoreNames);
+                    log(`📦 オブジェクトストア: ${storeNames.join(', ')}`);
+                    
+                    // 各ストアの詳細をチェック
+                    storeNames.forEach(storeName => {
+                        const transaction = db.transaction([storeName], 'readonly');
+                        const store = transaction.objectStore(storeName);
+                        
+                        // インデックス一覧
+                        const indexes = Array.from(store.indexNames);
+                        log(`  └─ ${storeName}: indexes=[${indexes.join(', ')}]`);
+                    });
+                    
+                    db.close();
+                };
+                
+                request.onerror = () => {
+                    log(`❌ DB接続エラー: ${request.error}`, 'error');
+                };
+                
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        async function countArticles() {
+            log('=== 記事数カウント ===', 'info');
+            
+            const request = indexedDB.open('SCF_V5_DB', 1);
+            
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                
+                if (!db.objectStoreNames.contains('articles')) {
+                    log('❌ articlesテーブルが存在しません', 'error');
+                    db.close();
+                    return;
+                }
+                
+                const transaction = db.transaction(['articles'], 'readonly');
+                const store = transaction.objectStore('articles');
+                const countRequest = store.count();
+                
+                countRequest.onsuccess = () => {
+                    log(`📊 記事総数: ${countRequest.result}件`);
+                    
+                    // feedId別にカウント
+                    const index = store.index('feedId');
+                    const feedCounts = {};
+                    
+                    index.openCursor().onsuccess = (event) => {
+                        const cursor = event.target.result;
+                        if (cursor) {
+                            const feedId = cursor.value.feedId;
+                            feedCounts[feedId] = (feedCounts[feedId] || 0) + 1;
+                            cursor.continue();
+                        } else {
+                            // カウント結果を表示
+                            Object.entries(feedCounts).forEach(([feedId, count]) => {
+                                log(`  Feed ID ${feedId}: ${count}件`);
+                            });
+                            db.close();
+                        }
+                    };
+                };
+            };
+        }
+        
+        async function showArticles() {
+            log('=== 記事表示（最初の10件） ===', 'info');
+            
+            const request = indexedDB.open('SCF_V5_DB', 1);
+            
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                
+                if (!db.objectStoreNames.contains('articles')) {
+                    log('❌ articlesテーブルが存在しません', 'error');
+                    db.close();
+                    return;
+                }
+                
+                const transaction = db.transaction(['articles'], 'readonly');
+                const store = transaction.objectStore('articles');
+                const getAllRequest = store.getAll();
+                
+                getAllRequest.onsuccess = () => {
+                    const articles = getAllRequest.result;
+                    log(`取得した記事数: ${articles.length}件`);
+                    
+                    // 最初の10件を表示
+                    articles.slice(0, 10).forEach((article, index) => {
+                        log(`\n--- 記事 ${index + 1} ---`);
+                        log(`ID: ${article.id}`);
+                        log(`タイトル: ${article.title || 'なし'}`);
+                        log(`Feed ID: ${article.feedId}`);
+                        log(`日付: ${article.pubDate || 'なし'}`);
+                        log(`URL: ${article.link || 'なし'}`);
+                        if (article.description) {
+                            log(`説明: ${article.description.substring(0, 100)}...`);
+                        }
+                    });
+                    
+                    db.close();
+                };
+            };
+        }
+        
+        async function showFeeds() {
+            log('=== フィード一覧 ===', 'info');
+            
+            const request = indexedDB.open('SCF_V5_DB', 1);
+            
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                
+                if (!db.objectStoreNames.contains('feeds')) {
+                    log('❌ feedsテーブルが存在しません', 'error');
+                    db.close();
+                    return;
+                }
+                
+                const transaction = db.transaction(['feeds'], 'readonly');
+                const store = transaction.objectStore('feeds');
+                const getAllRequest = store.getAll();
+                
+                getAllRequest.onsuccess = () => {
+                    const feeds = getAllRequest.result;
+                    log(`フィード総数: ${feeds.length}件`);
+                    
+                    feeds.forEach((feed, index) => {
+                        log(`\n--- フィード ${index + 1} ---`);
+                        log(`ID: ${feed.id}`);
+                        log(`名前: ${feed.name}`);
+                        log(`URL: ${feed.url}`);
+                        log(`カテゴリ: ${feed.category || 'なし'}`);
+                        log(`アクティブ: ${feed.active ? 'はい' : 'いいえ'}`);
+                        log(`記事数: ${feed.lastArticleCount || 0}`);
+                    });
+                    
+                    db.close();
+                };
+            };
+        }
+        
+        // 初期チェック
+        window.onload = () => {
+            log('IndexedDB デバッグツール起動', 'info');
+            checkDB();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[09] 記事作成テンプレート - 日刊AIゆたさん新聞</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .nav-buttons {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .template-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .template-editor {
+            width: 100%;
+            min-height: 500px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        
+        .template-editor:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #00bcd4, #00acc1);
+            color: white;
+        }
+        
+        .status-message {
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .template-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .template-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .template-info ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .template-info li {
+            margin-bottom: 5px;
+        }
+        
+        .quick-insert {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-btn {
+            padding: 8px 15px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .quick-btn:hover {
+            background: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 [09] 記事作成テンプレート</h1>
+            <p>日刊AIゆたさん新聞の記事作成テンプレートをカスタマイズ</p>
+            <div class="nav-buttons">
+                <a href="../index.html" class="nav-btn">🏠 トップへ</a>
+                <a href="../10_rss-to-article.html" class="nav-btn">→ [10] RSS連携へ</a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="template-info">
+                <h3>💡 テンプレートの使い方</h3>
+                <ul>
+                    <li>下記のテンプレートを自由に編集できます</li>
+                    <li>編集した内容は自動保存されます</li>
+                    <li>「[10]へ送信」ボタンで10_rss-to-articleで使用可能</li>
+                    <li>「デフォルトに戻す」で初期状態に復元</li>
+                    <li>クイック挿入ボタンで頻出パーツを追加</li>
+                </ul>
+            </div>
+            
+            <div class="template-section">
+                <h2 class="section-title">テンプレート編集エリア</h2>
+                
+                <div class="quick-insert">
+                    <button class="quick-btn" onclick="insertText('## ')">## 見出し</button>
+                    <button class="quick-btn" onclick="insertText('### ')">### 小見出し</button>
+                    <button class="quick-btn" onclick="insertText('- ')">- リスト</button>
+                    <button class="quick-btn" onclick="insertText('**太字**')">**太字**</button>
+                    <button class="quick-btn" onclick="insertText('[リンク](URL)')">リンク</button>
+                    <button class="quick-btn" onclick="insertText('---')">区切り線</button>
+                    <button class="quick-btn" onclick="insertHashtags()">#ハッシュタグ15個</button>
+                    <button class="quick-btn" onclick="insertSources()">出典13個</button>
+                </div>
+                
+                <textarea id="templateEditor" class="template-editor" placeholder="ここにテンプレートを入力..."></textarea>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="saveTemplate()">💾 保存</button>
+                    <button class="btn btn-success" onclick="sendToModule10()">📤 [10]へ送信</button>
+                    <button class="btn btn-info" onclick="copyToClipboard()">📋 クリップボードにコピー</button>
+                    <button class="btn btn-secondary" onclick="loadDefault()">🔄 デフォルトに戻す</button>
+                    <button class="btn btn-warning" onclick="clearTemplate()">🗑️ クリア</button>
+                </div>
+                
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // デフォルトのテンプレート
+        const defaultTemplate = `# 日刊AIゆたさん新聞 記事作成システム
+
+## 記事作成フロー
+
+### 1. テーマ選定
+- 技術的な学びがあるか
+- 読者に価値を提供できるか
+- 単なるゴシップではないか
+
+### 2. 情報収集
+- 一次情報源（公式発表）優先
+- 複数ソースでファクトチェック
+- 最低10個以上の出典確保
+
+### 3. 記事構成
+
+---
+
+## （20文字以内のタイトル）
+## 日刊AIゆたさん新聞
+## （20文字以内のサブタイトル）
+
+（日付・概要・インパクトを含む導入文）
+
+### （小見出し）
+
+## 見出し1（技術・製品の核心）
+
+（内容）
+
+## 見出し2（市場・企業動向）
+
+（内容）
+
+## 見出し3（将来展望）
+
+（内容）
+
+## 見出し4（エコシステム）
+
+（内容）
+
+### 編集長の視線
+
+（分析・展望・読者への提案をコラム風に）
+
+---
+
+## 出典
+（13個以上、説明付き）
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+
+## ハッシュタグ
+#日刊AIゆたさん新聞 #（タグ2） #（タグ3） #（タグ4） #（タグ5） #（タグ6） #（タグ7） #（タグ8） #（タグ9） #（タグ10） #（タグ11） #（タグ12） #（タグ13） #（タグ14） #（タグ15）
+
+## サムネイル画像
+**noteレギュレーション：1.91:1**
+- 基調：白ベース／明るいトーン
+- 配色：カラフル or パステルトーン
+- テキスト：視認性の高いフォント
+- 雰囲気：明るく親しみやすい
+- プロンプト：（画像生成用の具体的な指示）
+
+---
+
+## 記事作成時の注意事項（AI引き継ぎ用）
+
+### 品質基準
+- **ファクトのみ**（推測禁止）
+- **専門用語には説明を付ける**
+- **読者を尊重した表現**
+- **1記事1テーマの原則**
+
+### 基本原則
+- **1記事1内容の原則**：複数のトピックを詰め込まない、一つのテーマを深く掘り下げる
+- **嘘・推測の禁止**：確認できない情報は書かない、ファクトのみを記載
+- **出典の明記**：すべての情報に出典URLを付ける（AIフレンドリーな記事作成）
+- **一次情報優先**：公式サイト、プレスリリース、直接取材を優先
+
+### フォーマット規則（重要：厳守）
+- **冒頭3行の構成（必ず改行で分ける）**：
+  - 1行目：## タイトル（20文字以内・H2タグ使用）
+  - 2行目：## 日刊AIゆたさん新聞（固定文言・H2タグ使用）
+  - 3行目：## サブタイトル（20文字以内・H2タグ使用）
+- **4行目以降**：リード文（「リード文」という文字は書かない、内容のみ記載）
+- **見出しタグの使用**：
+  - H2タグ（##）：大見出し・セクション区切り・冒頭3行
+  - H3タグ（###）：小見出し・サブセクション・メイントピックの展開
+- タイトル：20文字以内（厳守）
+- サブタイトル：20文字以内（厳守）
+- ハッシュタグ：15個（#日刊AIゆたさん新聞 は必須）
+- 出典：13個以上（説明付き）
+- 本文見出し：【】や「セクション」などの説明文は使わない
+
+### 役割分担
+- **人間（ゆたさん）**：編集権、最終決定、取材、構想、写真撮影
+- **AI**：情報整理、提案、支援、文章構成、ファクトチェック支援
+
+### 文体・トーン
+- 親しみやすく、技術的な内容も分かりやすく
+- AI（編集部）と人間（ゆたさん）の協業感を自然に表現
+- 専門用語は必要に応じて簡単な説明を添える
+
+### ファクトから記事を展開する方法論
+
+#### 展開の5層構造
+1. **Layer 1 - 直接的意味**：ファクトが何を意味するか
+2. **Layer 2 - 比較価値**：他との比較で見える価値
+3. **Layer 3 - 影響範囲**：誰にどう影響するか
+4. **Layer 4 - 産業影響**：業界・社会への波及効果
+5. **Layer 5 - 未来予測**：将来への示唆
+
+#### 5W1H分解法
+- **What**：何が起きたか（事実）
+- **Why**：なぜ重要か（意義）
+- **Who**：誰に影響するか（対象）
+- **When**：いつから（時期）
+- **Where**：どこで使われるか（場所・用途）
+- **How**：どう変わるか（変化）
+
+#### 記事化の流れ
+1. ファクトを要素分解
+2. 各要素を展開・比較
+3. 影響と意味を分析
+4. 全体を物語として統合
+5. 「だから〇〇すべき」という行動提案で締める
+
+### 品質チェック項目
+□ すべての事実に出典があるか
+□ 推測や憶測が含まれていないか
+□ 1つのテーマに絞られているか
+□ タイトル・サブタイトルが文字数制限内か
+□ ハッシュタグが15個あるか
+□ 読者にとって価値のある内容か
+□ 出典が13個以上あるか
+□ 専門用語に説明があるか
+
+### その他の指定事項
+- インタビュー内容は「」で明確化
+- 価格情報は取材時点を明記
+- URLは必ずアクセス確認
+- 画像使用は許可確認必須
+- 更新日時を記載
+- **「編集長の視線」セクション**：コラム風で読者に寄り添う人間味のある文章（編集長から個別指示がある場合あり）
+
+### 翌日への引き継ぎ
+- 本日の要約
+- 明日の深掘りポイント
+- 取材・確認事項
+
+---
+
+## システム化成功！
+
+**このテンプレートで一貫性のある高品質な記事作成が可能になりました。**`;
+        
+        // エディタの初期化
+        const editor = document.getElementById('templateEditor');
+        
+        // ページ読み込み時の処理
+        window.addEventListener('DOMContentLoaded', () => {
+            // 保存済みテンプレートを読み込み
+            const savedTemplate = localStorage.getItem('article_template_09');
+            if (savedTemplate) {
+                editor.value = savedTemplate;
+            } else {
+                editor.value = defaultTemplate;
+            }
+            
+            // 自動保存の設定
+            let saveTimer;
+            editor.addEventListener('input', () => {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => {
+                    saveTemplate(true);
+                }, 1000);
+            });
+        });
+        
+        // テンプレートを保存
+        function saveTemplate(isAuto = false) {
+            const content = editor.value;
+            localStorage.setItem('article_template_09', content);
+            
+            if (!isAuto) {
+                showStatus('テンプレートを保存しました', 'success');
+            }
+        }
+        
+        // デフォルトに戻す
+        function loadDefault() {
+            if (confirm('現在の内容を破棄してデフォルトテンプレートに戻しますか？')) {
+                editor.value = defaultTemplate;
+                saveTemplate();
+                showStatus('デフォルトテンプレートを読み込みました', 'success');
+            }
+        }
+        
+        // クリア
+        function clearTemplate() {
+            if (confirm('テンプレートをクリアしますか？')) {
+                editor.value = '';
+                showStatus('テンプレートをクリアしました', 'success');
+            }
+        }
+        
+        // クリップボードにコピー
+        function copyToClipboard() {
+            const content = editor.value;
+            if (!content) {
+                showStatus('コピーする内容がありません', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(content).then(() => {
+                showStatus('クリップボードにコピーしました', 'success');
+            }).catch(() => {
+                showStatus('コピーに失敗しました', 'error');
+            });
+        }
+        
+        // [10]へ送信
+        function sendToModule10() {
+            const content = editor.value;
+            if (!content) {
+                showStatus('送信する内容がありません', 'error');
+                return;
+            }
+            
+            // テンプレートを保存
+            localStorage.setItem('template_for_10', content);
+            showStatus('[10]RSS→記事連携へ送信しました', 'success');
+            
+            // 2秒後に遷移
+            setTimeout(() => {
+                window.location.href = '../10_rss-to-article.html';
+            }, 2000);
+        }
+        
+        // テキスト挿入
+        function insertText(text) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const content = editor.value;
+            
+            editor.value = content.substring(0, start) + text + content.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + text.length;
+            editor.focus();
+        }
+        
+        // ハッシュタグ挿入
+        function insertHashtags() {
+            const hashtags = '#日刊AIゆたさん新聞 #AI #テクノロジー #イノベーション #デジタル変革 #未来技術 #人工知能 #機械学習 #ディープラーニング #ロボティクス #自動化 #スマート社会 #DX #技術革新 #次世代技術';
+            insertText('\n## ハッシュタグ\n' + hashtags + '\n');
+        }
+        
+        // 出典挿入
+        function insertSources() {
+            const sources = `## 出典
+- [出典1のタイトル](URL) - 説明文
+- [出典2のタイトル](URL) - 説明文
+- [出典3のタイトル](URL) - 説明文
+- [出典4のタイトル](URL) - 説明文
+- [出典5のタイトル](URL) - 説明文
+- [出典6のタイトル](URL) - 説明文
+- [出典7のタイトル](URL) - 説明文
+- [出典8のタイトル](URL) - 説明文
+- [出典9のタイトル](URL) - 説明文
+- [出典10のタイトル](URL) - 説明文
+- [出典11のタイトル](URL) - 説明文
+- [出典12のタイトル](URL) - 説明文
+- [出典13のタイトル](URL) - 説明文`;
+            insertText('\n' + sources + '\n');
+        }
+        
+        // ステータスメッセージ表示
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message status-' + type;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

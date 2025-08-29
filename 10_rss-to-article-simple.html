@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>10 RSS→記事連携（シンプル版）</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .article {
+            background: white;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .article:hover {
+            border-color: #4CAF50;
+        }
+        .article.selected {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #preview {
+            background: white;
+            padding: 15px;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>10 RSS→記事連携（シンプル版）</h1>
+    
+    <button onclick="loadFromDatabase()">06データベースから読み込み</button>
+    <button onclick="sendToArticleGenerator()">15_記事生成へ送る</button>
+    
+    <div class="grid">
+        <div class="panel">
+            <h2>記事一覧</h2>
+            <div id="articleList"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>選択中の記事</h2>
+            <div id="preview">記事を選択してください</div>
+        </div>
+    </div>
+
+    <script>
+        let articles = [];
+        let selectedArticle = null;
+        
+        async function loadFromDatabase() {
+            // 06_databaseからデータを読み込み
+            const response = await fetch('./06_database/data.json');
+            const data = await response.json();
+            articles = data.articles;
+            displayArticles();
+        }
+        
+        function displayArticles() {
+            const container = document.getElementById('articleList');
+            container.innerHTML = articles.map((article, index) => `
+                <div class="article" onclick="selectArticle(${index})">
+                    <strong>${article.id}. ${article.title}</strong><br>
+                    ${article.description}<br>
+                    <small>${article.date} | ${article.source} | ${article.category}</small>
+                </div>
+            `).join('');
+        }
+        
+        function selectArticle(index) {
+            selectedArticle = articles[index];
+            
+            // 選択状態を更新
+            document.querySelectorAll('.article').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            
+            // プレビュー更新
+            document.getElementById('preview').textContent = `
+【記事番号】 ${selectedArticle.id}
+【タイトル】 ${selectedArticle.title}
+【説明】 ${selectedArticle.description}
+【URL】 ${selectedArticle.url}
+【日付】 ${selectedArticle.date}
+【ソース】 ${selectedArticle.source}
+【カテゴリ】 ${selectedArticle.category}
+            `;
+        }
+        
+        function sendToArticleGenerator() {
+            if (!selectedArticle) {
+                alert('記事を選択してください');
+                return;
+            }
+            
+            // localStorageに保存（15_article/index.htmlで読み取る）
+            localStorage.setItem('selected-article', JSON.stringify(selectedArticle));
+            alert(`記事 #${selectedArticle.id} を記事生成画面用に保存しました`);
+            
+            // 必要に応じて画面遷移
+            // window.location.href = '15_article/index.html';
+        }
+    </script>
+</body>
+</html>

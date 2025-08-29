@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データブリッジツール - 05から10へデータ転送</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        .status-box {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .article-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4ecdc4;
+        }
+        .article-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .article-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .log {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌉 データブリッジツール</h1>
+        <p>このツールは05_rss-readerのデータを10_rss-to-articleで使える形式に変換して転送します。</p>
+        
+        <div class="status-box info">
+            💡 使い方：「テストデータ生成」→「10へ転送」の順でクリック
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="generateTestData()">📝 テストデータ70件を生成</button>
+            <button onclick="transferData()">🚀 データを10へ転送</button>
+            <button onclick="checkStatus()">🔍 データ状態を確認</button>
+            <button onclick="clearAll()">🗑️ すべてクリア</button>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="window.location.href='05_rss-reader/index.html'">📰 05_RSS一覧へ</button>
+            <button onclick="window.location.href='10_rss-to-article.html'">🔄 10_RSS→記事連携へ</button>
+        </div>
+        
+        <div id="statusMessage"></div>
+        <div id="articlePreview"></div>
+        <div class="log" id="logOutput"></div>
+    </div>
+
+    <script>
+        function log(message, type = '') {
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            const logOutput = document.getElementById('logOutput');
+            const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
+            logOutput.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function generateTestData() {
+            log('テストデータ生成開始...', 'info');
+            
+            const categories = ['AI', 'ロボット', '自動運転', '通信', '量子コンピュータ'];
+            const topics = [
+                'ChatGPT', 'Claude', 'Gemini', 'GPT-4', 'Tesla', 'Waymo', 
+                'Boston Dynamics', '5G', '6G', 'Starlink', 'メタバース', 
+                'VR', 'AR', 'ブロックチェーン', 'Figure', 'Optimus'
+            ];
+            const sources = ['TechCrunch', 'Gigazine', 'ITmedia', 'WIRED', 'ZDNet', 'Publickey'];
+            
+            const articles = [];
+            const today = new Date();
+            
+            for (let i = 0; i < 70; i++) {
+                const category = categories[i % categories.length];
+                const topic = topics[i % topics.length];
+                const source = sources[i % sources.length];
+                const daysAgo = Math.floor(i / 10);
+                const pubDate = new Date(today);
+                pubDate.setDate(pubDate.getDate() - daysAgo);
+                
+                articles.push({
+                    id: i + 1,
+                    title: `【${category}】${topic}の最新動向と将来展望 - ${i + 1}`,
+                    description: `${topic}に関する最新の研究開発状況をお伝えします。${category}分野において重要な進展があり、業界関係者から注目を集めています。今回の発表により、技術革新が加速することが期待されています。詳細な分析と専門家の見解を交えてお届けします。`,
+                    link: `https://example.com/article-${i + 1}`,
+                    pubDate: pubDate.toISOString(),
+                    date: pubDate.toLocaleDateString('ja-JP'),
+                    source: source,
+                    category: category,
+                    feedId: (i % 6) + 1,
+                    saved: false,
+                    summary: `${topic}の技術が急速に進化。${category}分野での応用が期待される。`
+                });
+            }
+            
+            // localStorageに保存（複数の形式で）
+            localStorage.setItem('bridge-articles', JSON.stringify(articles));
+            localStorage.setItem('test-articles-count', '70');
+            localStorage.setItem('test-articles-date', new Date().toISOString());
+            
+            log(`✅ ${articles.length}件のテスト記事を生成しました`, 'success');
+            
+            // プレビュー表示
+            showPreview(articles.slice(0, 3));
+            
+            // ステータス更新
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.className = 'status-box success';
+            statusMessage.innerHTML = `✅ 70件のテスト記事を生成完了！次は「データを10へ転送」をクリック`;
+        }
+
+        function transferData() {
+            log('データ転送開始...', 'info');
+            
+            const bridgeData = localStorage.getItem('bridge-articles');
+            if (!bridgeData) {
+                log('❌ 転送するデータがありません。先にテストデータを生成してください', 'error');
+                return;
+            }
+            
+            const articles = JSON.parse(bridgeData);
+            log(`${articles.length}件の記事を転送中...`, 'info');
+            
+            // IndexedDBを開いて記事を保存
+            const request = indexedDB.open('SCF_V5_DB', 1);
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                log('データベース初期化中...', 'info');
+                
+                // feeds store
+                if (!db.objectStoreNames.contains('feeds')) {
+                    const feedStore = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                    feedStore.createIndex('name', 'name', { unique: false });
+                    log('feedsテーブル作成', 'success');
+                }
+                
+                // articles store
+                if (!db.objectStoreNames.contains('articles')) {
+                    const articleStore = db.createObjectStore('articles', { keyPath: 'id', autoIncrement: true });
+                    articleStore.createIndex('feedId', 'feedId', { unique: false });
+                    articleStore.createIndex('pubDate', 'pubDate', { unique: false });
+                    log('articlesテーブル作成', 'success');
+                }
+            };
+            
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                log('データベース接続成功', 'success');
+                
+                // フィードも追加
+                const feeds = [
+                    { id: 1, name: 'TechCrunch', url: 'https://techcrunch.com/feed/', category: 'AI・Tech', active: true },
+                    { id: 2, name: 'Gigazine', url: 'https://gigazine.net/news/rss_2.0/', category: '技術全般', active: true },
+                    { id: 3, name: 'ITmedia', url: 'https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml', category: 'IT・通信', active: true },
+                    { id: 4, name: 'WIRED', url: 'https://wired.jp/rss/index.xml', category: 'テクノロジー', active: true },
+                    { id: 5, name: 'ZDNet', url: 'https://japan.zdnet.com/rss/index.rdf', category: 'ビジネスIT', active: true },
+                    { id: 6, name: 'Publickey', url: 'https://www.publickey1.jp/atom.xml', category: '開発', active: true }
+                ];
+                
+                const transaction = db.transaction(['feeds', 'articles'], 'readwrite');
+                const feedStore = transaction.objectStore('feeds');
+                const articleStore = transaction.objectStore('articles');
+                
+                // フィードを追加
+                feeds.forEach(feed => {
+                    feedStore.put(feed);
+                });
+                log(`${feeds.length}個のフィードを追加`, 'success');
+                
+                // 記事を追加
+                let addedCount = 0;
+                articles.forEach(article => {
+                    const request = articleStore.put(article);
+                    request.onsuccess = () => {
+                        addedCount++;
+                        if (addedCount === articles.length) {
+                            log(`✅ ${addedCount}件の記事をIndexedDBに保存完了`, 'success');
+                        }
+                    };
+                });
+                
+                transaction.oncomplete = () => {
+                    log('✅ すべてのトランザクション完了', 'success');
+                    
+                    // ステータス更新
+                    const statusMessage = document.getElementById('statusMessage');
+                    statusMessage.className = 'status-box success';
+                    statusMessage.innerHTML = `✅ データ転送完了！「10_RSS→記事連携へ」をクリックして確認してください`;
+                    
+                    // localStorage にも保存（フォールバック用）
+                    localStorage.setItem('rss-articles-cache', JSON.stringify(articles));
+                    localStorage.setItem('rss-feeds', JSON.stringify(feeds));
+                    localStorage.setItem('last-transfer-date', new Date().toISOString());
+                };
+                
+                transaction.onerror = () => {
+                    log(`❌ トランザクションエラー: ${transaction.error}`, 'error');
+                };
+            };
+            
+            request.onerror = () => {
+                log(`❌ データベースエラー: ${request.error}`, 'error');
+            };
+        }
+
+        function showPreview(articles) {
+            const preview = document.getElementById('articlePreview');
+            preview.innerHTML = '<h3>📋 サンプル記事（最初の3件）</h3>';
+            
+            articles.forEach(article => {
+                preview.innerHTML += `
+                    <div class="article-preview">
+                        <div class="article-title">${article.title}</div>
+                        <div class="article-meta">
+                            📰 ${article.source} | 📅 ${article.date} | 🏷️ ${article.category}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function checkStatus() {
+            log('データ状態チェック中...', 'info');
+            
+            // localStorage チェック
+            const bridgeArticles = localStorage.getItem('bridge-articles');
+            const rssFeeds = localStorage.getItem('rss-feeds');
+            const cacheArticles = localStorage.getItem('rss-articles-cache');
+            
+            log(`localStorage:`, 'info');
+            log(`  bridge-articles: ${bridgeArticles ? JSON.parse(bridgeArticles).length + '件' : 'なし'}`, 'info');
+            log(`  rss-feeds: ${rssFeeds ? JSON.parse(rssFeeds).length + '件' : 'なし'}`, 'info');
+            log(`  rss-articles-cache: ${cacheArticles ? JSON.parse(cacheArticles).length + '件' : 'なし'}`, 'info');
+            
+            // IndexedDB チェック
+            const request = indexedDB.open('SCF_V5_DB', 1);
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                log(`IndexedDB:`, 'info');
+                log(`  データベース: ${db.name} (Version ${db.version})`, 'info');
+                log(`  テーブル: ${Array.from(db.objectStoreNames).join(', ')}`, 'info');
+                
+                if (db.objectStoreNames.contains('articles')) {
+                    const transaction = db.transaction(['articles'], 'readonly');
+                    const store = transaction.objectStore('articles');
+                    const countRequest = store.count();
+                    countRequest.onsuccess = () => {
+                        log(`  articlesテーブル: ${countRequest.result}件`, 'success');
+                    };
+                }
+                
+                if (db.objectStoreNames.contains('feeds')) {
+                    const transaction = db.transaction(['feeds'], 'readonly');
+                    const store = transaction.objectStore('feeds');
+                    const countRequest = store.count();
+                    countRequest.onsuccess = () => {
+                        log(`  feedsテーブル: ${countRequest.result}件`, 'success');
+                    };
+                }
+            };
+        }
+
+        function clearAll() {
+            if (confirm('すべてのデータをクリアしますか？')) {
+                localStorage.removeItem('bridge-articles');
+                localStorage.removeItem('test-articles-count');
+                localStorage.removeItem('test-articles-date');
+                localStorage.removeItem('rss-articles-cache');
+                localStorage.removeItem('rss-feeds');
+                localStorage.removeItem('last-transfer-date');
+                
+                const deleteRequest = indexedDB.deleteDatabase('SCF_V5_DB');
+                deleteRequest.onsuccess = () => {
+                    log('✅ すべてのデータをクリアしました', 'success');
+                    document.getElementById('statusMessage').className = 'status-box info';
+                    document.getElementById('statusMessage').innerHTML = 'データがクリアされました';
+                    document.getElementById('articlePreview').innerHTML = '';
+                };
+            }
+        }
+
+        // 初期チェック
+        window.onload = () => {
+            log('データブリッジツール起動', 'success');
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

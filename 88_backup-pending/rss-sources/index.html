@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS配信元 | SCF V5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feed-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .feed-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feed-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .feed-url {
+            color: #666;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        .feed-status {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: inline-block;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📡 RSS配信元管理</h1>
+            <p>登録済みのRSSフィードを管理</p>
+        </div>
+        
+        <div class="content">
+            <div style="text-align: center;">
+                <button class="btn" onclick="location.href='../rss-reader/index.html'">
+                    RSS一覧へ移動
+                </button>
+                <button class="btn" onclick="location.href='../index.html'">
+                    ダッシュボードへ戻る
+                </button>
+            </div>
+            
+            <div class="feed-grid" id="feedGrid">
+                <!-- フィード一覧 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // サンプルフィード表示
+        const feeds = [
+            { title: 'TechCrunch', url: 'https://techcrunch.com/feed/', status: 'active' },
+            { title: 'Gigazine', url: 'https://gigazine.net/news/rss_2.0/', status: 'active' },
+            { title: 'ITmedia', url: 'https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml', status: 'active' },
+            { title: 'CNET Japan', url: 'https://feeds.japan.cnet.com/rss/cnet/all.rdf', status: 'error' }
+        ];
+        
+        const grid = document.getElementById('feedGrid');
+        feeds.forEach(feed => {
+            const card = document.createElement('div');
+            card.className = 'feed-card';
+            card.innerHTML = `
+                <div class="feed-title">${feed.title}</div>
+                <div class="feed-url">${feed.url}</div>
+                <span class="feed-status status-${feed.status}">
+                    ${feed.status === 'active' ? '✅ 有効' : '❌ エラー'}
+                </span>
+            `;
+            grid.appendChild(card);
+        });
+        
+        // LocalStorageからフィード読み込み
+        const savedFeeds = localStorage.getItem('rss-feeds');
+        if (savedFeeds) {
+            try {
+                const feedData = JSON.parse(savedFeeds);
+                console.log('保存済みフィード:', feedData);
+            } catch (e) {
+                console.error('フィード読み込みエラー:', e);
+            }
+        }
+    </script>
+    <!-- 新機能: 自動保存、エラー表示、共通関数 -->
+    <script src="../js/auto-save.js"></script>
+    <script src="../js/toast.js"></script>
+    <script src="../js/common.js"></script>
+</body>
+</html>

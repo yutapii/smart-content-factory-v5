@@ -266,7 +266,7 @@
     <div class="container">
         <header style="position: relative;">
             <h1>
-                📰 日刊AIゆたさん新聞
+                [01] 📰 日刊AIゆたさん新聞
                 <span class="version">SCF V5</span>
             </h1>
             <p class="subtitle">Smart Content Factory - 編集支援システム</p>
@@ -296,36 +296,10 @@
             </div>
         </div>
 
-        <div class="workflow-bar">
-            <div class="workflow-title">📊 本日のワークフロー</div>
-            <div class="workflow-steps">
-                <div class="workflow-step step-active">
-                    <div class="step-circle">1</div>
-                    <div class="step-name">RSS収集</div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-circle">2</div>
-                    <div class="step-name">記事選択</div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-circle">3</div>
-                    <div class="step-name">執筆</div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-circle">4</div>
-                    <div class="step-name">画像作成</div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-circle">5</div>
-                    <div class="step-name">出力</div>
-                </div>
-            </div>
-        </div>
-
         <div class="grid">
-            <a href="rss-reader/index.html" class="card">
+            <a href="05_rss-reader/index.html" class="card">
                 <div class="card-icon">📰</div>
-                <div class="card-title">RSS一覧</div>
+                <div class="card-title">[05] RSS一覧</div>
                 <div class="card-description">
                     配信元（ソース）管理<br>
                     RSSフィード登録・削除・更新頻度設定
@@ -336,21 +310,45 @@
                 </div>
             </a>
 
-            <a href="rss-sources/index.html" class="card">
-                <div class="card-icon">📡</div>
-                <div class="card-title">配信RSS</div>
+            <a href="06_database/index.html" class="card">
+                <div class="card-icon">💾</div>
+                <div class="card-title">[06] データベース</div>
                 <div class="card-description">
-                    収集した記事の表示<br>
-                    フィルタリング・キーワード検索
+                    記事データの管理<br>
+                    保存・検索・バックアップ機能
                 </div>
                 <div class="card-status">
                     <span class="status-badge status-ready">準備完了</span>
                 </div>
             </a>
 
-            <a href="article-creator/index.html" class="card">
+            <a href="09_template/index.html" class="card">
+                <div class="card-icon">📝</div>
+                <div class="card-title">[09] 記事テンプレート</div>
+                <div class="card-description">
+                    記事作成テンプレート編集<br>
+                    カスタマイズ・保存・[10]への連携
+                </div>
+                <div class="card-status">
+                    <span class="status-badge status-ready">準備完了</span>
+                </div>
+            </a>
+
+            <a href="10_rss-to-article.html" class="card">
+                <div class="card-icon">📡</div>
+                <div class="card-title">[10] RSS→記事連携</div>
+                <div class="card-description">
+                    収集した記事の表示<br>
+                    RSS記事から記事生成へ連携
+                </div>
+                <div class="card-status">
+                    <span class="status-badge status-ready">準備完了</span>
+                </div>
+            </a>
+
+            <a href="15_article/index.html" class="card">
                 <div class="card-icon">✍️</div>
-                <div class="card-title">記事生成</div>
+                <div class="card-title">[15] 記事生成</div>
                 <div class="card-description">
                     テンプレート型記事作成<br>
                     日刊・分析・特集の3形式対応
@@ -360,9 +358,9 @@
                 </div>
             </a>
 
-            <a href="wxr/index.html" class="card">
+            <a href="50_wxr/index.html" class="card">
                 <div class="card-icon">📦</div>
-                <div class="card-title">WXR出力</div>
+                <div class="card-title">[50] WXR出力</div>
                 <div class="card-description">
                     note.com用XML生成<br>
                     複数記事一括出力・タグ自動設定
@@ -373,9 +371,9 @@
                 </div>
             </a>
 
-            <a href="chart/index.html" class="card">
+            <a href="35_chart/index.html" class="card">
                 <div class="card-icon">📊</div>
-                <div class="card-title">図表生成</div>
+                <div class="card-title">[35] 図表生成</div>
                 <div class="card-description">
                     データ可視化ツール<br>
                     棒グラフ・円グラフ・折れ線グラフ
@@ -385,9 +383,9 @@
                 </div>
             </a>
 
-            <a href="prompt/index.html" class="card">
+            <a href="60_prompt/index.html" class="card">
                 <div class="card-icon">💡</div>
-                <div class="card-title">プロンプト生成</div>
+                <div class="card-title">[60] プロンプト生成</div>
                 <div class="card-description">
                     画像プロンプトの叩き台生成<br>
                     AI連携・テンプレート切替対応
@@ -397,9 +395,9 @@
                 </div>
             </a>
 
-            <a href="image-gen/index.html" class="card">
+            <a href="20_image-gen/index.html" class="card">
                 <div class="card-icon">🎨</div>
-                <div class="card-title">画像生成</div>
+                <div class="card-title">[20] 画像生成</div>
                 <div class="card-description">
                     サムネイル素材収集<br>
                     AI画像生成サービス連携
@@ -409,9 +407,9 @@
                 </div>
             </a>
 
-            <a href="thumbnail/index.html" class="card">
+            <a href="55_thumbnail/index.html" class="card">
                 <div class="card-icon">🖼️</div>
-                <div class="card-title">サムネイル</div>
+                <div class="card-title">[55] サムネイル</div>
                 <div class="card-description">
                     note用画像作成（1200×628px）<br>
                     テキストオーバーレイ・背景画像対応
@@ -422,9 +420,9 @@
                 </div>
             </a>
 
-            <a href="posts/index.html" class="card">
+            <a href="25_posts/index.html" class="card">
                 <div class="card-icon">✅</div>
-                <div class="card-title">投稿管理</div>
+                <div class="card-title">[25] 投稿管理</div>
                 <div class="card-description">
                     note.com記事の分析<br>
                     PV数・スキ数の可視化（AI支援入力）
@@ -434,9 +432,9 @@
                 </div>
             </a>
 
-            <a href="settings/index.html" class="card">
+            <a href="40_settings/index.html" class="card">
                 <div class="card-icon">⚙️</div>
-                <div class="card-title">設定</div>
+                <div class="card-title">[40] 設定</div>
                 <div class="card-description">
                     システム設定<br>
                     API設定・テーマ切替・データ管理
@@ -555,7 +553,8 @@
                     return;
                 }
             } catch (error) {
-                console.log('OCRサーバー未起動またはエラー:', error);
+                // OCRサーバーは任意機能なのでエラーを出さない
+                console.log('OCRサーバー未起動（任意機能）');
             }
             
             // OCRサーバーが起動していない場合のみ、APIステータスチェックを実行
@@ -563,5 +562,9 @@
             console.log('APIステータス:', status);
         });
     </script>
+    <!-- 新機能: 自動保存、エラー表示、共通関数 -->
+    <script src="js/auto-save.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/common.js"></script>
 </body>
 </html>

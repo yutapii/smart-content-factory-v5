@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS → 記事生成 連携ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .rss-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .rss-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .rss-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .rss-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .rss-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .rss-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .generation-levels {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .level-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .level-label {
+            font-weight: bold;
+            width: 100px;
+            color: #333;
+        }
+        
+        .level-content {
+            flex: 1;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .level-a { background: #e3f2fd; }
+        .level-minus1 { background: #f3e5f5; }
+        .level-minus2 { background: #fce4ec; }
+        
+        .preview-area {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 300px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-new { background: #d4edda; color: #155724; }
+        .status-updated { background: #cce5ff; color: #004085; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        /* ローディングアニメーション */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(102, 126, 234, 0.1);
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 400px;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            margin: 20px auto;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 15px;
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: #333;
+            font-weight: bold;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>[10] 🔄 RSS → 記事生成 連携ツール</h1>
+            <p>AI・ロボット・自動運転・通信分野の最新記事から深掘り記事を生成</p>
+            <p id="articleStats" style="margin-top: 10px; font-size: 14px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 15px; display: inline-block;">
+                📊 読み込み中...
+            </p>
+            <div style="margin-top: 20px;">
+                <button onclick="location.href='../index.html'" style="
+                    background: white;
+                    color: #667eea;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                ">
+                    🏠 TOPへ戻る
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 左側：RSS選択 -->
+            <div class="panel">
+                <div class="panel-title">📡 RSS記事を選択</div>
+                <input type="text" class="search-box" placeholder="検索..." id="searchBox">
+                
+                <div id="rssList">
+                    <div class="loading">RSSフィードを読み込み中...</div>
+                </div>
+            </div>
+            
+            <!-- 右側：生成設定 -->
+            <div class="panel">
+                <div class="panel-title">⚙️ 記事生成設定</div>
+                
+                <div class="generation-levels">
+                    <div class="level-item level-a">
+                        <div class="level-label">A (最新)</div>
+                        <div class="level-content" id="levelA">選択したRSS記事の内容</div>
+                    </div>
+                    <div class="level-item level-minus1">
+                        <div class="level-label">-1世代</div>
+                        <div class="level-content">前回の関連記事から発展的な分析を追加</div>
+                    </div>
+                    <div class="level-item level-minus2">
+                        <div class="level-label">-2世代</div>
+                        <div class="level-content">基礎となる背景情報から現在への変化を解説</div>
+                    </div>
+                </div>
+                
+                <div class="panel-title" style="margin-top: 20px;">📝 生成プレビュー</div>
+                <div class="preview-area" id="preview" style="white-space: pre-wrap; font-family: monospace; font-size: 12px; line-height: 1.5;">
+# 日刊AIゆたさん新聞 記事作成システム
+
+## 記事作成フロー
+
+### 1. テーマ選定
+- 技術的な学びがあるか
+- 読者に価値を提供できるか
+- 単なるゴシップではないか
+
+### 2. 情報収集
+- 一次情報源（公式発表）優先
+- 複数ソースでファクトチェック
+- 最低10個以上の出典確保
+
+### 3. 記事構成
+
+---
+
+## （20文字以内のタイトル）
+## 日刊AIゆたさん新聞
+## （20文字以内のサブタイトル）
+
+（日付・概要・インパクトを含む導入文）
+
+### （小見出し）
+
+## 見出し1（技術・製品の核心）
+
+（内容）
+
+## 見出し2（市場・企業動向）
+
+（内容）
+
+## 見出し3（将来展望）
+
+（内容）
+
+## 見出し4（エコシステム）
+
+（内容）
+
+### 編集長の視線
+
+（分析・展望・読者への提案をコラム風に）
+
+---
+
+## 出典
+（13個以上、説明付き）
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+
+## ハッシュタグ
+#日刊AIゆたさん新聞 #（タグ2） #（タグ3） #（タグ4） #（タグ5） #（タグ6） #（タグ7） #（タグ8） #（タグ9） #（タグ10） #（タグ11） #（タグ12） #（タグ13） #（タグ14） #（タグ15）
+
+## サムネイル画像
+**noteレギュレーション：1.91:1**
+- 基調：白ベース／明るいトーン
+- 配色：カラフル or パステルトーン
+- テキスト：視認性の高いフォント
+- 雰囲気：明るく親しみやすい
+- プロンプト：（画像生成用の具体的な指示）
+
+---
+
+## 記事作成時の注意事項（AI引き継ぎ用）
+
+### 品質基準
+- **ファクトのみ**（推測禁止）
+- **専門用語には説明を付ける**
+- **読者を尊重した表現**
+- **1記事1テーマの原則**
+
+### 基本原則
+- **1記事1内容の原則**：複数のトピックを詰め込まない、一つのテーマを深く掘り下げる
+- **嘘・推測の禁止**：確認できない情報は書かない、ファクトのみを記載
+- **出典の明記**：すべての情報に出典URLを付ける（AIフレンドリーな記事作成）
+- **一次情報優先**：公式サイト、プレスリリース、直接取材を優先
+
+### フォーマット規則（重要：厳守）
+- **冒頭3行の構成（必ず改行で分ける）**：
+  - 1行目：## タイトル（20文字以内・H2タグ使用）
+  - 2行目：## 日刊AIゆたさん新聞（固定文言・H2タグ使用）
+  - 3行目：## サブタイトル（20文字以内・H2タグ使用）
+- **4行目以降**：リード文（「リード文」という文字は書かない、内容のみ記載）
+- **見出しタグの使用**：
+  - H2タグ（##）：大見出し・セクション区切り・冒頭3行
+  - H3タグ（###）：小見出し・サブセクション・メイントピックの展開
+- タイトル：20文字以内（厳守）
+- サブタイトル：20文字以内（厳守）
+- ハッシュタグ：15個（#日刊AIゆたさん新聞 は必須）
+- 出典：13個以上（説明付き）
+- 本文見出し：【】や「セクション」などの説明文は使わない
+
+### 役割分担
+- **人間（ゆたさん）**：編集権、最終決定、取材、構想、写真撮影
+- **AI**：情報整理、提案、支援、文章構成、ファクトチェック支援
+
+### 文体・トーン
+- 親しみやすく、技術的な内容も分かりやすく
+- AI（編集部）と人間（ゆたさん）の協業感を自然に表現
+- 専門用語は必要に応じて簡単な説明を添える
+
+### ファクトから記事を展開する方法論
+
+#### 展開の5層構造
+1. **Layer 1 - 直接的意味**：ファクトが何を意味するか
+2. **Layer 2 - 比較価値**：他との比較で見える価値
+3. **Layer 3 - 影響範囲**：誰にどう影響するか
+4. **Layer 4 - 産業影響**：業界・社会への波及効果
+5. **Layer 5 - 未来予測**：将来への示唆
+
+#### 5W1H分解法
+- **What**：何が起きたか（事実）
+- **Why**：なぜ重要か（意義）
+- **Who**：誰に影響するか（対象）
+- **When**：いつから（時期）
+- **Where**：どこで使われるか（場所・用途）
+- **How**：どう変わるか（変化）
+
+#### 記事化の流れ
+1. ファクトを要素分解
+2. 各要素を展開・比較
+3. 影響と意味を分析
+4. 全体を物語として統合
+5. 「だから〇〇すべき」という行動提案で締める
+
+### 品質チェック項目
+□ すべての事実に出典があるか
+□ 推測や憶測が含まれていないか
+□ 1つのテーマに絞られているか
+□ タイトル・サブタイトルが文字数制限内か
+□ ハッシュタグが15個あるか
+□ 読者にとって価値のある内容か
+□ 出典が13個以上あるか
+□ 専門用語に説明があるか
+
+### その他の指定事項
+- インタビュー内容は「」で明確化
+- 価格情報は取材時点を明記
+- URLは必ずアクセス確認
+- 画像使用は許可確認必須
+- 更新日時を記載
+- **「編集長の視線」セクション**：コラム風で読者に寄り添う人間味のある文章（編集長から個別指示がある場合あり）
+
+### 翌日への引き継ぎ
+- 本日の要約
+- 明日の深掘りポイント
+- 取材・確認事項
+
+---
+
+## システム化成功！
+
+**このテンプレートで一貫性のある高品質な記事作成が可能になりました。**
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="copyToClipboard()">📋 コピー</button>
+                    <button class="btn btn-primary" onclick="openArticleGenerator()">✍️ 記事生成へ</button>
+                    <button class="btn btn-info" onclick="window.location.href='../09_template/index.html'" style="background: linear-gradient(135deg, #00bcd4, #00acc1); color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">📝 [09]テンプレート編集</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 実際のRSSフィードデータを取得
+        let rssItems = [];
+        
+        // デフォルトのRSSフィード（フォールバック用）
+        const DEFAULT_RSS_FEEDS = [
+            {
+                url: 'https://polished-snow-477a.yutapii.workers.dev/?url=https://techcrunch.com/feed/',
+                name: 'TechCrunch',
+                category: 'AI・Tech'
+            },
+            {
+                url: 'https://polished-snow-477a.yutapii.workers.dev/?url=https://gigazine.net/news/rss_2.0/',
+                name: 'Gigazine',
+                category: '技術全般'
+            },
+            {
+                url: 'https://polished-snow-477a.yutapii.workers.dev/?url=https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml',
+                name: 'ITmedia',
+                category: 'IT・通信'
+            }
+        ];
+        
+        // 05_rss-readerから保存されたフィードを取得
+        function getStoredFeeds() {
+            try {
+                const stored = localStorage.getItem('rss-feeds');
+                if (stored) {
+                    const feeds = JSON.parse(stored);
+                    console.log(`📡 ${feeds.length}個の登録済みフィードを読み込みました`);
+                    // フォーマットを統一（nameをsourceに変換）
+                    return feeds.map(feed => ({
+                        url: feed.url,
+                        source: feed.name || feed.source,
+                        category: feed.category || detectCategoryFromUrl(feed.url)
+                    }));
+                }
+            } catch (error) {
+                console.error('フィード読み込みエラー:', error);
+            }
+            console.log('デフォルトフィードを使用します');
+            return DEFAULT_RSS_FEEDS.map(feed => ({
+                url: feed.url,
+                source: feed.name,
+                category: feed.category
+            }));
+        }
+        
+        // URLからカテゴリを推測
+        function detectCategoryFromUrl(url) {
+            if (url.includes('techcrunch') || url.includes('verge')) return 'AI・Tech';
+            if (url.includes('gigazine') || url.includes('gizmodo')) return '技術全般';
+            if (url.includes('itmedia') || url.includes('zdnet')) return 'IT・通信';
+            if (url.includes('robot') || url.includes('spectrum')) return 'ロボット';
+            if (url.includes('automotive') || url.includes('tesla')) return '自動運転';
+            return '技術ニュース';
+        }
+        
+        // 実際に使用するフィード
+        const RSS_FEEDS = getStoredFeeds();
+        
+        // AI、ロボット、自動運転、通信に関連するキーワード
+        const KEYWORDS = {
+            AI: ['AI', '人工知能', 'ChatGPT', 'GPT', 'LLM', '機械学習', 'ディープラーニング', 'neural', 'OpenAI', 'Anthropic', 'Google AI', 'Gemini', 'Claude'],
+            ロボット: ['ロボット', 'robot', 'ヒューマノイド', 'humanoid', 'Boston Dynamics', 'Optimus', 'Figure', 'アンドロイド', '産業用ロボット'],
+            自動運転: ['自動運転', 'autonomous', 'Tesla', 'Waymo', 'Cruise', 'FSD', 'レベル4', 'レベル5', 'ADAS', 'LiDAR', 'センサー'],
+            通信: ['5G', '6G', '通信', 'ネットワーク', 'WiFi', 'Starlink', '衛星通信', 'IoT', 'エッジコンピューティング', 'クラウド']
+        };
+        
+        let selectedItem = null;
+        
+        // RSS記事リストを表示
+        function displayRSSItems(items = rssItems) {
+            console.log(`displayRSSItems呼び出し: ${items ? items.length : 0}件`);
+            const listContainer = document.getElementById('rssList');
+            
+            if (!items || items.length === 0) {
+                console.log('記事が0件なので表示をスキップ');
+                listContainer.innerHTML = '<div class="loading">記事がありません</div>';
+                return;
+            }
+            
+            // 既存の内容をクリア（重要：バナーも消える可能性）
+            listContainer.innerHTML = '';
+            console.log(`${items.length}件の記事を表示開始`);
+            
+            items.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'rss-item';
+                itemElement.innerHTML = `
+                    <div class="rss-title">${item.title}</div>
+                    <div class="rss-description">${item.description || item.summary || ''}</div>
+                    <div class="rss-meta">
+                        <span>📅 ${item.date || new Date().toLocaleDateString('ja-JP')}</span>
+                        <span>📰 ${item.source}</span>
+                        ${item.category ? `<span>🏷️ ${item.category}</span>` : ''}
+                        <span class="status-badge status-new">NEW</span>
+                    </div>
+                `;
+                itemElement.onclick = () => selectItem(item, itemElement);
+                listContainer.appendChild(itemElement);
+            });
+        }
+        
+        // バナー付きで記事を表示
+        function displayRSSItemsWithBanner(items, totalCount) {
+            console.log(`displayRSSItemsWithBanner呼び出し: ${items ? items.length : 0}件`);
+            const listContainer = document.getElementById('rssList');
+            
+            if (!items || items.length === 0) {
+                console.log('記事が0件なので表示をスキップ');
+                listContainer.innerHTML = '<div class="loading">記事がありません</div>';
+                return;
+            }
+            
+            // コンテナをクリアして、まずバナーを追加
+            listContainer.innerHTML = '';
+            
+            // バナーを作成
+            const countBanner = document.createElement('div');
+            countBanner.style.cssText = 'background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;';
+            countBanner.innerHTML = `📚 IndexedDBから<strong style="font-size: 1.3em;">${totalCount}件</strong>の記事を表示中`;
+            listContainer.appendChild(countBanner);
+            
+            console.log(`${items.length}件の記事を表示開始`);
+            
+            // 記事を表示
+            items.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'rss-item';
+                itemElement.innerHTML = `
+                    <div class="rss-title">${item.title}</div>
+                    <div class="rss-description">${item.description || item.summary || ''}</div>
+                    <div class="rss-meta">
+                        <span>📅 ${item.date || new Date().toLocaleDateString('ja-JP')}</span>
+                        <span>📰 ${item.source}</span>
+                        ${item.category ? `<span>🏷️ ${item.category}</span>` : ''}
+                        <span class="status-badge status-new">NEW</span>
+                    </div>
+                `;
+                itemElement.onclick = () => selectItem(item, itemElement);
+                listContainer.appendChild(itemElement);
+            });
+            
+            console.log(`✅ ${items.length}件の記事表示完了`);
+        }
+        
+        // 記事を選択
+        function selectItem(item, element) {
+            // 選択状態をクリア
+            document.querySelectorAll('.rss-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 新しい選択
+            element.classList.add('selected');
+            selectedItem = item;
+            
+            // プレビュー更新
+            updatePreview();
+            
+            // レベルA更新
+            document.getElementById('levelA').textContent = item.title;
+        }
+        
+        // プレビュー更新
+        function updatePreview() {
+            if (!selectedItem) return;
+            
+            const preview = document.getElementById('preview');
+            preview.textContent = `# 日刊AIゆたさん新聞 記事作成システム
+
+## 選択された記事情報
+
+### 記事タイトル
+${selectedItem.title}
+
+### 記事概要
+${selectedItem.description}
+
+### 記事URL
+${selectedItem.url || selectedItem.link || ''}
+
+### カテゴリ
+${selectedItem.category || '技術ニュース'}
+
+### 投稿日時
+${selectedItem.date}
+
+### 情報源
+${selectedItem.source}
+
+---
+
+## これから作成する記事の構成
+
+## （20文字以内のタイトル）
+## 日刊AIゆたさん新聞
+## （20文字以内のサブタイトル）
+
+（日付・概要・インパクトを含む導入文）
+
+### 記事のポイント
+
+## 見出し1（技術・製品の核心）
+- ${selectedItem.title}に関する詳細な解説
+
+## 見出し2（市場・企業動向）
+- 業界への影響と各社の動き
+
+## 見出し3（将来展望）
+- 今後の展開予測
+
+## 見出し4（エコシステム）
+- 関連技術や周辺環境
+
+### 編集長の視線
+（選択された記事に対する独自の分析と提案）
+
+---
+
+## システム化成功！
+
+**選択された記事を基に日刊AIゆたさん新聞の記事を作成します。**`;
+        }
+        
+        // クリップボードにコピー
+        function copyToClipboard() {
+            // 完全なプロンプトテンプレート
+            const fullPrompt = `# 日刊AIゆたさん新聞 記事作成システム
+
+## 記事作成フロー
+
+### 1. テーマ選定
+- 技術的な学びがあるか
+- 読者に価値を提供できるか
+- 単なるゴシップではないか
+
+### 2. 情報収集
+- 一次情報源（公式発表）優先
+- 複数ソースでファクトチェック
+- 最低10個以上の出典確保
+
+### 3. 記事構成
+
+---
+
+## （20文字以内のタイトル）
+## 日刊AIゆたさん新聞
+## （20文字以内のサブタイトル）
+
+（日付・概要・インパクトを含む導入文）
+
+### （小見出し）
+
+## 見出し1（技術・製品の核心）
+
+（内容）
+
+## 見出し2（市場・企業動向）
+
+（内容）
+
+## 見出し3（将来展望）
+
+（内容）
+
+## 見出し4（エコシステム）
+
+（内容）
+
+### 編集長の視線
+
+（分析・展望・読者への提案をコラム風に）
+
+---
+
+## 出典
+（13個以上、説明付き）
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+
+## ハッシュタグ
+#日刊AIゆたさん新聞 #（タグ2） #（タグ3） #（タグ4） #（タグ5） #（タグ6） #（タグ7） #（タグ8） #（タグ9） #（タグ10） #（タグ11） #（タグ12） #（タグ13） #（タグ14） #（タグ15）
+
+## サムネイル画像
+**noteレギュレーション：1.91:1**
+- 基調：白ベース／明るいトーン
+- 配色：カラフル or パステルトーン
+- テキスト：視認性の高いフォント
+- 雰囲気：明るく親しみやすい
+- プロンプト：（画像生成用の具体的な指示）
+
+---
+
+## 記事作成時の注意事項（AI引き継ぎ用）
+
+### 品質基準
+- **ファクトのみ**（推測禁止）
+- **専門用語には説明を付ける**
+- **読者を尊重した表現**
+- **1記事1テーマの原則**
+
+### 基本原則
+- **1記事1内容の原則**：複数のトピックを詰め込まない、一つのテーマを深く掘り下げる
+- **嘘・推測の禁止**：確認できない情報は書かない、ファクトのみを記載
+- **出典の明記**：すべての情報に出典URLを付ける（AIフレンドリーな記事作成）
+- **一次情報優先**：公式サイト、プレスリリース、直接取材を優先
+
+### フォーマット規則（重要：厳守）
+- **冒頭3行の構成（必ず改行で分ける）**：
+  - 1行目：## タイトル（20文字以内・H2タグ使用）
+  - 2行目：## 日刊AIゆたさん新聞（固定文言・H2タグ使用）
+  - 3行目：## サブタイトル（20文字以内・H2タグ使用）
+- **4行目以降**：リード文（「リード文」という文字は書かない、内容のみ記載）
+- **見出しタグの使用**：
+  - H2タグ（##）：大見出し・セクション区切り・冒頭3行
+  - H3タグ（###）：小見出し・サブセクション・メイントピックの展開
+- タイトル：20文字以内（厳守）
+- サブタイトル：20文字以内（厳守）
+- ハッシュタグ：15個（#日刊AIゆたさん新聞 は必須）
+- 出典：13個以上（説明付き）
+- 本文見出し：【】や「セクション」などの説明文は使わない
+
+### 役割分担
+- **人間（ゆたさん）**：編集権、最終決定、取材、構想、写真撮影
+- **AI**：情報整理、提案、支援、文章構成、ファクトチェック支援
+
+### 文体・トーン
+- 親しみやすく、技術的な内容も分かりやすく
+- AI（編集部）と人間（ゆたさん）の協業感を自然に表現
+- 専門用語は必要に応じて簡単な説明を添える
+
+### ファクトから記事を展開する方法論
+
+#### 展開の5層構造
+1. **Layer 1 - 直接的意味**：ファクトが何を意味するか
+2. **Layer 2 - 比較価値**：他との比較で見える価値
+3. **Layer 3 - 影響範囲**：誰にどう影響するか
+4. **Layer 4 - 産業影響**：業界・社会への波及効果
+5. **Layer 5 - 未来予測**：将来への示唆
+
+#### 5W1H分解法
+- **What**：何が起きたか（事実）
+- **Why**：なぜ重要か（意義）
+- **Who**：誰に影響するか（対象）
+- **When**：いつから（時期）
+- **Where**：どこで使われるか（場所・用途）
+- **How**：どう変わるか（変化）
+
+#### 記事化の流れ
+1. ファクトを要素分解
+2. 各要素を展開・比較
+3. 影響と意味を分析
+4. 全体を物語として統合
+5. 「だから〇〇すべき」という行動提案で締める
+
+### 品質チェック項目
+□ すべての事実に出典があるか
+□ 推測や憶測が含まれていないか
+□ 1つのテーマに絞られているか
+□ タイトル・サブタイトルが文字数制限内か
+□ ハッシュタグが15個あるか
+□ 読者にとって価値のある内容か
+□ 出典が13個以上あるか
+□ 専門用語に説明があるか
+
+### その他の指定事項
+- インタビュー内容は「」で明確化
+- 価格情報は取材時点を明記
+- URLは必ずアクセス確認
+- 画像使用は許可確認必須
+- 更新日時を記載
+- **「編集長の視線」セクション**：コラム風で読者に寄り添う人間味のある文章（編集長から個別指示がある場合あり）
+
+### 翌日への引き継ぎ
+- 本日の要約
+- 明日の深掘りポイント
+- 取材・確認事項
+
+---
+
+## システム化成功！
+
+**このテンプレートで一貫性のある高品質な記事作成が可能になりました。**
+
+---
+
+## 今回の記事作成依頼
+
+${selectedItem ? `### 選択された記事情報
+- タイトル: ${selectedItem.title}
+- 概要: ${selectedItem.description}
+- URL: ${selectedItem.url || selectedItem.link || ''}
+- カテゴリ: ${selectedItem.category || '技術ニュース'}
+- 日付: ${selectedItem.date}
+- 情報源: ${selectedItem.source}
+
+上記の記事を基に、日刊AIゆたさん新聞の記事を作成してください。
+必ず上記のフォーマット規則に従い、すべての要件を満たした記事を作成してください。` : 'RSS記事を選択してください'}`;
+            
+            navigator.clipboard.writeText(fullPrompt).then(() => {
+                alert('完全なプロンプトをコピーしました。WebのClaudeに貼り付けてください。');
+            });
+        }
+        
+        // 記事生成画面を開く
+        function openArticleGenerator() {
+            if (!selectedItem) {
+                alert('RSS記事を選択してください');
+                return;
+            }
+            
+            // LocalStorageに選択データを保存
+            localStorage.setItem('rss-to-article', JSON.stringify({
+                title: selectedItem.title,
+                body: `【RSS記事（A：最新情報）】\n${selectedItem.description}\n\n出典URL: ${selectedItem.url}\nソース: ${selectedItem.source}\n日付: ${selectedItem.date}`,
+                url: selectedItem.url
+            }));
+            
+            // 記事生成画面を開く
+            window.open('../15_article/index.html', '_blank');
+        }
+        
+        // 検索機能
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.rss-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+        
+        // カテゴリを判定する関数
+        function detectCategory(title, description) {
+            const text = (title + ' ' + (description || '')).toLowerCase();
+            for (const [category, keywords] of Object.entries(KEYWORDS)) {
+                if (keywords.some(keyword => text.includes(keyword.toLowerCase()))) {
+                    return category;
+                }
+            }
+            return null;
+        }
+        
+        // IndexedDBから05で保存した記事を取得
+        async function loadArticlesFromDB() {
+            return new Promise((resolve) => {
+                try {
+                    const dbRequest = indexedDB.open('SCF_V5_DB', 1);
+                    
+                    dbRequest.onsuccess = (event) => {
+                        const db = event.target.result;
+                        console.log('IndexedDB接続成功。利用可能なテーブル:', Array.from(db.objectStoreNames));
+                        
+                        if (!db.objectStoreNames.contains('articles')) {
+                            console.log('articlesテーブルがありません');
+                            resolve([]);
+                            return;
+                        }
+                        
+                        // feedsとarticlesの両方を取得
+                        const storeNames = ['articles'];
+                        if (db.objectStoreNames.contains('feeds')) {
+                            storeNames.push('feeds');
+                        }
+                        
+                        const transaction = db.transaction(storeNames, 'readonly');
+                        const articlesStore = transaction.objectStore('articles');
+                        const articles = [];
+                        
+                        // フィード情報を取得（存在する場合）
+                        let feedsMap = {};
+                        if (db.objectStoreNames.contains('feeds')) {
+                            const feedsStore = transaction.objectStore('feeds');
+                            const feedsRequest = feedsStore.getAll();
+                            feedsRequest.onsuccess = (event) => {
+                                const feeds = event.target.result;
+                                feeds.forEach(feed => {
+                                    feedsMap[feed.id] = feed.name || feed.url;
+                                });
+                                console.log('フィード情報取得:', feedsMap);
+                            };
+                        }
+                        
+                        // 記事を取得
+                        const request = articlesStore.getAll();
+                        request.onsuccess = (event) => {
+                            const allArticles = event.target.result;
+                            console.log(`articlesテーブルから${allArticles.length}件の記事を取得`);
+                            
+                            allArticles.forEach(article => {
+                                // フィード名を取得
+                                let source = feedsMap[article.feedId] || `Feed ${article.feedId}`;
+                                
+                                // URLからソース名を推測（フォールバック）
+                                if (source.includes('http')) {
+                                    if (source.includes('techcrunch')) source = 'TechCrunch';
+                                    else if (source.includes('gigazine')) source = 'Gigazine';
+                                    else if (source.includes('itmedia')) source = 'ITmedia';
+                                    else if (source.includes('wired')) source = 'WIRED';
+                                    else if (source.includes('zdnet')) source = 'ZDNet';
+                                    else if (source.includes('publickey')) source = 'Publickey';
+                                }
+                                
+                                articles.push({
+                                    title: article.title || 'タイトルなし',
+                                    description: article.description || article.summary || '',
+                                    url: article.link || '',
+                                    date: article.pubDate ? new Date(article.pubDate).toLocaleDateString('ja-JP') : new Date().toLocaleDateString('ja-JP'),
+                                    source: source,
+                                    category: detectCategory(article.title || '', article.description || article.summary || '')
+                                });
+                            });
+                            
+                            // 日付でソート（新しい順）
+                            articles.sort((a, b) => {
+                                const dateA = new Date(a.date.replace(/\//g, '-'));
+                                const dateB = new Date(b.date.replace(/\//g, '-'));
+                                return dateB - dateA;
+                            });
+                            
+                            console.log(`処理済み記事数: ${articles.length}`);
+                            resolve(articles);
+                        };
+                        
+                        request.onerror = () => {
+                            console.error('記事取得エラー:', request.error);
+                            resolve([]);
+                        };
+                    };
+                    
+                    dbRequest.onerror = () => {
+                        console.error('IndexedDB接続エラー');
+                        resolve([]);
+                    };
+                    
+                    dbRequest.onupgradeneeded = (event) => {
+                        console.log('DB作成/アップグレード必要');
+                        const db = event.target.result;
+                        
+                        // articlesテーブルを作成（必要な場合）
+                        if (!db.objectStoreNames.contains('articles')) {
+                            const articleStore = db.createObjectStore('articles', { keyPath: 'id', autoIncrement: true });
+                            articleStore.createIndex('feedId', 'feedId', { unique: false });
+                            articleStore.createIndex('pubDate', 'pubDate', { unique: false });
+                            console.log('articlesテーブルを作成しました');
+                        }
+                    };
+                } catch (error) {
+                    console.error('loadArticlesFromDBエラー:', error);
+                    resolve([]);
+                }
+            });
+        }
+        
+        // 進捗表示用ヘルパー関数
+        function showLoadingProgress(percentage, message) {
+            const listContainer = document.getElementById('rssList');
+            listContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>${message}</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${percentage}%"></div>
+                        <div class="progress-text">${percentage}%</div>
+                    </div>
+                    <p style="margin-top: 10px; color: #999;">しばらくお待ちください...</p>
+                </div>
+            `;
+        }
+        
+        // RSSフィードを取得（フォールバック用）
+        async function fetchRSSFeeds() {
+            const listContainer = document.getElementById('rssList');
+            
+            // まず06_databaseから送信された記事があるか確認
+            const selectedArticlesData = localStorage.getItem('selected_articles_for_10');
+            if (selectedArticlesData) {
+                try {
+                    const data = JSON.parse(selectedArticlesData);
+                    console.log(`✅ 06_databaseから${data.articles.length}件の記事を受信`);
+                    
+                    // rssItemsにデータを変換して格納
+                    rssItems = data.articles.map(article => ({
+                        title: article.title,
+                        description: article.description || '',
+                        link: article.url || '',
+                        date: article.date || new Date().toLocaleDateString('ja-JP'),
+                        source: article.source || '不明',
+                        category: article.category || 'その他'
+                    }));
+                    
+                    // バナー付きで表示
+                    listContainer.innerHTML = '';
+                    
+                    // 06_databaseからのデータを示すバナー
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background: linear-gradient(135deg, #ff6b6b, #feca57); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold;';
+                    banner.innerHTML = `🔗 [06]データベースから<strong style="font-size: 1.3em;">${rssItems.length}件</strong>の記事を受信しました`;
+                    listContainer.appendChild(banner);
+                    
+                    // 戻るボタンを追加
+                    const backButton = document.createElement('button');
+                    backButton.style.cssText = 'background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; margin-bottom: 15px; cursor: pointer;';
+                    backButton.innerHTML = '← [06]データベースへ戻る';
+                    backButton.onclick = () => window.location.href = '../06_database/index.html';
+                    listContainer.appendChild(backButton);
+                    
+                    // 記事を表示
+                    rssItems.forEach((item, index) => {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'rss-item';
+                        itemElement.innerHTML = `
+                            <div class="rss-title">${item.title}</div>
+                            <div class="rss-description">${item.description}</div>
+                            <div class="rss-meta">
+                                <span>📅 ${item.date}</span>
+                                <span>📰 ${item.source}</span>
+                                <span>🏷️ ${item.category}</span>
+                                <span class="status-badge" style="background: #ff6b6b;">FROM [06]</span>
+                            </div>
+                        `;
+                        itemElement.onclick = () => selectItem(item, itemElement);
+                        listContainer.appendChild(itemElement);
+                    });
+                    
+                    // 使用済みのデータをクリア（オプション：必要に応じてコメントアウト）
+                    // localStorage.removeItem('selected_articles_for_10');
+                    
+                    console.log('✅ 06_databaseからの記事表示完了');
+                    return; // 他の処理をスキップ
+                } catch (error) {
+                    console.error('06_databaseからのデータ読み込みエラー:', error);
+                }
+            }
+            
+            // 06_databaseからのデータがない場合は通常の処理
+            // 進捗0%表示
+            showLoadingProgress(0, '📚 IndexedDBに接続中...');
+            
+            // 少し待機（アニメーション表示のため）
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 進捗30%
+            showLoadingProgress(30, '📚 保存済み記事を検索中...');
+            
+            // まず05で保存した記事を取得
+            let allItems = await loadArticlesFromDB();
+            console.log('loadArticlesFromDB結果:', allItems.length, '件');
+            
+            // 進捗60%
+            showLoadingProgress(60, '📚 記事データを処理中...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (allItems && allItems.length > 0) {
+                const totalCount = allItems.length;
+                console.log(`✅ 05から${totalCount}件の記事を読み込みました`);
+                
+                // カテゴリフィルタリング（全件も含めて表示）
+                const aiRobotItems = allItems.filter(item => {
+                    const cat = item.category;
+                    return cat === 'AI' || cat === 'ロボット' || cat === '自動運転' || cat === '通信';
+                });
+                const filteredCount = aiRobotItems.length;
+                
+                // 統計を更新（全記事数を強調表示）
+                const statsElement = document.getElementById('articleStats');
+                if (statsElement) {
+                    statsElement.innerHTML = `
+                        🗄️ IndexedDB保存済み: <strong style="color: #ff6b6b; font-size: 1.2em;">${totalCount}件</strong> | 
+                        🎯 AI・ロボット・自動運転・通信: <strong>${filteredCount}件</strong> | 
+                        📅 最終更新: ${localStorage.getItem('last-test-date') ? new Date(localStorage.getItem('last-test-date')).toLocaleString('ja-JP') : '未実行'}
+                    `;
+                }
+                
+                // 全70件を表示（制限なし）
+                rssItems = allItems; // 全件表示
+                console.log(`表示用配列に${rssItems.length}件セット`);
+                
+                // 進捗90%
+                showLoadingProgress(90, '📚 記事を表示準備中...');
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // 進捗100%
+                showLoadingProgress(100, '✅ 完了！');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // バナーを含めて表示処理を実行
+                displayRSSItemsWithBanner(allItems, totalCount);
+                return;
+            }
+            
+            // 保存済み記事がない場合（修正: allItemsがnullやundefinedの場合も考慮）
+            if (!allItems || allItems.length === 0) {
+                // 進捗80%
+                showLoadingProgress(80, '⚠️ 保存済み記事がありません');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // エラー表示
+                listContainer.innerHTML = `
+                    <div class="loading" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">📭</div>
+                        <p style="font-size: 1.2em; margin-bottom: 20px; color: #ff6b6b;">IndexedDBに記事がありません</p>
+                        <p style="color: #666; margin-bottom: 10px;">まず05_RSS一覧で「自動テスト」を実行してください</p>
+                        <p style="color: #999; font-size: 0.9em;">自動テストで70件の記事が保存されます</p>
+                        <button onclick="location.href='../05_rss-reader/index.html'" style="
+                            margin-top: 20px;
+                            background: linear-gradient(135deg, #667eea, #764ba2);
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">05_RSS一覧で自動テストを実行</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 保存済み記事がない場合は新規取得を試みる
+            const feedCount = RSS_FEEDS.length;
+            showLoadingProgress(70, `📡 ${feedCount}個のフィードから新規取得中...`);
+            
+            for (const feed of RSS_FEEDS) {
+                try {
+                    // CORSプロキシが既に含まれているか確認
+                    let feedUrl = feed.url;
+                    if (!feedUrl.includes('polished-snow-477a.yutapii.workers.dev')) {
+                        // CORSプロキシを追加
+                        const cloudflareWorkerUrl = localStorage.getItem('cloudflare-worker-url') || 'https://polished-snow-477a.yutapii.workers.dev/';
+                        feedUrl = cloudflareWorkerUrl + '?url=' + encodeURIComponent(feed.url);
+                    }
+                    
+                    const response = await fetch(feedUrl);
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, 'text/xml');
+                    
+                    // RSS 2.0形式
+                    const items = xml.querySelectorAll('item');
+                    items.forEach(item => {
+                        const title = item.querySelector('title')?.textContent || '';
+                        const description = item.querySelector('description')?.textContent || '';
+                        const link = item.querySelector('link')?.textContent || '';
+                        const pubDate = item.querySelector('pubDate')?.textContent || '';
+                        
+                        // カテゴリ判定
+                        const category = detectCategory(title, description);
+                        
+                        // 関連する記事のみ追加（またはすべて表示）
+                        if (category) {
+                            allItems.push({
+                                title: title,
+                                description: description.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+                                url: link,
+                                date: pubDate ? new Date(pubDate).toLocaleDateString('ja-JP') : new Date().toLocaleDateString('ja-JP'),
+                                source: feed.source,
+                                category: category
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error(`フィード取得エラー (${feed.source}):`, error);
+                }
+            }
+            
+            // 日付でソート（新しい順）
+            allItems.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return dateB - dateA;
+            });
+            
+            // 最新20件に限定
+            rssItems = allItems.slice(0, 20);
+            
+            if (rssItems.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="loading" style="text-align: center; padding: 40px;">
+                        <p style="font-size: 1.2em; margin-bottom: 20px;">📰 IndexedDBに記事がありません</p>
+                        <p style="color: #666; margin-bottom: 10px;">まず05_RSS一覧で「自動テスト」を実行してください</p>
+                        <p style="color: #999; font-size: 0.9em;">自動テストで70件の記事が保存されます</p>
+                        <button onclick="location.href='../05_rss-reader/index.html'" style="
+                            margin-top: 20px;
+                            background: linear-gradient(135deg, #667eea, #764ba2);
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                        ">05_RSS一覧で自動テストを実行</button>
+                    </div>
+                `;
+            } else {
+                // 既に記事一覧を表示済み（上のif文で処理）
+                const currentCount = document.querySelectorAll('.rss-item').length;
+                console.log(`📊 ${currentCount}件の記事を表示中`);
+            }
+        }
+        
+        // 初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 09_templateから送信されたテンプレートがあるか確認
+            const templateFrom09 = localStorage.getItem('template_for_10');
+            if (templateFrom09) {
+                // プレビューエリアを更新
+                const preview = document.getElementById('preview');
+                preview.textContent = templateFrom09;
+                
+                // 使用済みのデータをクリア（オプション）
+                localStorage.removeItem('template_for_10');
+                
+                // メッセージ表示
+                const listContainer = document.getElementById('rssList');
+                const templateBanner = document.createElement('div');
+                templateBanner.style.cssText = 'background: linear-gradient(135deg, #00bcd4, #00acc1); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold;';
+                templateBanner.innerHTML = '📝 [09]テンプレートから読み込みました';
+                listContainer.insertBefore(templateBanner, listContainer.firstChild);
+            }
+            
+            fetchRSSFeeds();
+        });
+    </script>
+    <!-- 新機能: 自動保存、エラー表示、共通関数 -->
+    <script src="../js/auto-save.js"></script>
+    <script src="../js/toast.js"></script>
+    <script src="../js/common.js"></script>
+</body>
+</html>

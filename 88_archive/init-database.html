@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データベース初期化ツール - SCF V5</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ IndexedDB データベース初期化ツール</h1>
+        
+        <div class="status info">
+            このツールを使用して、SCF V5のデータベースを初期化し、テスト記事を追加できます。
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="forceInitDatabase()">📦 データベース初期化（強制）</button>
+            <button onclick="addTestArticles()">📝 テスト記事70件を追加</button>
+            <button onclick="checkDatabase()">🔍 DB状態を確認</button>
+            <button onclick="clearAndInit()">🔄 DBクリア＆初期化</button>
+            <button onclick="goToRSSReader()">📰 05_RSS一覧へ移動</button>
+            <button onclick="goToArticleLink()">🔄 10_RSS→記事連携へ移動</button>
+        </div>
+        
+        <div id="statusMessage"></div>
+        
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script>
+        const DB_NAME = 'SCF_V5_DB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            const logContainer = document.getElementById('logContainer');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // ログに追加
+            logContainer.innerHTML += `[${timestamp}] ${message}<br>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // ステータスメッセージ更新
+            statusMessage.className = `status ${type}`;
+            statusMessage.textContent = message;
+        }
+
+        async function initDatabase(forceCreate = false) {
+            log('データベース初期化を開始します...', 'info');
+            
+            return new Promise((resolve, reject) => {
+                // forceCreateがtrueの場合、バージョンを上げて強制的にonupgradeneededを発火
+                const version = forceCreate ? DB_VERSION + 1 : DB_VERSION;
+                const request = indexedDB.open(DB_NAME, version);
+                
+                request.onerror = () => {
+                    log(`❌ データベース接続エラー: ${request.error}`, 'error');
+                    reject(request.error);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    log(`✅ データベース接続成功: ${db.name} (Version: ${db.version})`, 'success');
+                    
+                    const stores = Array.from(db.objectStoreNames);
+                    log(`既存のテーブル: ${stores.join(', ') || 'なし'}`, 'info');
+                    
+                    // テーブルが存在しない場合は作成を促す
+                    if (!db.objectStoreNames.contains('feeds') || !db.objectStoreNames.contains('articles')) {
+                        log('⚠️ 必要なテーブルが存在しません。「データベース初期化」ボタンをクリックしてください。', 'warning');
+                    }
+                    
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    log('データベースのアップグレードを実行中...', 'warning');
+                    
+                    // feeds store（RSS一覧用）
+                    if (!db.objectStoreNames.contains('feeds')) {
+                        const feedStore = db.createObjectStore('feeds', { keyPath: 'id', autoIncrement: true });
+                        feedStore.createIndex('name', 'name', { unique: false });
+                        feedStore.createIndex('category', 'category', { unique: false });
+                        feedStore.createIndex('active', 'active', { unique: false });
+                        log('✅ feedsテーブルを作成しました', 'success');
+                    }
+                    
+                    // articles store（記事用）
+                    if (!db.objectStoreNames.contains('articles')) {
+                        const articleStore = db.createObjectStore('articles', { keyPath: 'id', autoIncrement: true });
+                        articleStore.createIndex('feedId', 'feedId', { unique: false });
+                        articleStore.createIndex('pubDate', 'pubDate', { unique: false });
+                        articleStore.createIndex('saved', 'saved', { unique: false });
+                        log('✅ articlesテーブルを作成しました', 'success');
+                    }
+                };
+            });
+        }
+
+        async function addTestArticles() {
+            // 常に新しくDBを開く
+            log('データベースを開いています...', 'info');
+            
+            try {
+                // DBを閉じて再度開く
+                if (db) {
+                    db.close();
+                    db = null;
+                }
+                
+                await initDatabase();
+                
+                // テーブルの存在確認
+                if (!db.objectStoreNames.contains('feeds') || !db.objectStoreNames.contains('articles')) {
+                    log('⚠️ 必要なテーブルが存在しません。ページをリロードしてからもう一度お試しください。', 'warning');
+                    return;
+                }
+                
+                log('テスト記事の追加を開始します...', 'info');
+                
+                // まずフィードを追加
+                const testFeeds = [
+                    { name: 'TechCrunch Japan', url: 'https://techcrunch.com/feed/', category: 'AI・Tech', active: true },
+                    { name: 'Gigazine', url: 'https://gigazine.net/news/rss_2.0/', category: '技術全般', active: true },
+                    { name: 'ITmedia', url: 'https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml', category: 'IT・通信', active: true },
+                    { name: 'WIRED Japan', url: 'https://wired.jp/rss/index.xml', category: 'テクノロジー', active: true },
+                    { name: 'ZDNet Japan', url: 'https://japan.zdnet.com/rss/index.rdf', category: 'ビジネスIT', active: true }
+                ];
+                
+                const transaction = db.transaction(['feeds', 'articles'], 'readwrite');
+                const feedStore = transaction.objectStore('feeds');
+                const articleStore = transaction.objectStore('articles');
+                
+                // フィードを追加
+                const feedIds = [];
+                for (const feed of testFeeds) {
+                    const request = feedStore.add(feed);
+                    request.onsuccess = () => {
+                        feedIds.push(request.result);
+                        log(`フィード追加: ${feed.name} (ID: ${request.result})`, 'success');
+                    };
+                }
+                
+                // テスト記事を生成
+                const categories = ['AI', 'ロボット', '自動運転', '通信', '量子コンピュータ'];
+                const topics = [
+                    'ChatGPT', 'Claude', 'Gemini', 'LLM', 'Tesla', 'Waymo', 'Boston Dynamics',
+                    '5G', '6G', 'Starlink', 'メタバース', 'VR', 'AR', 'ブロックチェーン'
+                ];
+                
+                const articles = [];
+                const today = new Date();
+                
+                for (let i = 0; i < 70; i++) {
+                    const category = categories[i % categories.length];
+                    const topic = topics[i % topics.length];
+                    const feedId = (i % 5) + 1; // 1-5のフィードIDを循環
+                    const daysAgo = Math.floor(i / 10); // 10記事ごとに1日前
+                    const pubDate = new Date(today);
+                    pubDate.setDate(pubDate.getDate() - daysAgo);
+                    
+                    articles.push({
+                        feedId: feedId,
+                        title: `【${category}】${topic}の最新動向と将来展望 - 記事${i + 1}`,
+                        description: `${topic}に関する最新の研究開発状況と市場動向をお伝えします。${category}分野において重要な進展があり、業界関係者から注目を集めています。今回の発表により、今後の技術革新が加速することが期待されています。`,
+                        link: `https://example.com/article-${i + 1}`,
+                        pubDate: pubDate.toISOString(),
+                        author: `編集部${feedId}`,
+                        saved: false,
+                        summary: `${topic}の技術が急速に進化している。${category}分野での応用が期待される。`
+                    });
+                }
+                
+                // 記事を追加
+                let addedCount = 0;
+                for (const article of articles) {
+                    const request = articleStore.add(article);
+                    request.onsuccess = () => {
+                        addedCount++;
+                        if (addedCount % 10 === 0) {
+                            log(`${addedCount}件の記事を追加しました...`, 'info');
+                        }
+                        if (addedCount === articles.length) {
+                            log(`✅ 合計${addedCount}件のテスト記事を追加完了！`, 'success');
+                        }
+                    };
+                }
+                
+                transaction.oncomplete = () => {
+                    log('✅ すべてのトランザクションが完了しました', 'success');
+                };
+                
+                transaction.onerror = () => {
+                    log(`❌ トランザクションエラー: ${transaction.error}`, 'error');
+                };
+                
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkDatabase() {
+            if (!db) {
+                await initDatabase();
+            }
+            
+            log('データベースの状態を確認中...', 'info');
+            
+            try {
+                const transaction = db.transaction(['feeds', 'articles'], 'readonly');
+                
+                // フィード数を確認
+                const feedStore = transaction.objectStore('feeds');
+                const feedCountRequest = feedStore.count();
+                feedCountRequest.onsuccess = () => {
+                    log(`📊 フィード数: ${feedCountRequest.result}件`, 'info');
+                };
+                
+                // 記事数を確認
+                const articleStore = transaction.objectStore('articles');
+                const articleCountRequest = articleStore.count();
+                articleCountRequest.onsuccess = () => {
+                    log(`📊 記事数: ${articleCountRequest.result}件`, 'info');
+                };
+                
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, 'error');
+            }
+        }
+
+        async function forceInitDatabase() {
+            try {
+                // 既存のDBを閉じる
+                if (db) {
+                    db.close();
+                    db = null;
+                }
+                
+                // データベースを削除して再作成
+                log('データベースを削除しています...', 'info');
+                const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                
+                deleteRequest.onsuccess = async () => {
+                    log('✅ 古いデータベースを削除しました', 'success');
+                    
+                    // 新しいDBを作成
+                    await initDatabase();
+                    log('✅ 新しいデータベースを作成しました', 'success');
+                };
+                
+                deleteRequest.onerror = () => {
+                    log('❌ データベース削除エラー', 'error');
+                };
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAndInit() {
+            try {
+                // DBを閉じる
+                if (db) {
+                    db.close();
+                    db = null;
+                }
+                
+                log('データベースをクリアして初期化します...', 'info');
+                
+                // DBを削除
+                const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                
+                deleteRequest.onsuccess = async () => {
+                    log('✅ データベースをクリアしました', 'success');
+                    
+                    // 新しいDBを作成してテストデータを追加
+                    await initDatabase();
+                    await addTestArticles();
+                };
+                
+                deleteRequest.onerror = () => {
+                    log('❌ クリアエラー', 'error');
+                };
+            } catch (error) {
+                log(`❌ エラー: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearDatabase() {
+            if (confirm('本当にデータベースをクリアしますか？すべてのデータが削除されます。')) {
+                try {
+                    if (db) {
+                        db.close();
+                    }
+                    
+                    const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                    deleteRequest.onsuccess = () => {
+                        log('✅ データベースを削除しました', 'success');
+                        db = null;
+                    };
+                    deleteRequest.onerror = () => {
+                        log('❌ データベース削除エラー', 'error');
+                    };
+                } catch (error) {
+                    log(`❌ エラー: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function goToRSSReader() {
+            window.location.href = '05_rss-reader/index.html';
+        }
+
+        function goToArticleLink() {
+            window.location.href = '10_rss-to-article.html';
+        }
+
+        // 初期チェック
+        window.onload = () => {
+            checkDatabase();
+        };
+    </script>
+</body>
+</html>
