@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS2JSON API Key 取得ガイド</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #2196f3;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .highlight {
+            background: #fffde7;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .code-box {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .api-key-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #2196f3;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .link-button {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px;
+        }
+        .link-button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 RSS2JSON API Key 取得ガイド</h1>
+        
+        <div class="success">
+            <strong>✅ アカウント作成済みとのこと！</strong><br>
+            以下の手順でAPI Keyを確認してください。
+        </div>
+
+        <div class="step">
+            <div><span class="step-number">1</span><strong>RSS2JSONにログイン</strong></div>
+            <p>既にアカウントをお持ちなので、ログインページからアクセスしてください。</p>
+            <a href="https://rss2json.com/login" target="_blank" class="link-button">ログインページを開く</a>
+        </div>
+
+        <div class="step">
+            <div><span class="step-number">2</span><strong>ダッシュボードでAPI Key確認</strong></div>
+            <p>ログイン後、ダッシュボードまたはプロフィール設定でAPI Keyが表示されます。</p>
+            <p>通常は以下のような場所にあります：</p>
+            <ul>
+                <li><span class="highlight">Dashboard</span> → API Key セクション</li>
+                <li><span class="highlight">Settings</span> → API Configuration</li>
+                <li><span class="highlight">My Account</span> → API Access</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div><span class="step-number">3</span><strong>API Keyをコピー</strong></div>
+            <p>40文字の英数字の文字列が表示されているはずです。</p>
+            <div class="code-box">
+                例: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
+            </div>
+        </div>
+
+        <div class="step">
+            <div><span class="step-number">4</span><strong>API Keyを設定</strong></div>
+            <p>取得したAPI Keyを下記に入力して保存します：</p>
+            <input type="text" 
+                   id="apiKeyInput" 
+                   class="api-key-input" 
+                   placeholder="RSS2JSON API Keyを貼り付け（40文字）"
+                   maxlength="40">
+            <button onclick="saveApiKey()">API Keyを保存</button>
+            <button onclick="testApiKey()">動作テスト</button>
+            <div id="result"></div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 注意事項</strong>
+            <ul>
+                <li>API Keyは他人に共有しないでください</li>
+                <li>無料プラン: 10,000リクエスト/日</li>
+                <li>91フィード × 1日10回 = 910リクエスト（余裕あり）</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div><span class="step-number">5</span><strong>設定ファイルの更新</strong></div>
+            <p>API Keyを取得したら、以下のファイルを更新してください：</p>
+            <div class="code-box">
+                /40_settings/api-config.js<br><br>
+                RSS2JSON_API_KEY: 'ここにあなたのAPI Key',
+            </div>
+        </div>
+
+        <h2>📊 プラン情報確認</h2>
+        <div class="step">
+            <p>現在のプランと使用状況は以下で確認できます：</p>
+            <a href="https://rss2json.com/plans" target="_blank" class="link-button">プラン確認</a>
+            <a href="https://rss2json.com/dashboard" target="_blank" class="link-button">使用状況確認</a>
+        </div>
+    </div>
+
+    <script>
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: red; margin-top: 10px;">API Keyを入力してください</div>';
+                return;
+            }
+            
+            if (apiKey.length !== 40) {
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: orange; margin-top: 10px;">API Keyは通常40文字です。確認してください。</div>';
+            }
+            
+            // LocalStorageに保存
+            localStorage.setItem('rss2json-api-key', apiKey);
+            
+            document.getElementById('result').innerHTML = 
+                '<div style="color: green; margin-top: 10px;">✅ API Keyを保存しました！</div>';
+            
+            // api-config.jsの更新を促す
+            setTimeout(() => {
+                alert('API Keyを保存しました。\n\n次に /40_settings/api-config.js ファイルの RSS2JSON_API_KEY に同じキーを設定してください。');
+            }, 500);
+        }
+        
+        async function testApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim() || 
+                          localStorage.getItem('rss2json-api-key');
+            
+            if (!apiKey) {
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: red; margin-top: 10px;">API Keyを入力してください</div>';
+                return;
+            }
+            
+            document.getElementById('result').innerHTML = 
+                '<div style="color: blue; margin-top: 10px;">テスト中...</div>';
+            
+            try {
+                const testUrl = 'https://gigazine.net/news/rss_2.0/';
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(testUrl)}&api_key=${apiKey}&count=1`;
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('result').innerHTML = 
+                        `<div style="color: green; margin-top: 10px;">
+                            ✅ API Key有効！<br>
+                            テスト成功: ${data.feed.title}<br>
+                            記事数: ${data.items.length}件取得
+                        </div>`;
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        `<div style="color: red; margin-top: 10px;">
+                            ❌ エラー: ${data.message}
+                        </div>`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<div style="color: red; margin-top: 10px;">
+                        ❌ ネットワークエラー: ${error.message}
+                    </div>`;
+            }
+        }
+        
+        // 保存済みのキーがあれば表示
+        window.addEventListener('load', () => {
+            const savedKey = localStorage.getItem('rss2json-api-key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: blue; margin-top: 10px;">📝 保存済みのAPI Keyを読み込みました</div>';
+            }
+        });
+    </script>
+</body>
+</html>

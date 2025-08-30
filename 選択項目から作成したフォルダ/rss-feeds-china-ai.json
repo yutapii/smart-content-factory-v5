@@ -1,0 +1,296 @@
+{
+  "feeds": [
+    {
+      "category": "中国AI企業",
+      "feeds": [
+        {
+          "name": "DeepSeek",
+          "url": "https://www.deepseek.com/feed/",
+          "description": "DeepSeek - 低コスト高性能AI開発",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["AI", "LLM", "中国", "低コスト", "オープンソース"]
+        },
+        {
+          "name": "DeepSeek GitHub",
+          "url": "https://github.com/deepseek-ai.atom",
+          "description": "DeepSeek GitHubリポジトリ更新",
+          "priority": "high",
+          "language": "en",
+          "tags": ["オープンソース", "AI", "GitHub"]
+        },
+        {
+          "name": "Baidu AI (ERNIE)",
+          "url": "http://ai.baidu.com/rss/",
+          "description": "百度AI - ERNIE開発",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["百度", "ERNIE", "AI", "中国"]
+        },
+        {
+          "name": "Baidu Research",
+          "url": "http://research.baidu.com/feed/",
+          "description": "百度研究院",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["研究", "AI", "百度", "論文"]
+        },
+        {
+          "name": "Alibaba Cloud AI",
+          "url": "https://www.alibabacloud.com/blog/feed/",
+          "description": "アリババクラウドAI（Qwen）",
+          "priority": "high",
+          "language": "en",
+          "tags": ["Alibaba", "Qwen", "クラウド", "AI"]
+        },
+        {
+          "name": "Alibaba DAMO Academy",
+          "url": "https://damo.alibaba.com/labs/feed/",
+          "description": "アリババ達摩院研究所",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["研究", "Alibaba", "AI", "イノベーション"]
+        },
+        {
+          "name": "ModelScope (Alibaba)",
+          "url": "https://modelscope.cn/api/v1/models/feed.rss",
+          "description": "ModelScope - Alibabaのモデルハブ",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["モデル", "Qwen", "オープンソース", "Alibaba"]
+        },
+        {
+          "name": "ByteDance AI Lab",
+          "url": "https://ailab.bytedance.com/feed/",
+          "description": "ByteDance AI研究所（Doubao/Seed）",
+          "priority": "high",
+          "language": "en",
+          "tags": ["ByteDance", "Doubao", "TikTok", "AI"]
+        },
+        {
+          "name": "ByteDance Research",
+          "url": "https://research.bytedance.com/feed/",
+          "description": "ByteDance研究部門",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["研究", "ByteDance", "論文", "AI"]
+        },
+        {
+          "name": "Tencent AI Lab",
+          "url": "https://ai.tencent.com/ailab/en/rss/",
+          "description": "テンセントAI研究所",
+          "priority": "high",
+          "language": "en",
+          "tags": ["Tencent", "AI", "研究", "中国"]
+        },
+        {
+          "name": "Tencent Cloud AI",
+          "url": "https://cloud.tencent.com/developer/feed",
+          "description": "テンセントクラウドAI",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["Tencent", "クラウド", "AI", "開発者"]
+        },
+        {
+          "name": "SenseTime",
+          "url": "https://www.sensetime.com/en/news/feed/",
+          "description": "SenseTime（商湯科技）",
+          "priority": "high",
+          "language": "en",
+          "tags": ["AI", "コンピュータビジョン", "中国", "顔認識"]
+        },
+        {
+          "name": "Megvii",
+          "url": "https://en.megvii.com/news/feed/",
+          "description": "Megvii（曠視科技）- Face++",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["AI", "顔認識", "Face++", "中国"]
+        },
+        {
+          "name": "iFLYTEK",
+          "url": "https://www.iflytek.com/en/news/rss.xml",
+          "description": "iFLYTEK（科大訊飛）- 音声認識AI",
+          "priority": "high",
+          "language": "en",
+          "tags": ["音声認識", "AI", "中国", "NLP"]
+        },
+        {
+          "name": "Huawei AI",
+          "url": "https://www.huawei.com/en/news/ai/rss",
+          "description": "Huawei AI研究開発",
+          "priority": "high",
+          "language": "en",
+          "tags": ["Huawei", "AI", "Ascend", "Pangu"]
+        },
+        {
+          "name": "JD AI Research",
+          "url": "https://air.jd.com/feed/",
+          "description": "京東AI研究院",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["JD", "AI", "Eコマース", "研究"]
+        },
+        {
+          "name": "Xiaomi AI",
+          "url": "https://ai.xiaomi.com/feed/",
+          "description": "Xiaomi AI Lab",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["Xiaomi", "AI", "IoT", "スマートホーム"]
+        },
+        {
+          "name": "Zhipu AI",
+          "url": "https://www.zhipuai.cn/feed/",
+          "description": "智譜AI（GLM開発）",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["ChatGLM", "AI", "LLM", "中国"]
+        },
+        {
+          "name": "01.AI (Yi)",
+          "url": "https://01.ai/feed/",
+          "description": "01.AI - Yi-34B開発（李開復）",
+          "priority": "high",
+          "language": "en",
+          "tags": ["Yi", "LLM", "李開復", "AI"]
+        },
+        {
+          "name": "MiniMax",
+          "url": "https://www.minimaxi.com/feed/",
+          "description": "MiniMax - AI対話モデル",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["AI", "対話", "LLM", "中国"]
+        }
+      ]
+    },
+    {
+      "category": "中国AI関連ニュース",
+      "feeds": [
+        {
+          "name": "AI科技評論",
+          "url": "https://www.leiphone.com/category/ai/feed",
+          "description": "中国AI業界ニュース",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["ニュース", "AI", "中国", "業界動向"]
+        },
+        {
+          "name": "36Kr AI",
+          "url": "https://36kr.com/feed/section/ai",
+          "description": "36Kr AI関連記事",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["スタートアップ", "AI", "中国", "投資"]
+        },
+        {
+          "name": "機器之心",
+          "url": "https://www.jiqizhixin.com/rss",
+          "description": "Synced - 中国AI専門メディア",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["AI", "機械学習", "論文", "中国"]
+        },
+        {
+          "name": "量子位",
+          "url": "https://www.qbitai.com/feed",
+          "description": "QbitAI - AI業界分析",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["AI", "分析", "中国", "トレンド"]
+        },
+        {
+          "name": "PaperWeekly",
+          "url": "https://www.paperweekly.site/feed/",
+          "description": "AI論文週報",
+          "priority": "medium",
+          "language": "zh",
+          "tags": ["論文", "AI", "研究", "中国"]
+        }
+      ]
+    },
+    {
+      "category": "中国政府・研究機関",
+      "feeds": [
+        {
+          "name": "中国科学院",
+          "url": "http://www.cas.cn/rss/kydt.xml",
+          "description": "中国科学院ニュース",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["研究", "政府", "科学", "AI"]
+        },
+        {
+          "name": "清華大学AI研究院",
+          "url": "https://ai.tsinghua.edu.cn/feed/",
+          "description": "清華大学AI研究院",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["大学", "研究", "AI", "清華"]
+        },
+        {
+          "name": "北京大学AI研究院",
+          "url": "https://ai.pku.edu.cn/feed/",
+          "description": "北京大学AI研究院",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["大学", "研究", "AI", "北京大学"]
+        },
+        {
+          "name": "MIIT（工業情報化部）",
+          "url": "https://www.miit.gov.cn/rss/index.xml",
+          "description": "中国工業情報化部",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["政府", "政策", "AI規制", "産業"]
+        },
+        {
+          "name": "CAC（网信办）",
+          "url": "http://www.cac.gov.cn/rss.xml",
+          "description": "中国インターネット情報弁公室",
+          "priority": "high",
+          "language": "zh",
+          "tags": ["政府", "規制", "インターネット", "AI"]
+        }
+      ]
+    }
+  ],
+  "keywords": [
+    "DeepSeek",
+    "ERNIE",
+    "文心一言",
+    "Qwen",
+    "通義千問",
+    "Doubao",
+    "豆包",
+    "ByteDance",
+    "抖音",
+    "TikTok",
+    "百度",
+    "阿里巴巴",
+    "騰訊",
+    "華為",
+    "商湯科技",
+    "曠視科技",
+    "科大訊飛",
+    "智譜AI",
+    "ChatGLM",
+    "Yi-34B",
+    "李開復",
+    "MoE",
+    "Mixture of Experts",
+    "中国AI",
+    "価格破壊",
+    "低コストAI",
+    "オープンソース",
+    "LLM",
+    "大規模言語モデル",
+    "Pangu",
+    "盤古",
+    "達摩院",
+    "DAMO Academy",
+    "ModelScope",
+    "Hugging Face中国版"
+  ]
+}

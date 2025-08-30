@@ -515,6 +515,30 @@
                     <h2 class="section-title">APIキー設定</h2>
                     <p class="section-description">外部サービスのAPIキーを管理します</p>
                 </div>
+                
+                <!-- 重要な注意事項 -->
+                <div style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff3cd, #ffe4b5); border: 2px solid #ffc107; border-radius: 10px; box-shadow: 0 2px 10px rgba(255, 193, 7, 0.2);">
+                    <h3 style="margin: 0 0 15px 0; color: #d39e00; font-size: 1.2em;">
+                        ⚠️ 重要：APIキーの編集について
+                    </h3>
+                    <div style="color: #333; line-height: 1.6;">
+                        <p style="margin-bottom: 10px;">
+                            <strong>このページはAPIキーの確認専用です。</strong><br>
+                            混乱を避けるため、APIキーの編集は <code style="background: white; padding: 3px 8px; border-radius: 4px; font-weight: bold;">40_settings/api-config.js</code> ファイルでのみ行えます。
+                        </p>
+                        <div style="background: white; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                            <strong>📝 変更手順：</strong>
+                            <ol style="margin: 8px 0 0 20px; padding: 0;">
+                                <li>このフォルダ内の <code>api-config.js</code> を開く</li>
+                                <li>APIキーを直接編集して保存</li>
+                                <li>ブラウザをリロードで自動反映</li>
+                            </ol>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            ※ 下記の入力欄は表示専用です。「保存」ボタンは無効化されています。
+                        </p>
+                    </div>
+                </div>
 
                 <!-- formタグで囲んで警告を解消 -->
                 <form autocomplete="on">
@@ -522,7 +546,7 @@
                     <label class="setting-label">
                         OpenAI API Key
                         <span class="status-indicator status-disconnected" id="openai-status"></span>
-                        <button type="button" class="btn-small" onclick="saveIndividualKey('openai'); return false;" style="margin-left: 10px;">保存</button>
+                        <button type="button" class="btn-small" onclick="alert('APIキーの編集は api-config.js ファイルで行ってください'); return false;" style="margin-left: 10px; opacity: 0.5; cursor: not-allowed;" disabled>保存</button>
                     </label>
                     <div class="api-key-input">
                         <input type="password" id="openaiKey" class="setting-input api-key-field" placeholder="sk-...">
@@ -535,7 +559,7 @@
                     <label class="setting-label">
                         Anthropic API Key
                         <span class="status-indicator status-disconnected" id="anthropic-status"></span>
-                        <button type="button" class="btn-small" onclick="saveIndividualKey('anthropic'); return false;" style="margin-left: 10px;">保存</button>
+                        <button type="button" class="btn-small" onclick="alert('APIキーの編集は api-config.js ファイルで行ってください'); return false;" style="margin-left: 10px; opacity: 0.5; cursor: not-allowed;" disabled>保存</button>
                     </label>
                     <div class="api-key-input">
                         <input type="password" id="anthropicKey" class="setting-input api-key-field" placeholder="sk-ant-...">
@@ -548,7 +572,7 @@
                     <label class="setting-label">
                         Google AI API Key
                         <span class="status-indicator status-disconnected" id="google-status"></span>
-                        <button type="button" class="btn-small" onclick="saveIndividualKey('google'); return false;" style="margin-left: 10px;">保存</button>
+                        <button type="button" class="btn-small" onclick="alert('APIキーの編集は api-config.js ファイルで行ってください'); return false;" style="margin-left: 10px; opacity: 0.5; cursor: not-allowed;" disabled>保存</button>
                     </label>
                     <div class="api-key-input">
                         <input type="password" id="googleKey" class="setting-input api-key-field" placeholder="AIza...">
@@ -559,16 +583,29 @@
 
                 <div class="setting-group">
                     <label class="setting-label">
+                        RSS2JSON API Key
+                        <span class="status-indicator status-disconnected" id="rss2json-status"></span>
+                        <a href="https://rss2json.com/#api_key" target="_blank" style="margin-left: 10px; color: #667eea; text-decoration: none; font-size: 12px;">[取得]</a>
+                    </label>
+                    <div class="api-key-input">
+                        <input type="password" id="rss2jsonKey" class="setting-input api-key-field" placeholder="RSS2JSON API Key">
+                        <button class="toggle-visibility" onclick="toggleVisibility('rss2jsonKey')">👁️</button>
+                    </div>
+                    <div class="setting-hint">RSSフィード取得用（05_rss-readerで使用）</div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">
                         Cloudflare Worker URL
                         <span class="status-indicator status-disconnected" id="worker-status"></span>
-                        <button type="button" class="btn-small" onclick="saveIndividualKey('worker'); return false;" style="margin-left: 10px;">保存</button>
+                        <button type="button" class="btn-small" onclick="alert('APIキーの編集は api-config.js ファイルで行ってください'); return false;" style="margin-left: 10px; opacity: 0.5; cursor: not-allowed;" disabled>保存</button>
                     </label>
                     <input type="url" id="workerUrl" class="setting-input" placeholder="https://your-worker.workers.dev">
                     <div class="setting-hint">Claude API CORS回避用（claude-worker.jsをデプロイ）</div>
                 </div>
 
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="saveSettings('api')">保存</button>
+                    <button class="btn btn-primary" onclick="alert('APIキーの編集は api-config.js ファイルで行ってください'); return false;" style="opacity: 0.5; cursor: not-allowed;" disabled>保存（無効）</button>
                     <button type="button" class="btn btn-secondary" onclick="testAPIs(); return false;">接続テスト</button>
                 </div>
             </div>
@@ -1403,6 +1440,8 @@
         window.addEventListener('hashchange', checkHashAndShowSection);
     </script>
     <!-- 新機能: 自動保存、エラー表示、共通関数 -->
+    <!-- APIキー自動読み込み -->
+    <script src="api-config.js"></script>
     <script src="../js/auto-save.js"></script>
     <script src="../js/toast.js"></script>
     <script src="../js/common.js"></script>

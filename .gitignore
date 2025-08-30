@@ -1,3 +1,7 @@
+# API設定ファイル（秘密情報を含むため）
+40_settings/api-config.js
+
+# システムファイル
 .DS_Store
 *.log
 *.tmp

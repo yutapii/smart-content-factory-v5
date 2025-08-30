@@ -30,6 +30,13 @@ async function checkAPIStatus(containerId) {
                 const url = localStorage.getItem('cloudflare-worker-url');
                 return url && (url.includes('workers.dev') || url.includes('cloudflare'));
             }
+        },
+        google: {
+            name: 'Google Gemini API',
+            check: async () => {
+                const key = localStorage.getItem('google-api-key');
+                return key && key.length > 20;
+            }
         }
     };
     

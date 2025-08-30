@@ -260,9 +260,6 @@
     </style>
 </head>
 <body>
-    <!-- APIステータスアラート表示用 -->
-    <div id="api-status-container"></div>
-    
     <div class="container">
         <header style="position: relative;">
             <h1>
@@ -270,11 +267,6 @@
                 <span class="version">SCF V5</span>
             </h1>
             <p class="subtitle">Smart Content Factory - 編集支援システム</p>
-            <div style="position: absolute; top: 10px; right: 10px;">
-                <a href="debug-panel.html" style="background: linear-gradient(135deg, #333, #555); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                    🔍 デバッグパネル
-                </a>
-            </div>
         </header>
 
         <div class="stats">
@@ -322,6 +314,32 @@
                 </div>
             </a>
 
+            <a href="07_ai-trend-map/index.html" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">[07] AIトレンドマップ</div>
+                <div class="card-description">
+                    自動トレンド分析<br>
+                    多言語キーワード正規化・可視化
+                </div>
+                <div class="card-status">
+                    <span class="status-badge status-ready">準備完了</span>
+                    <span class="status-badge priority-high">新機能</span>
+                </div>
+            </a>
+
+            <a href="08_content-filter/index.html" class="card">
+                <div class="card-icon">🎯</div>
+                <div class="card-title">[08] コンテンツフィルター</div>
+                <div class="card-description">
+                    AI関連記事の自動フィルタリング<br>
+                    カテゴリー別・時間別・検索機能
+                </div>
+                <div class="card-status">
+                    <span class="status-badge status-ready">準備完了</span>
+                    <span class="status-badge priority-high">新機能</span>
+                </div>
+            </a>
+
             <a href="09_template/index.html" class="card">
                 <div class="card-icon">📝</div>
                 <div class="card-title">[09] 記事テンプレート</div>
@@ -334,7 +352,7 @@
                 </div>
             </a>
 
-            <a href="10_rss-to-article.html" class="card">
+            <a href="10_rss-to-article/index.html" class="card">
                 <div class="card-icon">📡</div>
                 <div class="card-title">[10] RSS→記事連携</div>
                 <div class="card-description">
@@ -449,6 +467,9 @@
             <p>© 2025 SCF V5 - Smart Content Factory Version 5</p>
             <p>日刊AIゆたさん新聞 編集支援システム</p>
         </footer>
+        
+        <!-- APIステータスアラート表示用 -->
+        <div id="api-status-container"></div>
     </div>
 
     <script>
@@ -562,6 +583,8 @@
             console.log('APIステータス:', status);
         });
     </script>
+    <!-- APIキー自動読み込み -->
+    <script src="40_settings/api-config.js"></script>
     <!-- 新機能: 自動保存、エラー表示、共通関数 -->
     <script src="js/auto-save.js"></script>
     <script src="js/toast.js"></script>

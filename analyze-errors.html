@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS エラー分析レポート</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(255,107,107,0.3);
+        }
+        h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card.error {
+            border-left: 5px solid #f44336;
+        }
+        .stat-card.success {
+            border-left: 5px solid #4caf50;
+        }
+        .stat-card.warning {
+            border-left: 5px solid #ff9800;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .analysis-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #f8f8f8;
+            font-weight: bold;
+            color: #333;
+        }
+        .error-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .error-cors { background: #ffebee; color: #c62828; }
+        .error-network { background: #e3f2fd; color: #1565c0; }
+        .error-parse { background: #fff3e0; color: #e65100; }
+        .error-404 { background: #fce4ec; color: #c2185b; }
+        .category-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .recommendation {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        .bar {
+            height: 30px;
+            margin: 10px 0;
+            background: linear-gradient(90deg, #4caf50 var(--success), #f44336 var(--error));
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .bar-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 RSS エラー分析レポート</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">テスト実行日時: <span id="testDate"></span></p>
+    </div>
+
+    <div class="summary">
+        <div class="stat-card success">
+            <div class="stat-label">✅ 成功</div>
+            <div class="stat-value" style="color: #4caf50;">25</div>
+            <div class="stat-label">27.5%</div>
+        </div>
+        <div class="stat-card error">
+            <div class="stat-label">❌ エラー</div>
+            <div class="stat-value" style="color: #f44336;">66</div>
+            <div class="stat-label">72.5%</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-label">🔧 自動修正</div>
+            <div class="stat-value" style="color: #ff9800;">1</div>
+            <div class="stat-label">1.1%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">📰 総記事数</div>
+            <div class="stat-value" style="color: #2196f3;">2111</div>
+            <div class="stat-label">成功フィードから</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h3>成功率グラフ</h3>
+        <div class="bar" style="--success: 27.5%; --error: 72.5%;">
+            <div class="bar-label">成功 27.5% | エラー 72.5%</div>
+        </div>
+    </div>
+
+    <div class="analysis-section">
+        <h2>🔍 エラー原因分析</h2>
+        <div id="errorAnalysis"></div>
+    </div>
+
+    <div class="analysis-section">
+        <h2>📋 カテゴリ別エラー率</h2>
+        <div id="categoryAnalysis"></div>
+    </div>
+
+    <div class="analysis-section">
+        <h2>💡 推奨アクション</h2>
+        <div class="recommendation">
+            <h3>エラー率が高い原因と対策</h3>
+            <ul>
+                <li><strong>CORS エラー（推定50%以上）</strong>
+                    <ul>
+                        <li>多くの官公庁・企業サイトがCORS制限あり</li>
+                        <li>対策: CORS回避サービスの設定確認</li>
+                    </ul>
+                </li>
+                <li><strong>SSL/証明書エラー</strong>
+                    <ul>
+                        <li>HTTPSでないサイト、期限切れ証明書</li>
+                        <li>対策: HTTPサイトは代替URLを検討</li>
+                    </ul>
+                </li>
+                <li><strong>404/サービス終了</strong>
+                    <ul>
+                        <li>古いRSSフィードURL</li>
+                        <li>対策: 最新のURLに更新または削除</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="disableAllErrors()">🚫 エラーフィードを全て無効化</button>
+            <button onclick="keepOnlySuccess()">✅ 成功フィードのみ残す</button>
+            <button onclick="exportSuccessFeeds()">💾 成功フィードをエクスポート</button>
+            <button onclick="findAlternatives()">🔄 代替フィード提案</button>
+        </div>
+    </div>
+
+    <div class="analysis-section">
+        <h2>✅ 正常動作フィード（25件）</h2>
+        <div id="successFeeds"></div>
+    </div>
+
+    <div class="analysis-section">
+        <h2>❌ エラーフィード詳細（66件）</h2>
+        <div id="errorFeeds"></div>
+    </div>
+
+    <script>
+        document.getElementById('testDate').textContent = new Date().toLocaleString('ja-JP');
+
+        function analyzeErrors() {
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            
+            // エラータイプ別集計
+            const errorTypes = {};
+            const categoryErrors = {};
+            const successList = [];
+            const errorList = [];
+            
+            feeds.forEach(feed => {
+                const hasError = (feed.errorType && feed.errorType !== '') || 
+                                feed.status === 'エラー' || 
+                                feed.status === '❌ エラー';
+                
+                if (hasError) {
+                    errorList.push(feed);
+                    const type = feed.errorType || 'ステータスエラー';
+                    errorTypes[type] = (errorTypes[type] || 0) + 1;
+                    
+                    const category = feed.category || '未分類';
+                    if (!categoryErrors[category]) {
+                        categoryErrors[category] = { error: 0, total: 0 };
+                    }
+                    categoryErrors[category].error++;
+                    categoryErrors[category].total++;
+                } else if (feed.status === '✅ OK' || feed.status === 'OK') {
+                    successList.push(feed);
+                    const category = feed.category || '未分類';
+                    if (!categoryErrors[category]) {
+                        categoryErrors[category] = { error: 0, total: 0 };
+                    }
+                    categoryErrors[category].total++;
+                }
+            });
+            
+            // エラータイプ表示
+            let errorHtml = '<table><thead><tr><th>エラータイプ</th><th>件数</th><th>割合</th></tr></thead><tbody>';
+            Object.entries(errorTypes).sort((a, b) => b[1] - a[1]).forEach(([type, count]) => {
+                const percentage = ((count / errorList.length) * 100).toFixed(1);
+                errorHtml += `<tr><td>${type}</td><td>${count}</td><td>${percentage}%</td></tr>`;
+            });
+            errorHtml += '</tbody></table>';
+            document.getElementById('errorAnalysis').innerHTML = errorHtml;
+            
+            // カテゴリ別表示
+            let categoryHtml = '<table><thead><tr><th>カテゴリ</th><th>エラー/総数</th><th>エラー率</th></tr></thead><tbody>';
+            Object.entries(categoryErrors).sort((a, b) => b[1].error - a[1].error).forEach(([category, stats]) => {
+                const errorRate = ((stats.error / stats.total) * 100).toFixed(1);
+                const barColor = errorRate > 70 ? '#f44336' : errorRate > 30 ? '#ff9800' : '#4caf50';
+                categoryHtml += `<tr>
+                    <td><span class="category-badge">${category}</span></td>
+                    <td>${stats.error} / ${stats.total}</td>
+                    <td><strong style="color: ${barColor}">${errorRate}%</strong></td>
+                </tr>`;
+            });
+            categoryHtml += '</tbody></table>';
+            document.getElementById('categoryAnalysis').innerHTML = categoryHtml;
+            
+            // 成功フィード表示
+            let successHtml = '<table><thead><tr><th>名前</th><th>カテゴリ</th><th>記事数</th></tr></thead><tbody>';
+            successList.forEach(feed => {
+                successHtml += `<tr>
+                    <td>${feed.name}</td>
+                    <td><span class="category-badge">${feed.category || '未分類'}</span></td>
+                    <td>${feed.articleCount || '-'}</td>
+                </tr>`;
+            });
+            successHtml += '</tbody></table>';
+            document.getElementById('successFeeds').innerHTML = successHtml;
+            
+            // エラーフィード表示
+            let errorHtml2 = '<table><thead><tr><th>名前</th><th>カテゴリ</th><th>エラータイプ</th><th>URL</th></tr></thead><tbody>';
+            errorList.forEach(feed => {
+                const errorType = feed.errorType || feed.status || 'エラー';
+                errorHtml2 += `<tr>
+                    <td>${feed.name}</td>
+                    <td><span class="category-badge">${feed.category || '未分類'}</span></td>
+                    <td><span class="error-type error-cors">${errorType}</span></td>
+                    <td style="font-size: 11px; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${feed.url}</td>
+                </tr>`;
+            });
+            errorHtml2 += '</tbody></table>';
+            document.getElementById('errorFeeds').innerHTML = errorHtml2;
+        }
+
+        function disableAllErrors() {
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            let disabledCount = 0;
+            
+            feeds.forEach(feed => {
+                if ((feed.errorType && feed.errorType !== '') || 
+                    feed.status === 'エラー' || 
+                    feed.status === '❌ エラー') {
+                    feed.active = false;
+                    disabledCount++;
+                }
+            });
+            
+            localStorage.setItem('rss-feeds', JSON.stringify(feeds));
+            alert(`${disabledCount}件のエラーフィードを無効化しました`);
+            location.reload();
+        }
+
+        function keepOnlySuccess() {
+            if (!confirm('エラーフィードを全て削除し、成功フィードのみ残しますか？')) return;
+            
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            const successFeeds = feeds.filter(feed => 
+                feed.status === '✅ OK' || feed.status === 'OK'
+            );
+            
+            localStorage.setItem('rss-feeds', JSON.stringify(successFeeds));
+            alert(`${successFeeds.length}件の成功フィードのみ残しました`);
+            location.reload();
+        }
+
+        function exportSuccessFeeds() {
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            const successFeeds = feeds.filter(feed => 
+                feed.status === '✅ OK' || feed.status === 'OK'
+            );
+            
+            const exportData = successFeeds.map(feed => ({
+                name: feed.name,
+                url: feed.url,
+                category: feed.category
+            }));
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', `working-feeds-${new Date().toISOString().split('T')[0]}.json`);
+            linkElement.click();
+            
+            alert(`${successFeeds.length}件の成功フィードをエクスポートしました`);
+        }
+
+        function findAlternatives() {
+            alert('代替フィード提案機能は開発中です。\n\nエラーの多いカテゴリ:\n- G7官公庁系: 別のRSS配信サービスを検討\n- 中国AI企業: プロキシ経由でのアクセスを検討\n- EU機関: 公式APIの利用を検討');
+        }
+
+        // ページロード時に分析実行
+        analyzeErrors();
+    </script>
+</body>
+</html>

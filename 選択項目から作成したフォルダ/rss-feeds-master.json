@@ -1,0 +1,457 @@
+[
+  {
+    "name": "GIGAZINE",
+    "url": "https://gigazine.net/news/rss_2.0/",
+    "category": "テクノロジー"
+  },
+  {
+    "name": "ITmedia AI+",
+    "url": "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
+    "category": "AI・機械学習"
+  },
+  {
+    "name": "NIST",
+    "url": "https://www.nist.gov/news-events/news/rss.xml",
+    "category": "G7官公庁 - アメリカ"
+  },
+  {
+    "name": "UK Government Digital Service",
+    "url": "https://gds.blog.gov.uk/feed/",
+    "category": "G7官公庁 - イギリス"
+  },
+  {
+    "name": "DCMS",
+    "url": "https://www.gov.uk/government/organisations/department-for-digital-culture-media-sport.atom",
+    "category": "G7官公庁 - イギリス"
+  },
+  {
+    "name": "UKRI",
+    "url": "https://www.ukri.org/feed/",
+    "category": "G7官公庁 - イギリス"
+  },
+  {
+    "name": "European Commission - Digital",
+    "url": "https://digital-strategy.ec.europa.eu/rss.xml",
+    "category": "EU機関"
+  },
+  {
+    "name": "Boston Dynamics",
+    "url": "https://www.bostondynamics.com/rss.xml",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "Universal Robots",
+    "url": "https://www.universal-robots.com/blog/rss/",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "ファナック",
+    "url": "https://www.fanuc.co.jp/rss/news.xml",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "安川電機",
+    "url": "https://www.yaskawa.co.jp/rss/news.xml",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "ABB Robotics",
+    "url": "https://new.abb.com/news/rss",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "KUKA",
+    "url": "https://www.kuka.com/en-de/press/news/rss",
+    "category": "ロボット企業"
+  },
+  {
+    "name": "Waymo",
+    "url": "https://waymo.com/blog/rss/",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Cruise",
+    "url": "https://getcruise.com/news/rss/",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Aurora",
+    "url": "https://aurora.tech/blog/rss",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Mobileye",
+    "url": "https://www.mobileye.com/feed/",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Baidu Apollo",
+    "url": "http://apollo.auto/feed.xml",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Tesla",
+    "url": "https://www.tesla.com/blog/rss",
+    "category": "自動運転企業"
+  },
+  {
+    "name": "Qualcomm",
+    "url": "https://www.qualcomm.com/news/rss",
+    "category": "通信企業"
+  },
+  {
+    "name": "Ericsson",
+    "url": "https://www.ericsson.com/en/news/rss",
+    "category": "通信企業"
+  },
+  {
+    "name": "Nokia",
+    "url": "https://www.nokia.com/about-us/news/releases/rss.xml",
+    "category": "通信企業"
+  },
+  {
+    "name": "Huawei",
+    "url": "https://www.huawei.com/en/news/rss",
+    "category": "通信企業"
+  },
+  {
+    "name": "Cisco",
+    "url": "https://newsroom.cisco.com/c/allnews.rss",
+    "category": "通信企業"
+  },
+  {
+    "name": "NTT R&D",
+    "url": "https://www.rd.ntt/rss/",
+    "category": "通信企業"
+  },
+  {
+    "name": "White House - Technology",
+    "url": "https://www.whitehouse.gov/feed/",
+    "category": "G7官公庁 - アメリカ"
+  },
+  {
+    "name": "FCC",
+    "url": "https://www.fcc.gov/rss/blog/rss.xml",
+    "category": "G7官公庁 - アメリカ"
+  },
+  {
+    "name": "NSF",
+    "url": "https://www.nsf.gov/news/RSS/rss.xml",
+    "category": "G7官公庁 - アメリカ"
+  },
+  {
+    "name": "デジタル庁",
+    "url": "https://www.digital.go.jp/feed/",
+    "category": "G7官公庁 - 日本"
+  },
+  {
+    "name": "総務省",
+    "url": "https://www.soumu.go.jp/news/rss/index.xml",
+    "category": "G7官公庁 - 日本"
+  },
+  {
+    "name": "経済産業省",
+    "url": "https://www.meti.go.jp/news/rss/index.xml",
+    "category": "G7官公庁 - 日本"
+  },
+  {
+    "name": "NEDO",
+    "url": "https://www.nedo.go.jp/news/rss/index.xml",
+    "category": "G7官公庁 - 日本"
+  },
+  {
+    "name": "BMWK",
+    "url": "https://www.bmwk.de/Navigation/DE/Service/RSS/rss.xml",
+    "category": "G7官公庁 - ドイツ"
+  },
+  {
+    "name": "BMBF",
+    "url": "https://www.bmbf.de/SiteGlobals/Functions/RSSFeed/BMBF_RSSNewsfeed.xml",
+    "category": "G7官公庁 - ドイツ"
+  },
+  {
+    "name": "BSI",
+    "url": "https://www.bsi.bund.de/SharedDocs/RSS/DE/BSI-Presse.xml",
+    "category": "G7官公庁 - ドイツ"
+  },
+  {
+    "name": "Ministère de l'Économie",
+    "url": "https://www.economie.gouv.fr/rss/actu",
+    "category": "G7官公庁 - フランス"
+  },
+  {
+    "name": "ANSSI",
+    "url": "https://www.ssi.gouv.fr/feed/",
+    "category": "G7官公庁 - フランス"
+  },
+  {
+    "name": "Inria",
+    "url": "https://www.inria.fr/fr/feeds/actualites.xml",
+    "category": "G7官公庁 - フランス"
+  },
+  {
+    "name": "AGID",
+    "url": "https://www.agid.gov.it/it/rss.xml",
+    "category": "G7官公庁 - イタリア"
+  },
+  {
+    "name": "MISE",
+    "url": "https://www.mise.gov.it/index.php/it/?format=feed",
+    "category": "G7官公庁 - イタリア"
+  },
+  {
+    "name": "ISED Canada",
+    "url": "https://www.canada.ca/en/innovation-science-economic-development.rss",
+    "category": "G7官公庁 - カナダ"
+  },
+  {
+    "name": "Canadian Digital Service",
+    "url": "https://digital.canada.ca/feed.xml",
+    "category": "G7官公庁 - カナダ"
+  },
+  {
+    "name": "NRC Canada",
+    "url": "https://nrc.canada.ca/en/rss/news",
+    "category": "G7官公庁 - カナダ"
+  },
+  {
+    "name": "European Commission - Digital",
+    "url": "https://digital-strategy.ec.europa.eu/en/news-redirect/rss.xml",
+    "category": "EU機関"
+  },
+  {
+    "name": "ENISA",
+    "url": "https://www.enisa.europa.eu/front-page/RSS",
+    "category": "EU機関"
+  },
+  {
+    "name": "TechCrunch Japan",
+    "url": "https://techcrunch.com/feed/",
+    "category": "テクノロジー"
+  },
+  {
+    "name": "OpenAI Blog",
+    "url": "https://openai.com/news/rss.xml",
+    "category": "AI研究機関"
+  },
+  {
+    "name": "Google AI Blog",
+    "url": "https://blog.google/technology/ai/rss/",
+    "category": "AI研究機関"
+  },
+  {
+    "name": "DeepMind Blog",
+    "url": "https://deepmind.google/blog/rss.xml",
+    "category": "AI研究機関"
+  },
+  {
+    "name": "Microsoft AI Blog",
+    "url": "https://blogs.microsoft.com/ai/feed/",
+    "category": "AI研究機関"
+  },
+  {
+    "name": "arXiv AI",
+    "url": "https://export.arxiv.org/rss/cs.AI",
+    "category": "学術論文"
+  },
+  {
+    "name": "arXiv Machine Learning",
+    "url": "https://export.arxiv.org/rss/cs.LG",
+    "category": "学術論文"
+  },
+  {
+    "name": "arXiv Neural Computing",
+    "url": "https://export.arxiv.org/rss/cs.NE",
+    "category": "学術論文"
+  },
+  {
+    "name": "MIT CSAIL News",
+    "url": "https://www.csail.mit.edu/rss.xml",
+    "category": "大学研究機関"
+  },
+  {
+    "name": "理化学研究所 AIP",
+    "url": "https://aip.riken.jp/feed/",
+    "category": "日本のAI研究"
+  },
+  {
+    "name": "Preferred Networks",
+    "url": "https://tech.preferred.jp/ja/blog/feed/",
+    "category": "日本のAI企業"
+  },
+  {
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog/feed.xml",
+    "category": "AI企業"
+  },
+  {
+    "name": "AWS ML Blog",
+    "url": "https://aws.amazon.com/blogs/machine-learning/feed/",
+    "category": "クラウドAI"
+  },
+  {
+    "name": "TechCrunch Japan",
+    "url": "https://jp.techcrunch.com/feed/",
+    "category": "テクノロジー"
+  },
+  {
+    "name": "DeepSeek",
+    "url": "https://www.deepseek.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "DeepSeek GitHub",
+    "url": "https://github.com/deepseek-ai.atom",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Baidu AI (ERNIE)",
+    "url": "http://ai.baidu.com/rss/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Baidu Research",
+    "url": "http://research.baidu.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Alibaba Cloud AI",
+    "url": "https://www.alibabacloud.com/blog/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Alibaba DAMO Academy",
+    "url": "https://damo.alibaba.com/labs/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "ModelScope (Alibaba)",
+    "url": "https://modelscope.cn/api/v1/models/feed.rss",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "ByteDance AI Lab",
+    "url": "https://ailab.bytedance.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "ByteDance Research",
+    "url": "https://research.bytedance.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Tencent AI Lab",
+    "url": "https://ai.tencent.com/ailab/en/rss/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Tencent Cloud AI",
+    "url": "https://cloud.tencent.com/developer/feed",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "SenseTime",
+    "url": "https://www.sensetime.com/en/news/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Megvii",
+    "url": "https://en.megvii.com/news/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "iFLYTEK",
+    "url": "https://www.iflytek.com/en/news/rss.xml",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Huawei AI",
+    "url": "https://www.huawei.com/en/news/ai/rss",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "JD AI Research",
+    "url": "https://air.jd.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Xiaomi AI",
+    "url": "https://ai.xiaomi.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "Zhipu AI",
+    "url": "https://www.zhipuai.cn/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "01.AI (Yi)",
+    "url": "https://01.ai/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "MiniMax",
+    "url": "https://www.minimaxi.com/feed/",
+    "category": "中国AI企業"
+  },
+  {
+    "name": "AI科技評論",
+    "url": "https://www.leiphone.com/category/ai/feed",
+    "category": "中国AI関連ニュース"
+  },
+  {
+    "name": "36Kr AI",
+    "url": "https://36kr.com/feed/section/ai",
+    "category": "中国AI関連ニュース"
+  },
+  {
+    "name": "機器之心",
+    "url": "https://www.jiqizhixin.com/rss",
+    "category": "中国AI関連ニュース"
+  },
+  {
+    "name": "量子位",
+    "url": "https://www.qbitai.com/feed",
+    "category": "中国AI関連ニュース"
+  },
+  {
+    "name": "PaperWeekly",
+    "url": "https://www.paperweekly.site/feed/",
+    "category": "中国AI関連ニュース"
+  },
+  {
+    "name": "中国科学院",
+    "url": "http://www.cas.cn/rss/kydt.xml",
+    "category": "中国政府・研究機関"
+  },
+  {
+    "name": "清華大学AI研究院",
+    "url": "https://ai.tsinghua.edu.cn/feed/",
+    "category": "中国政府・研究機関"
+  },
+  {
+    "name": "北京大学AI研究院",
+    "url": "https://ai.pku.edu.cn/feed/",
+    "category": "中国政府・研究機関"
+  },
+  {
+    "name": "MIIT（工業情報化部）",
+    "url": "https://www.miit.gov.cn/rss/index.xml",
+    "category": "中国政府・研究機関"
+  },
+  {
+    "name": "CAC（网信办）",
+    "url": "http://www.cac.gov.cn/rss.xml",
+    "category": "中国政府・研究機関"
+  },
+  {
+    "name": "Ledge.ai",
+    "url": "https://ledge.ai/rss/",
+    "category": "AI・機械学習"
+  },
+  {
+    "name": "google",
+    "url": "https://news.google.com/rss/topics/CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE5mTTJRU0FtcGhLQUFQAQ?hl=ja&gl=JP&ceid=JP:ja",
+    "category": ""
+  }
+]

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 回避サービステストツール</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .service-card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ccc;
+        }
+        .service-card.testing {
+            border-left-color: #2196f3;
+            background: #e3f2fd;
+        }
+        .service-card.success {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+        .service-card.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .service-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .service-status {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        input[type="url"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .results {
+            margin: 20px 0;
+        }
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .result-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .result-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .result-info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .recommendation {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 CORS 回避サービステストツール</h1>
+        
+        <div class="input-group">
+            <input type="url" id="testUrl" placeholder="テストするRSS URLを入力（例: https://gigazine.net/news/rss_2.0/）" 
+                   value="https://gigazine.net/news/rss_2.0/">
+            <button onclick="testAllServices()" id="testBtn">全サービステスト</button>
+            <button onclick="testErrorFeeds()">エラーフィード一括テスト</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 テスト対象サービス</h2>
+            
+            <div class="service-card" id="service-cloudflare">
+                <div class="service-name">1. Cloudflare Worker (現在使用中)</div>
+                <div class="service-status">URL: https://polished-snow-477a.yutapii.workers.dev</div>
+                <div class="service-result"></div>
+            </div>
+
+            <div class="service-card" id="service-rss2json">
+                <div class="service-name">2. RSS2JSON API</div>
+                <div class="service-status">URL: https://api.rss2json.com/v1/api.json</div>
+                <div class="service-result"></div>
+            </div>
+
+            <div class="service-card" id="service-allorigins">
+                <div class="service-name">3. AllOrigins</div>
+                <div class="service-status">URL: https://api.allorigins.win/raw</div>
+                <div class="service-result"></div>
+            </div>
+
+            <div class="service-card" id="service-cors-anywhere">
+                <div class="service-name">4. CORS Anywhere (要自己ホスト)</div>
+                <div class="service-status">URL: https://cors-anywhere.herokuapp.com/</div>
+                <div class="service-result"></div>
+            </div>
+
+            <div class="service-card" id="service-direct">
+                <div class="service-name">5. 直接アクセス（CORS無視）</div>
+                <div class="service-status">ブラウザの直接fetch</div>
+                <div class="service-result"></div>
+            </div>
+        </div>
+
+        <div class="results" id="results"></div>
+
+        <div class="recommendation" id="recommendation" style="display:none;">
+            <h3>💡 推奨設定</h3>
+            <div id="recommendationContent"></div>
+        </div>
+
+        <div class="test-section" style="display:none;" id="errorFeedsSection">
+            <h2>❌ エラーフィードのテスト結果</h2>
+            <div id="errorFeedsResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const corsServices = [
+            {
+                id: 'cloudflare',
+                name: 'Cloudflare Worker',
+                test: async (url) => {
+                    const proxyUrl = `https://polished-snow-477a.yutapii.workers.dev?url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl, {
+                        mode: 'cors',
+                        credentials: 'omit',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const text = await response.text();
+                    return { success: response.ok, data: text.substring(0, 500), responseHeaders: response.headers };
+                }
+            },
+            {
+                id: 'rss2json',
+                name: 'RSS2JSON',
+                test: async (url) => {
+                    const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl, {
+                        mode: 'cors',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const data = await response.json();
+                    return { 
+                        success: data.status === 'ok', 
+                        data: JSON.stringify(data).substring(0, 500),
+                        itemCount: data.items ? data.items.length : 0
+                    };
+                }
+            },
+            {
+                id: 'allorigins',
+                name: 'AllOrigins',
+                test: async (url) => {
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl, {
+                        mode: 'cors',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const text = await response.text();
+                    return { success: response.ok, data: text.substring(0, 500) };
+                }
+            },
+            {
+                id: 'cors-anywhere',
+                name: 'CORS Anywhere',
+                test: async (url) => {
+                    // Note: デフォルトのHeroku版は制限があるため、通常は失敗します
+                    const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+                    const response = await fetch(proxyUrl, {
+                        mode: 'cors',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const text = await response.text();
+                    return { success: response.ok, data: text.substring(0, 500) };
+                }
+            },
+            {
+                id: 'direct',
+                name: '直接アクセス',
+                test: async (url) => {
+                    const response = await fetch(url, {
+                        mode: 'cors',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const text = await response.text();
+                    return { success: response.ok, data: text.substring(0, 500) };
+                }
+            }
+        ];
+
+        async function testAllServices() {
+            const url = document.getElementById('testUrl').value;
+            if (!url) {
+                alert('URLを入力してください');
+                return;
+            }
+
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('results').innerHTML = '<div class="result-info">テスト実行中...</div>';
+            
+            const results = [];
+            const successServices = [];
+
+            for (const service of corsServices) {
+                const card = document.getElementById(`service-${service.id}`);
+                card.className = 'service-card testing';
+                card.querySelector('.service-result').innerHTML = 'テスト中...';
+
+                try {
+                    const startTime = performance.now();
+                    const result = await service.test(url);
+                    const endTime = performance.now();
+                    const responseTime = (endTime - startTime).toFixed(0);
+
+                    if (result.success) {
+                        card.className = 'service-card success';
+                        card.querySelector('.service-result').innerHTML = 
+                            `✅ 成功 (${responseTime}ms) ${result.itemCount ? `- ${result.itemCount}件の記事` : ''}`;
+                        successServices.push(service.name);
+                        
+                        // データサンプル表示
+                        if (result.data) {
+                            const preview = document.createElement('pre');
+                            preview.textContent = result.data;
+                            preview.style.maxHeight = '100px';
+                            preview.style.overflow = 'hidden';
+                            card.querySelector('.service-result').appendChild(preview);
+                        }
+                    } else {
+                        throw new Error('Response not OK');
+                    }
+
+                    results.push({
+                        service: service.name,
+                        success: true,
+                        responseTime: responseTime,
+                        itemCount: result.itemCount
+                    });
+
+                } catch (error) {
+                    card.className = 'service-card error';
+                    card.querySelector('.service-result').innerHTML = 
+                        `❌ エラー: ${error.message}`;
+                    
+                    results.push({
+                        service: service.name,
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+
+            // 結果サマリー
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="result-info">
+                    テスト完了: ${successServices.length}/${corsServices.length} サービスが成功
+                </div>
+                ${successServices.length > 0 ? 
+                    `<div class="result-success">✅ 利用可能: ${successServices.join(', ')}</div>` : 
+                    '<div class="result-error">❌ 利用可能なサービスがありません</div>'
+                }
+            `;
+
+            // 推奨設定
+            if (successServices.length > 0) {
+                showRecommendation(results, url);
+            }
+
+            document.getElementById('testBtn').disabled = false;
+        }
+
+        function showRecommendation(results, testUrl) {
+            const successResults = results.filter(r => r.success);
+            const recommendation = document.getElementById('recommendation');
+            const content = document.getElementById('recommendationContent');
+            
+            let html = '<ol>';
+            
+            if (successResults.some(r => r.service === 'RSS2JSON')) {
+                html += '<li><strong>RSS2JSON</strong>を優先推奨（記事数取得可能、安定性高）</li>';
+            }
+            
+            if (successResults.some(r => r.service === 'Cloudflare Worker')) {
+                html += '<li><strong>Cloudflare Worker</strong>は動作するが、カスタマイズが必要かも</li>';
+            }
+            
+            if (successResults.some(r => r.service === 'AllOrigins')) {
+                html += '<li><strong>AllOrigins</strong>はバックアップとして利用可能</li>';
+            }
+            
+            html += '</ol>';
+            
+            html += '<h4>実装コード例:</h4>';
+            html += '<pre>';
+            if (successResults.some(r => r.service === 'RSS2JSON')) {
+                html += `// RSS2JSON を使用
+const proxyUrl = \`https://api.rss2json.com/v1/api.json?rss_url=\${encodeURIComponent(feedUrl)}\`;
+const response = await fetch(proxyUrl);
+const data = await response.json();
+if (data.status === 'ok') {
+    const articles = data.items; // 記事配列
+}`;
+            } else if (successResults.some(r => r.service === 'AllOrigins')) {
+                html += `// AllOrigins を使用
+const proxyUrl = \`https://api.allorigins.win/raw?url=\${encodeURIComponent(feedUrl)}\`;
+const response = await fetch(proxyUrl);
+const xmlText = await response.text();
+// XMLをパース`;
+            }
+            html += '</pre>';
+            
+            content.innerHTML = html;
+            recommendation.style.display = 'block';
+        }
+
+        async function testErrorFeeds() {
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            const errorFeeds = feeds.filter(feed => 
+                (feed.errorType && feed.errorType !== '') || 
+                feed.status === 'エラー' || 
+                feed.status === '❌ エラー'
+            );
+
+            if (errorFeeds.length === 0) {
+                alert('エラーフィードがありません');
+                return;
+            }
+
+            document.getElementById('errorFeedsSection').style.display = 'block';
+            const resultsDiv = document.getElementById('errorFeedsResults');
+            resultsDiv.innerHTML = `<div class="result-info">エラーフィード ${errorFeeds.length}件をテスト中...</div>`;
+
+            const testResults = [];
+            
+            for (const feed of errorFeeds.slice(0, 10)) { // 最初の10件のみテスト
+                const result = { name: feed.name, url: feed.url, services: [] };
+                
+                for (const service of corsServices) {
+                    try {
+                        const testResult = await service.test(feed.url);
+                        if (testResult.success) {
+                            result.services.push(service.name);
+                        }
+                    } catch (error) {
+                        // エラーは無視
+                    }
+                }
+                
+                testResults.push(result);
+            }
+
+            // 結果表示
+            let html = '<table style="width:100%; border-collapse: collapse;">';
+            html += '<thead><tr><th>フィード名</th><th>動作するサービス</th></tr></thead><tbody>';
+            
+            testResults.forEach(result => {
+                html += '<tr>';
+                html += `<td style="padding: 8px; border: 1px solid #ddd;">${result.name}</td>`;
+                html += `<td style="padding: 8px; border: 1px solid #ddd;">`;
+                if (result.services.length > 0) {
+                    html += `✅ ${result.services.join(', ')}`;
+                } else {
+                    html += '❌ なし';
+                }
+                html += '</td></tr>';
+            });
+            
+            html += '</tbody></table>';
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // ページロード時に自動テスト
+        window.addEventListener('load', () => {
+            // 必要に応じて自動実行
+            // testAllServices();
+        });
+    </script>
+</body>
+</html>

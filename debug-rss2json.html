@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS2JSON デバッグツール</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .container {
+            background: #2d2d2d;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #fff;
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #3d3d3d;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+        .status-ok {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .status-warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ff5252;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            color: #aed581;
+            border: 1px solid #444;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            font-family: monospace;
+            font-size: 12px;
+            border-left: 3px solid #555;
+            padding-left: 10px;
+        }
+        .log-success {
+            border-left-color: #4caf50;
+            color: #81c784;
+        }
+        .log-error {
+            border-left-color: #f44336;
+            color: #ef5350;
+        }
+        .log-info {
+            border-left-color: #2196f3;
+            color: #64b5f6;
+        }
+        .api-key-display {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 RSS2JSON デバッグツール</h1>
+        
+        <div class="debug-section">
+            <h2>1️⃣ API Key 詳細チェック</h2>
+            <button onclick="checkApiKeyDetails()">詳細確認</button>
+            <div id="apiKeyDetails"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>2️⃣ 直接API呼び出しテスト</h2>
+            <button onclick="directApiTest()">GIGAZINEでテスト</button>
+            <button onclick="testMultipleFeeds()">複数フィードテスト</button>
+            <div id="apiTestResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>3️⃣ 05_rss-reader 実装確認</h2>
+            <button onclick="check05Implementation()">実装状態確認</button>
+            <div id="implementationCheck"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>4️⃣ フィード別状態</h2>
+            <button onclick="analyzeFeedStatus()">フィード分析</button>
+            <div id="feedAnalysis"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>5️⃣ 完全リセット</h2>
+            <button onclick="fullReset()" style="background: #f44336;">⚠️ 全データリセット</button>
+            <button onclick="reloadApiKey()">API Key再読み込み</button>
+            <div id="resetResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>📋 実行ログ</h2>
+            <div id="debugLog"></div>
+        </div>
+    </div>
+
+    <script src="40_settings/api-config.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debugLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function checkApiKeyDetails() {
+            const detailsDiv = document.getElementById('apiKeyDetails');
+            const localStorageKey = localStorage.getItem('rss2json-api-key');
+            const configKey = typeof API_CONFIG !== 'undefined' ? API_CONFIG.RSS2JSON_API_KEY : 'undefined';
+            
+            let html = '<h3>API Key 状態</h3>';
+            
+            // LocalStorage
+            if (localStorageKey) {
+                html += `<p class="status-ok">✅ LocalStorage: 設定済み</p>`;
+                html += `<div class="api-key-display">Key: ${localStorageKey}</div>`;
+                html += `<p>長さ: ${localStorageKey.length}文字</p>`;
+            } else {
+                html += `<p class="status-error">❌ LocalStorage: 未設定</p>`;
+            }
+            
+            // api-config.js
+            if (configKey && configKey !== 'undefined' && configKey !== '') {
+                html += `<p class="status-ok">✅ api-config.js: 設定済み</p>`;
+                html += `<div class="api-key-display">Key: ${configKey}</div>`;
+                html += `<p>長さ: ${configKey.length}文字</p>`;
+            } else {
+                html += `<p class="status-error">❌ api-config.js: 未設定または空</p>`;
+            }
+            
+            // 一致確認
+            if (localStorageKey && configKey && localStorageKey === configKey) {
+                html += `<p class="status-ok">✅ 両方一致</p>`;
+            } else if (localStorageKey !== configKey) {
+                html += `<p class="status-warning">⚠️ LocalStorageとapi-config.jsが不一致</p>`;
+            }
+            
+            detailsDiv.innerHTML = html;
+            log('API Key詳細確認完了', 'info');
+        }
+
+        async function directApiTest() {
+            const resultDiv = document.getElementById('apiTestResult');
+            const apiKey = localStorage.getItem('rss2json-api-key');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<p class="status-error">❌ API Keyが設定されていません</p>';
+                log('API Key未設定', 'error');
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>テスト実行中...</p>';
+            log(`API Keyでテスト開始: ${apiKey.substring(0, 10)}...`, 'info');
+            
+            try {
+                // テスト1: API Keyあり
+                const url1 = `https://api.rss2json.com/v1/api.json?rss_url=https://gigazine.net/news/rss_2.0/&api_key=${apiKey}&count=2`;
+                log(`リクエストURL: ${url1}`, 'info');
+                
+                const response1 = await fetch(url1);
+                const data1 = await response1.json();
+                
+                let html = '<h3>API Key付きリクエスト結果</h3>';
+                if (data1.status === 'ok') {
+                    html += `<p class="status-ok">✅ 成功: ${data1.items.length}件取得</p>`;
+                    html += `<pre>${JSON.stringify(data1.feed, null, 2)}</pre>`;
+                    log(`成功: ${data1.items.length}件取得`, 'success');
+                } else {
+                    html += `<p class="status-error">❌ エラー: ${data1.message}</p>`;
+                    log(`エラー: ${data1.message}`, 'error');
+                }
+                
+                // テスト2: API Keyなし（比較用）
+                const url2 = `https://api.rss2json.com/v1/api.json?rss_url=https://gigazine.net/news/rss_2.0/&count=2`;
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();
+                
+                html += '<h3>API Keyなしリクエスト結果（比較）</h3>';
+                if (data2.status === 'ok') {
+                    html += `<p class="status-warning">⚠️ API Keyなしでも動作（無料枠）</p>`;
+                } else {
+                    html += `<p class="status-info">ℹ️ ${data2.message}</p>`;
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="status-error">❌ エラー: ${error.message}</p>`;
+                log(`エラー: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMultipleFeeds() {
+            const resultDiv = document.getElementById('apiTestResult');
+            const apiKey = localStorage.getItem('rss2json-api-key');
+            
+            const testFeeds = [
+                'https://techcrunch.com/feed/',
+                'https://www.theverge.com/rss/index.xml',
+                'https://feeds.feedburner.com/hatena/b/hotentry',
+                'https://blog.google/technology/ai/rss/',
+                'https://www.bmbf.de/SiteGlobals/Functions/RSSFeed/BMBF_RSSNewsfeed.xml'
+            ];
+            
+            resultDiv.innerHTML = '<h3>複数フィードテスト中...</h3>';
+            let results = [];
+            
+            for (const feedUrl of testFeeds) {
+                try {
+                    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&api_key=${apiKey}&count=1`;
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    
+                    const domain = new URL(feedUrl).hostname;
+                    if (data.status === 'ok') {
+                        results.push(`✅ ${domain}: 成功`);
+                        log(`${domain}: 成功`, 'success');
+                    } else {
+                        results.push(`❌ ${domain}: ${data.message}`);
+                        log(`${domain}: ${data.message}`, 'error');
+                    }
+                } catch (error) {
+                    const domain = new URL(feedUrl).hostname;
+                    results.push(`❌ ${domain}: ${error.message}`);
+                    log(`${domain}: ${error.message}`, 'error');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            resultDiv.innerHTML = '<h3>テスト結果</h3>' + results.map(r => `<p>${r}</p>`).join('');
+        }
+
+        function check05Implementation() {
+            const checkDiv = document.getElementById('implementationCheck');
+            
+            // 05_rss-readerのtestFeed関数を確認
+            let html = '<h3>実装状態</h3>';
+            
+            // LocalStorageのフィードを確認
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            const successFeeds = feeds.filter(f => f.status === '✅ OK' || f.status === 'OK');
+            const rss2jsonFeeds = successFeeds.filter(f => f.message && f.message.includes('RSS2JSON'));
+            
+            html += `<p>総フィード数: ${feeds.length}</p>`;
+            html += `<p>成功フィード: ${successFeeds.length}</p>`;
+            html += `<p>RSS2JSON経由: ${rss2jsonFeeds.length}</p>`;
+            
+            if (rss2jsonFeeds.length === 0) {
+                html += '<p class="status-error">❌ RSS2JSONが使われていません！</p>';
+                html += '<p>原因: testFeed関数でRSS2JSONが優先されていない可能性</p>';
+            } else {
+                html += '<p class="status-ok">✅ RSS2JSONが使用されています</p>';
+                html += '<h4>RSS2JSON成功フィード:</h4>';
+                rss2jsonFeeds.slice(0, 5).forEach(feed => {
+                    html += `<p>・${feed.name}</p>`;
+                });
+            }
+            
+            checkDiv.innerHTML = html;
+            log('実装確認完了', 'info');
+        }
+
+        function analyzeFeedStatus() {
+            const analysisDiv = document.getElementById('feedAnalysis');
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            
+            const categories = {};
+            feeds.forEach(feed => {
+                const category = feed.category || '未分類';
+                if (!categories[category]) {
+                    categories[category] = { success: 0, error: 0, total: 0 };
+                }
+                categories[category].total++;
+                
+                if (feed.status === '✅ OK' || feed.status === 'OK') {
+                    categories[category].success++;
+                } else {
+                    categories[category].error++;
+                }
+            });
+            
+            let html = '<h3>カテゴリ別分析</h3><table style="width:100%;">';
+            html += '<tr><th>カテゴリ</th><th>成功</th><th>エラー</th><th>成功率</th></tr>';
+            
+            Object.entries(categories).forEach(([cat, stats]) => {
+                const rate = ((stats.success / stats.total) * 100).toFixed(1);
+                const rateClass = rate > 50 ? 'status-ok' : rate > 25 ? 'status-warning' : 'status-error';
+                html += `<tr>
+                    <td>${cat}</td>
+                    <td>${stats.success}</td>
+                    <td>${stats.error}</td>
+                    <td class="${rateClass}">${rate}%</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            analysisDiv.innerHTML = html;
+            log('フィード分析完了', 'info');
+        }
+
+        function fullReset() {
+            if (!confirm('全てのフィードデータをリセットしますか？')) return;
+            
+            const feeds = JSON.parse(localStorage.getItem('rss-feeds') || '[]');
+            feeds.forEach(feed => {
+                feed.status = '未テスト';
+                feed.lastChecked = null;
+                feed.errorType = null;
+                feed.articleCount = null;
+                feed.message = null;
+            });
+            localStorage.setItem('rss-feeds', JSON.stringify(feeds));
+            
+            document.getElementById('resetResult').innerHTML = 
+                '<p class="status-ok">✅ リセット完了。05_rss-readerで再テストしてください。</p>';
+            log('全データリセット完了', 'success');
+        }
+
+        function reloadApiKey() {
+            if (typeof API_CONFIG !== 'undefined' && API_CONFIG.RSS2JSON_API_KEY) {
+                localStorage.setItem('rss2json-api-key', API_CONFIG.RSS2JSON_API_KEY);
+                document.getElementById('resetResult').innerHTML = 
+                    `<p class="status-ok">✅ API Key再読み込み完了: ${API_CONFIG.RSS2JSON_API_KEY.substring(0, 20)}...</p>`;
+                log('API Key再読み込み完了', 'success');
+            } else {
+                document.getElementById('resetResult').innerHTML = 
+                    '<p class="status-error">❌ api-config.jsからAPI Keyを読み込めません</p>';
+                log('API Key読み込み失敗', 'error');
+            }
+        }
+
+        // ページ読み込み時
+        window.addEventListener('load', () => {
+            log('デバッグツール起動', 'info');
+            checkApiKeyDetails();
+        });
+    </script>
+</body>
+</html>

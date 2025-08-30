@@ -1,0 +1,426 @@
+{
+  "feeds": [
+    {
+      "category": "ロボット企業",
+      "feeds": [
+        {
+          "name": "Boston Dynamics",
+          "url": "https://www.bostondynamics.com/rss.xml",
+          "description": "Boston Dynamics - 先進ロボティクス",
+          "priority": "high",
+          "language": "en",
+          "tags": ["ロボット", "研究開発", "四足歩行"]
+        },
+        {
+          "name": "Universal Robots",
+          "url": "https://www.universal-robots.com/blog/rss/",
+          "description": "協働ロボットのリーディングカンパニー",
+          "priority": "high",
+          "language": "en",
+          "tags": ["協働ロボット", "産業用", "自動化"]
+        },
+        {
+          "name": "ファナック",
+          "url": "https://www.fanuc.co.jp/rss/news.xml",
+          "description": "日本の産業用ロボット大手",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["産業用ロボット", "FA", "日本"]
+        },
+        {
+          "name": "安川電機",
+          "url": "https://www.yaskawa.co.jp/rss/news.xml",
+          "description": "産業用ロボット・サーボモータ",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["産業用ロボット", "サーボ", "日本"]
+        },
+        {
+          "name": "ABB Robotics",
+          "url": "https://new.abb.com/news/rss",
+          "description": "ABBロボティクス部門",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["産業用ロボット", "自動化", "欧州"]
+        },
+        {
+          "name": "KUKA",
+          "url": "https://www.kuka.com/en-de/press/news/rss",
+          "description": "ドイツの産業用ロボットメーカー",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["産業用ロボット", "ドイツ", "自動化"]
+        }
+      ]
+    },
+    {
+      "category": "自動運転企業",
+      "feeds": [
+        {
+          "name": "Waymo",
+          "url": "https://waymo.com/blog/rss/",
+          "description": "Google系自動運転企業",
+          "priority": "high",
+          "language": "en",
+          "tags": ["自動運転", "Google", "Level4"]
+        },
+        {
+          "name": "Cruise",
+          "url": "https://getcruise.com/news/rss/",
+          "description": "GM系自動運転企業",
+          "priority": "high",
+          "language": "en",
+          "tags": ["自動運転", "GM", "ロボタクシー"]
+        },
+        {
+          "name": "Aurora",
+          "url": "https://aurora.tech/blog/rss",
+          "description": "自動運転技術開発",
+          "priority": "high",
+          "language": "en",
+          "tags": ["自動運転", "トラック", "配送"]
+        },
+        {
+          "name": "Mobileye",
+          "url": "https://www.mobileye.com/feed/",
+          "description": "Intel子会社・ADAS開発",
+          "priority": "high",
+          "language": "en",
+          "tags": ["ADAS", "Intel", "自動運転"]
+        },
+        {
+          "name": "Baidu Apollo",
+          "url": "http://apollo.auto/feed.xml",
+          "description": "百度の自動運転プラットフォーム",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["自動運転", "中国", "百度"]
+        },
+        {
+          "name": "Tesla",
+          "url": "https://www.tesla.com/blog/rss",
+          "description": "Tesla公式ブログ",
+          "priority": "high",
+          "language": "en",
+          "tags": ["EV", "自動運転", "FSD"]
+        }
+      ]
+    },
+    {
+      "category": "通信企業",
+      "feeds": [
+        {
+          "name": "Qualcomm",
+          "url": "https://www.qualcomm.com/news/rss",
+          "description": "通信チップ最大手",
+          "priority": "high",
+          "language": "en",
+          "tags": ["5G", "チップ", "モバイル"]
+        },
+        {
+          "name": "Ericsson",
+          "url": "https://www.ericsson.com/en/news/rss",
+          "description": "通信インフラ大手",
+          "priority": "high",
+          "language": "en",
+          "tags": ["5G", "インフラ", "ネットワーク"]
+        },
+        {
+          "name": "Nokia",
+          "url": "https://www.nokia.com/about-us/news/releases/rss.xml",
+          "description": "通信機器・ネットワーク",
+          "priority": "high",
+          "language": "en",
+          "tags": ["5G", "インフラ", "欧州"]
+        },
+        {
+          "name": "Huawei",
+          "url": "https://www.huawei.com/en/news/rss",
+          "description": "中国通信機器大手",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["5G", "中国", "通信機器"]
+        },
+        {
+          "name": "Cisco",
+          "url": "https://newsroom.cisco.com/c/allnews.rss",
+          "description": "ネットワーク機器最大手",
+          "priority": "high",
+          "language": "en",
+          "tags": ["ネットワーク", "セキュリティ", "企業向け"]
+        },
+        {
+          "name": "NTT R&D",
+          "url": "https://www.rd.ntt/rss/",
+          "description": "NTT研究開発",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["6G", "IOWN", "光通信"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - アメリカ",
+      "feeds": [
+        {
+          "name": "White House - Technology",
+          "url": "https://www.whitehouse.gov/feed/",
+          "description": "ホワイトハウス技術政策",
+          "priority": "high",
+          "language": "en",
+          "tags": ["政策", "アメリカ", "AI規制"]
+        },
+        {
+          "name": "FCC",
+          "url": "https://www.fcc.gov/rss/blog/rss.xml",
+          "description": "連邦通信委員会",
+          "priority": "high",
+          "language": "en",
+          "tags": ["通信規制", "5G", "ネット中立性"]
+        },
+        {
+          "name": "NIST",
+          "url": "https://www.nist.gov/news-events/news/rss.xml",
+          "description": "国立標準技術研究所",
+          "priority": "high",
+          "language": "en",
+          "tags": ["標準化", "AI", "サイバーセキュリティ"]
+        },
+        {
+          "name": "NSF",
+          "url": "https://www.nsf.gov/news/RSS/rss.xml",
+          "description": "全米科学財団",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["研究開発", "科学技術", "助成金"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - 日本",
+      "feeds": [
+        {
+          "name": "デジタル庁",
+          "url": "https://www.digital.go.jp/feed/",
+          "description": "日本デジタル庁",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["デジタル政策", "マイナンバー", "DX"]
+        },
+        {
+          "name": "総務省",
+          "url": "https://www.soumu.go.jp/news/rss/index.xml",
+          "description": "総務省ニュース",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["通信政策", "5G", "電波"]
+        },
+        {
+          "name": "経済産業省",
+          "url": "https://www.meti.go.jp/news/rss/index.xml",
+          "description": "経済産業省ニュース",
+          "priority": "high",
+          "language": "ja",
+          "tags": ["産業政策", "DX", "半導体"]
+        },
+        {
+          "name": "NEDO",
+          "url": "https://www.nedo.go.jp/news/rss/index.xml",
+          "description": "新エネルギー・産業技術総合開発機構",
+          "priority": "medium",
+          "language": "ja",
+          "tags": ["研究開発", "イノベーション", "助成"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - イギリス",
+      "feeds": [
+        {
+          "name": "UK Government Digital Service",
+          "url": "https://gds.blog.gov.uk/feed/",
+          "description": "英国政府デジタルサービス",
+          "priority": "high",
+          "language": "en",
+          "tags": ["デジタル政府", "GovTech", "オープンデータ"]
+        },
+        {
+          "name": "DCMS",
+          "url": "https://www.gov.uk/government/organisations/department-for-digital-culture-media-sport.atom",
+          "description": "デジタル・文化・メディア・スポーツ省",
+          "priority": "high",
+          "language": "en",
+          "tags": ["デジタル政策", "AI", "データ保護"]
+        },
+        {
+          "name": "UKRI",
+          "url": "https://www.ukri.org/feed/",
+          "description": "英国研究・イノベーション機構",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["研究開発", "イノベーション", "助成"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - ドイツ",
+      "feeds": [
+        {
+          "name": "BMWK",
+          "url": "https://www.bmwk.de/Navigation/DE/Service/RSS/rss.xml",
+          "description": "連邦経済・気候保護省",
+          "priority": "high",
+          "language": "de",
+          "tags": ["経済政策", "エネルギー", "デジタル化"]
+        },
+        {
+          "name": "BMBF",
+          "url": "https://www.bmbf.de/SiteGlobals/Functions/RSSFeed/BMBF_RSSNewsfeed.xml",
+          "description": "連邦教育研究省",
+          "priority": "high",
+          "language": "de",
+          "tags": ["研究開発", "教育", "イノベーション"]
+        },
+        {
+          "name": "BSI",
+          "url": "https://www.bsi.bund.de/SharedDocs/RSS/DE/BSI-Presse.xml",
+          "description": "連邦情報セキュリティ庁",
+          "priority": "high",
+          "language": "de",
+          "tags": ["サイバーセキュリティ", "IT安全", "規制"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - フランス",
+      "feeds": [
+        {
+          "name": "Ministère de l'Économie",
+          "url": "https://www.economie.gouv.fr/rss/actu",
+          "description": "フランス経済財務省",
+          "priority": "high",
+          "language": "fr",
+          "tags": ["経済政策", "デジタル", "イノベーション"]
+        },
+        {
+          "name": "ANSSI",
+          "url": "https://www.ssi.gouv.fr/feed/",
+          "description": "国家情報システムセキュリティ庁",
+          "priority": "high",
+          "language": "fr",
+          "tags": ["サイバーセキュリティ", "国家安全", "規制"]
+        },
+        {
+          "name": "Inria",
+          "url": "https://www.inria.fr/fr/feeds/actualites.xml",
+          "description": "国立情報学自動制御研究所",
+          "priority": "medium",
+          "language": "fr",
+          "tags": ["AI研究", "コンピュータサイエンス", "イノベーション"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - イタリア",
+      "feeds": [
+        {
+          "name": "AGID",
+          "url": "https://www.agid.gov.it/it/rss.xml",
+          "description": "デジタルイタリア庁",
+          "priority": "high",
+          "language": "it",
+          "tags": ["デジタル政策", "電子政府", "イノベーション"]
+        },
+        {
+          "name": "MISE",
+          "url": "https://www.mise.gov.it/index.php/it/?format=feed",
+          "description": "経済開発省",
+          "priority": "medium",
+          "language": "it",
+          "tags": ["経済政策", "産業", "イノベーション"]
+        }
+      ]
+    },
+    {
+      "category": "G7官公庁 - カナダ",
+      "feeds": [
+        {
+          "name": "ISED Canada",
+          "url": "https://www.canada.ca/en/innovation-science-economic-development.rss",
+          "description": "イノベーション・科学・経済開発省",
+          "priority": "high",
+          "language": "en",
+          "tags": ["イノベーション", "科学技術", "経済政策"]
+        },
+        {
+          "name": "Canadian Digital Service",
+          "url": "https://digital.canada.ca/feed.xml",
+          "description": "カナダデジタルサービス",
+          "priority": "high",
+          "language": "en",
+          "tags": ["デジタル政府", "公共サービス", "イノベーション"]
+        },
+        {
+          "name": "NRC Canada",
+          "url": "https://nrc.canada.ca/en/rss/news",
+          "description": "カナダ国立研究機構",
+          "priority": "medium",
+          "language": "en",
+          "tags": ["研究開発", "科学技術", "イノベーション"]
+        }
+      ]
+    },
+    {
+      "category": "EU機関",
+      "feeds": [
+        {
+          "name": "European Commission - Digital",
+          "url": "https://digital-strategy.ec.europa.eu/en/news-redirect/rss.xml",
+          "description": "欧州委員会デジタル戦略",
+          "priority": "high",
+          "language": "en",
+          "tags": ["デジタル政策", "AI規制", "データ保護"]
+        },
+        {
+          "name": "ENISA",
+          "url": "https://www.enisa.europa.eu/front-page/RSS",
+          "description": "欧州ネットワーク情報セキュリティ機関",
+          "priority": "high",
+          "language": "en",
+          "tags": ["サイバーセキュリティ", "規制", "標準化"]
+        }
+      ]
+    }
+  ],
+  "keywords": [
+    "ロボット",
+    "協働ロボット",
+    "産業用ロボット",
+    "自動運転",
+    "Level4",
+    "Level5",
+    "ADAS",
+    "5G",
+    "6G",
+    "通信インフラ",
+    "ネットワーク",
+    "デジタル政策",
+    "AI規制",
+    "データ保護",
+    "GDPR",
+    "サイバーセキュリティ",
+    "電子政府",
+    "GovTech",
+    "イノベーション政策",
+    "研究開発助成",
+    "標準化",
+    "Waymo",
+    "Tesla",
+    "FSD",
+    "Boston Dynamics",
+    "ファナック",
+    "Qualcomm",
+    "Ericsson",
+    "Nokia"
+  ]
+}

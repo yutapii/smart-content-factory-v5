@@ -1,0 +1,134 @@
+{
+  "exportDate": "2025-08-18T04:12:33.643Z",
+  "totalCount": 16,
+  "feeds": [
+    {
+      "name": "TechCrunch Japan",
+      "url": "https://techcrunch.com/feed/",
+      "category": "テクノロジー",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:12:02.843Z",
+      "lastChecked": "2025-08-18T04:12:07.901Z"
+    },
+    {
+      "name": "GIGAZINE",
+      "url": "https://gigazine.net/news/rss_2.0/",
+      "category": "テクノロジー",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:07:23.177Z",
+      "lastChecked": "2025-08-18T04:12:08.604Z"
+    },
+    {
+      "name": "ITmedia AI+",
+      "url": "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
+      "category": "AI・機械学習",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:07:23.178Z",
+      "lastChecked": "2025-08-18T04:12:09.250Z"
+    },
+    {
+      "name": "TechCrunch Japan",
+      "url": "https://techcrunch.com/feed/",
+      "category": "テクノロジー",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.474Z",
+      "lastChecked": "2025-08-18T04:12:09.971Z"
+    },
+    {
+      "name": "OpenAI Blog",
+      "url": "https://openai.com/news/rss.xml",
+      "category": "AI研究機関",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.475Z",
+      "lastChecked": "2025-08-18T04:12:10.621Z"
+    },
+    {
+      "name": "Google AI Blog",
+      "url": "https://blog.google/technology/ai/rss/",
+      "category": "AI研究機関",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.476Z",
+      "lastChecked": "2025-08-18T04:12:11.685Z"
+    },
+    {
+      "name": "DeepMind Blog",
+      "url": "https://deepmind.google/blog/rss.xml",
+      "category": "AI研究機関",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.476Z",
+      "lastChecked": "2025-08-18T04:12:13.616Z"
+    },
+    {
+      "name": "Microsoft AI Blog",
+      "url": "https://blogs.microsoft.com/ai/feed/",
+      "category": "AI研究機関",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.476Z",
+      "lastChecked": "2025-08-18T04:12:14.311Z"
+    },
+    {
+      "name": "arXiv AI",
+      "url": "https://export.arxiv.org/rss/cs.AI",
+      "category": "学術論文",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.477Z",
+      "lastChecked": "2025-08-18T04:12:14.998Z"
+    },
+    {
+      "name": "arXiv Machine Learning",
+      "url": "https://export.arxiv.org/rss/cs.LG",
+      "category": "学術論文",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.477Z",
+      "lastChecked": "2025-08-18T04:12:15.601Z"
+    },
+    {
+      "name": "arXiv Neural Computing",
+      "url": "https://export.arxiv.org/rss/cs.NE",
+      "category": "学術論文",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.477Z",
+      "lastChecked": "2025-08-18T04:12:16.243Z"
+    },
+    {
+      "name": "MIT CSAIL News",
+      "url": "https://www.csail.mit.edu/rss.xml",
+      "category": "大学研究機関",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.478Z",
+      "lastChecked": "2025-08-18T04:12:17.531Z"
+    },
+    {
+      "name": "理化学研究所 AIP",
+      "url": "https://aip.riken.jp/feed/",
+      "category": "日本のAI研究",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.478Z",
+      "lastChecked": "2025-08-18T04:12:18.220Z"
+    },
+    {
+      "name": "Preferred Networks",
+      "url": "https://tech.preferred.jp/ja/blog/feed/",
+      "category": "日本のAI企業",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.478Z",
+      "lastChecked": "2025-08-18T04:12:19.025Z"
+    },
+    {
+      "name": "Hugging Face Blog",
+      "url": "https://huggingface.co/blog/feed.xml",
+      "category": "AI企業",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.478Z",
+      "lastChecked": "2025-08-18T04:12:19.786Z"
+    },
+    {
+      "name": "AWS ML Blog",
+      "url": "https://aws.amazon.com/blogs/machine-learning/feed/",
+      "category": "クラウドAI",
+      "active": true,
+      "lastUpdate": "2025-08-18T04:09:44.479Z",
+      "lastChecked": "2025-08-18T04:12:21.201Z"
+    }
+  ]
+}
